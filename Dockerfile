@@ -2,6 +2,9 @@
 FROM rust:1.85-slim AS builder
 WORKDIR /app
 
+# Ставим утилиты сборки и Си-библиотеку sqlite, чтобы компилятор не падал
+RUN apt-get update && apt-get install -y pkg-config libsqlite3-dev && rm -rf /var/lib/apt/lists/*
+
 # Копируем весь репозиторий в контейнер
 COPY . .
 
