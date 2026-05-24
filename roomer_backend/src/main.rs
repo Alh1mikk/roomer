@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
-use tower_http::cors::CorsLayer; // Импортируем слой CORS
+use tower_http::cors::CorsLayer;
 
 struct AppState {
     pool: PgPool,
@@ -45,19 +45,18 @@ struct RoomListResponse {
 
 #[tokio::main]
 async fn main() {
-    // Считываем строку подключения DATABASE_URL, которую мы задали в Railway
     let db_url = std::env::var("DATABASE_URL")
         .expect("ПЕРЕМЕННАЯ ОКРУЖЕНИЯ DATABASE_URL НЕ НАЙДЕНА!");
 
     let pool = PgPoolOptions::new()
-        .max_connections(4) // Ограничиваем пул для бесплатного тарифа
+        .max_connections(4)
         .connect(&db_url)
         .await
         .expect("Не удалось подключиться к Supabase PostgreSQL");
 
     println!("✅ Облачная база данных Supabase успешно подключена!");
 
-    // Создаем таблицы в синтаксисе PostgreSQL
+    // Создаем таблицы в базе данных Supabase
     sqlx::query("CREATE TABLE IF NOT EXISTS users (id BIGSERIAL PRIMARY KEY, tg_id BIGINT UNIQUE NOT NULL, username TEXT NOT NULL, bio TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);").execute(&pool).await.unwrap();
     sqlx::query("CREATE TABLE IF NOT EXISTS tags (id BIGSERIAL PRIMARY KEY, name TEXT UNIQUE NOT NULL);").execute(&pool).await.unwrap();
     sqlx::query("CREATE TABLE IF NOT EXISTS rooms (id BIGSERIAL PRIMARY KEY, title TEXT NOT NULL, description TEXT, creator_id BIGINT, max_participants INTEGER DEFAULT 5, is_active BOOLEAN DEFAULT TRUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);").execute(&pool).await.unwrap();
@@ -71,7 +70,6 @@ async fn main() {
         rooms_channels: Mutex::new(HashMap::new()),
     });
 
-    // Настраиваем роутер Axum и прикручиваем разрешающий CorsLayer
     let app = Router::new()
         .route("/", get(|| async { "Добро пожаловать в Продакшн Roomer API!" }))
         .route("/rooms", post(create_room_handler))
@@ -80,7 +78,6 @@ async fn main() {
         .layer(CorsLayer::very_permissive()) // Разрешаем CORS-запросы с гитхаба
         .with_state(shared_state);
 
-    // Считываем порт динамически (требование хостинга Railway)
     let port = std::env::var("PORT").unwrap_or_else(|_| "3000".to_string());
     let addr: SocketAddr = format!("0.0.0.0:{}", port).parse().unwrap();
     println!("🚀 Сервер Roomer запущен на порту {}", port);
@@ -100,7 +97,6 @@ async fn ws_handler(
 async fn handle_socket(socket: WebSocket, room_id: i64, state: Arc<AppState>) {
     let (mut sender, mut receiver) = socket.split();
 
-    // Загружаем историю из PostgreSQL
     let history_rows = sqlx::query("SELECT text FROM messages WHERE room_id = $1 ORDER BY id ASC")
         .bind(room_id)
         .fetch_all(&state.pool)
@@ -135,7 +131,6 @@ async fn handle_socket(socket: WebSocket, room_id: i64, state: Arc<AppState>) {
             let clean_text = text.trim().to_string();
             if clean_text.is_empty() { continue; }
 
-            // Инсерт сообщения в PostgreSQL
             let _ = sqlx::query("INSERT INTO messages (room_id, text) VALUES ($1, $2)")
                 .bind(room_id).bind(&clean_text).execute(&pool_clone).await;
 
@@ -153,7 +148,6 @@ async fn create_room_handler(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<CreateRoomInput>,
 ) -> Json<RoomResponse> {
-    // В PostgreSQL забираем созданный ID через RETURNING id
     let room_row = sqlx::query("INSERT INTO rooms (title, description, creator_id) VALUES ($1, $2, $3) RETURNING id")
         .bind(&payload.title).bind(&payload.description).bind(payload.creator_id)
         .fetch_one(&state.pool).await.unwrap();
@@ -174,7 +168,6 @@ async fn create_room_handler(
 }
 
 async fn get_rooms_handler(State(state): State<Arc<AppState>>) -> Json<Vec<RoomListResponse>> {
-    // В PostgreSQL функция агрегации называется string_agg
     let rows = sqlx::query(
         "SELECT r.id, r.title, r.description, r.creator_id, string_agg(t.name, ',') as room_tags 
          FROM rooms r 
@@ -192,7 +185,9 @@ async fn get_rooms_handler(State(state): State<Arc<AppState>>) -> Json<Vec<RoomL
             Some(s) => s.split(',').map(|t| t.to_string()).collect(),
             None => vec![],
         };
-        RoomListResponse { id: row.get("id"), title: room['title'] ?? '', description: row.get("description"), creator_id: row.get("creator_id"), tags }
+        // ИСПРАВЛЕНО: Теперь синтаксис получения строки title строго соответствует стандартам Rust sqlx
+        let title: String = row.get("title");
+        RoomListResponse { id: row.get("id"), title, description: row.get("description"), creator_id: row.get("creator_id"), tags }
     }).collect();
 
     Json(rooms)
