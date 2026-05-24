@@ -13,7 +13,7 @@ use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 use tower_http::cors::CorsLayer;
-use tokio_postgres_rustls::MakeTlsConnector;
+use tokio_postgres_rustls::MakeTlsConnect;
 use std::io::Write; // Для сброса буфера логов
 
 struct AppState {
@@ -61,7 +61,7 @@ async fn main() {
     let config = rustls::ClientConfig::builder()
         .with_root_certificates(root_store)
         .with_no_client_auth();
-    let connector = MakeTlsConnector::new(config);
+    let connector = MakeTlsConnect::new(config);
 
     // 3. Подключаемся к БД
     let (client, connection) = tokio_postgres::Config::new()
