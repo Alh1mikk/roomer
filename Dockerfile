@@ -4,15 +4,15 @@ WORKDIR /app
 COPY . .
 RUN cd roomer_backend && cargo build --release
 
-# Шаг 2: Финальный запуск (Заменили Debian на современную Ubuntu 24.04)
+# Шаг 2: Финальный запуск
 FROM ubuntu:24.04
 WORKDIR /app
 
-# Обновляем сертификаты SSL внутри Ubuntu, чтобы работал коннект к Supabase
+# Обновляем сертификаты SSL внутри Ubuntu
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # Копируем скомпилированный бинарник
 COPY --from=builder /app/roomer_backend/target/release/roomer_backend .
 
-# Запуск нашего сервера
-CMD ["./roomer_backend"]
+# ИСПРАВЛЕНО: Перед запуском сервера принудительно прописываем DNS Google, чтобы домен Supabase резолвился!
+CMD sh -c "echo 'nameserver 8.8.8.8' > /etc/resolv.conf && ./roomer_backend"
