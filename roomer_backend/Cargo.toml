@@ -8,6 +8,9 @@ axum = { version = "0.7", features = ["ws"] }
 tower-http = { version = "0.5", features = ["cors"] }
 futures-util = "0.3"
 tokio = { version = "1.0", features = ["full"] }
-sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "postgres", "macros"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+# Добавляем чистый драйвер и поддержку SSL
+tokio-postgres = { version = "0.7", features = ["runtime"] }
+postgres-native-tls = "0.3"
+native-tls = "0.2"
