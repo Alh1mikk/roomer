@@ -133,14 +133,8 @@ def create_room(payload: CreateRoomInput):
     conn.close()
     return {"status": "success", "room_id": room_id}
 
-@app.websocket("/ws/{room_id}")
+@app.websocket("/ws/{room_id}") # <-- СТРОГО БЕЗ СЛЭША НА КОНЦЕ!
 async def websocket_endpoint(websocket: WebSocket, room_id: int):
-    # ХАК ДЛЯ FIREFOX: Явно разрешаем подключение сокета со сторонних источников (CORS для WS)
-    # Если браузер передает заголовок origin, мы одобряем рукопожатие
-    headers = websocket.headers
-    origin = headers.get("origin")
-    
-    # Позволяем Firefox установить соединение без блокировок безопасности
     await manager.connect(room_id, websocket)
     
     def fetch_history():
@@ -184,5 +178,5 @@ async def websocket_endpoint(websocket: WebSocket, room_id: int):
     except WebSocketDisconnect:
         manager.disconnect(room_id, websocket)
     except Exception as e:
-        print(f"Критическая ошибка сокета: {e}")
+        print(f"Ошибка сокета: {e}")
         manager.disconnect(room_id, websocket)
