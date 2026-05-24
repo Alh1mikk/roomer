@@ -2,7 +2,7 @@
 FROM rust:1.75-slim AS builder
 WORKDIR /app
 COPY . .
-RUN cargo build --release
+RUN SQLX_OFFLINE=true cargo build --release
 
 # Шаг 2: Легковесный запуск в продакшене
 FROM debian:bookworm-slim
