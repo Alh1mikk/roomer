@@ -13,7 +13,7 @@ use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 use tower_http::cors::CorsLayer;
-use postgres_rustls::MakeTlsConnector;
+use tokio_postgres_rustls::MakeTlsConnector;
 use std::io::Write; // Для сброса буфера логов
 
 struct AppState {
