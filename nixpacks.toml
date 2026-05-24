@@ -1,7 +1,0 @@
-[phases.build]
-# Заходим в папку и компилируем релизный бинарник
-cmds = ["cd roomer_backend && cargo build --release"]
-
-[start]
-# Заходим в папку бэкенда и запускаем его через встроенную команду cargo
-cmd = "cd roomer_backend && cargo run --release"
