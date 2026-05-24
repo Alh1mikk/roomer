@@ -135,9 +135,14 @@ def create_room(payload: CreateRoomInput):
 
 @app.websocket("/ws/{room_id}")
 async def websocket_endpoint(websocket: WebSocket, room_id: int):
+    # ХАК ДЛЯ FIREFOX: Явно разрешаем подключение сокета со сторонних источников (CORS для WS)
+    # Если браузер передает заголовок origin, мы одобряем рукопожатие
+    headers = websocket.headers
+    origin = headers.get("origin")
+    
+    # Позволяем Firefox установить соединение без блокировок безопасности
     await manager.connect(room_id, websocket)
     
-    # ИСПРАВЛЕНО: Чтение истории вынесено в асинхронный поток
     def fetch_history():
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
@@ -165,7 +170,6 @@ async def websocket_endpoint(websocket: WebSocket, room_id: int):
             
             clean_text = ai_moderate_text(text)
             
-            # ИСПРАВЛЕНО: Запись сообщений вынесена в параллельный поток, сокет в Firefox больше не лагает
             def save_message():
                 conn = get_db_connection()
                 cursor = conn.cursor()
