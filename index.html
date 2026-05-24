@@ -437,7 +437,7 @@
 
     <script>
         const API_URL = 'https://roomer-production.up.railway.app';
-        const WS_URL = 'wss://roomer-production.up.railway.app';
+        const WS_URL = 'wss://roomer-production.up.railway.app:443';
 
         const tg = window.Telegram.WebApp;
         tg.ready();
@@ -505,7 +505,22 @@
             document.getElementById('chat-messages').innerHTML = '';
             switchScreen('chat-screen');
 
+            // Если старое соединение не закрылось — принудительно рубим его
+            if (wsConnection) { wsConnection.close(); }
+
+            console.log("Пытаемся подключиться к сокету:", WS_URL + '/ws/' + roomId.toString());
             wsConnection = new WebSocket(WS_URL + '/ws/' + roomId.toString());
+
+            // ХАК ДЛЯ ТРАБЛШУТИНГА: Ловим ошибки сокета в Firefox
+            wsConnection.onerror = function(error) {
+                console.error("Критическая ошибка WebSocket в Firefox:", error);
+                const msgBox = document.getElementById('chat-messages');
+                msgBox.innerHTML = '<p style="color:#FF5252; text-align:center; font-size:13px;">⚠️ Ошибка сети сокета. Firefox заблокировал соединение.</p>';
+            };
+
+            wsConnection.onclose = function(event) {
+                console.warn("Соединение закрыто сервером. Код:", event.code, "Причина:", event.reason);
+            };
 
             wsConnection.onmessage = function(event) {
                 const msgBox = document.getElementById('chat-messages');
@@ -537,6 +552,7 @@
                 });
             };
         }
+
 
         function sendWsMessage() {
             const input = document.getElementById('chat-input');
