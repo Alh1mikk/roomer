@@ -44,24 +44,14 @@ struct RoomListResponse {
 
 #[tokio::main]
 async fn main() {
-    // Инициализируем крипто-провайдер ring для Supabase [INDEX]
-    let _ = rustls::crypto::ring::default_provider().install_default();
-
     // 1. Считываем переменные окружения из Railway
     let db_host = std::env::var("DB_HOST").unwrap_or_else(|_| "44.223.149.3".to_string());
     let db_user = std::env::var("DB_USER").unwrap_or_else(|_| "postgres.vdbevrnecyvmmxtsnpxn".to_string());
     let db_pass = std::env::var("DB_PASS").unwrap_or_else(|_| "roomerdataba".to_string());
 
-    // 2. Настраиваем чистый Rustls коннектор через стабильный postgres-rustls [INDEX]
-    let mut root_store = rustls::RootCertStore::empty();
-    root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
-    
-    let config = rustls::ClientConfig::builder()
-        .with_root_certificates(root_store)
-        .with_no_client_auth();
-    
-    // ИСПОЛЬЗУЕМ СТАБИЛЬНУЮ СТРУКТУРУ ИЗ POSTGRES_RUSTLS [INDEX]
-    let connector = postgres_rustls::MakeTlsConnector::new(config);
+    // 2. Настраиваем стандартный TLS-коннектор через native-tls
+    let native_connector = native_tls::TlsConnector::builder().build().unwrap();
+    let connector = tokio_native_tls::TlsConnector::from(native_connector);
 
     // 3. Подключаемся к БД Supabase
     let (client, connection) = tokio_postgres::Config::new()
