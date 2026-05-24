@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Roomer</title>
-    <!-- Официальный скрипт Telegram SDK -->
-    <script src="https://telegram.org"></script>
+    <!-- Официальный скрипт Telegram SDK (адрес исправлен) -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
             background-color: #0F0F13;
@@ -21,16 +21,27 @@
         .card p { margin: 0 0 12px 0; color: #AAAAAA; font-size: 14px; }
         .tag { display: inline-block; background: rgba(124, 77, 255, 0.2); color: #B388FF; border: 1px solid #7C4DFF; padding: 4px 8px; border-radius: 6px; font-size: 12px; margin-right: 6px; margin-bottom: 6px; }
         
-        /* Стили для формы создания комнаты */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0F0F13; padding: 16px; box-sizing: border-box; }
+        /* Стили экранов */
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* Формы и инпуты */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0F0F13; padding: 16px; box-sizing: border-box; z-index: 10; }
         input, textarea { width: 100%; background: #1A1A24; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; margin-bottom: 16px; box-sizing: border-box; }
-        .btn-submit { width: 100%; background: #7C4DFF; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 16px; }
+        .btn-submit { width: 100%; background: #7C4DFF; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        
+        /* Стили Живого Чата */
+        #chat-messages { height: 65vh; overflow-y: auto; background: #1A1A24; border-radius: 12px; padding: 12px; margin-bottom: 16px; box-sizing: border-box; }
+        .msg { background: #2A2A38; padding: 10px; border-radius: 8px; margin-bottom: 8px; width: fit-content; max-width: 85%; word-break: break-all; }
+        .chat-input-container { display: flex; gap: 8px; }
+        .chat-input-container input { margin-bottom: 0; }
+        .btn-send { background: #7C4DFF; color: white; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <!-- ЭКРАН 1: ЛЕНТА КОМНАТ -->
-    <div id="feed-screen">
+    <div id="feed-screen" class="screen active">
         <div class="header">
             <h2>🌟 Активные комнаты</h2>
             <button class="btn-add" onclick="toggleModal(true)">+</button>
@@ -38,7 +49,7 @@
         <div id="rooms-list">Загрузка комнат...</div>
     </div>
 
-    <!-- ЭКРАН 2: ФОРМА СОЗДАНИЯ -->
+    <!-- ЭКРАН 2: ФОРМА СОЗДАНИЯ (МОДАЛКА) -->
     <div id="create-modal" class="modal">
         <h2>Запустить свой движ</h2>
         <input type="text" id="room-title" placeholder="Название комнаты (например: Кодим на Rust)">
@@ -48,19 +59,43 @@
         <button class="btn-submit" style="background:#333; margin-top: 10px;" onclick="toggleModal(false)">Назад</button>
     </div>
 
+    <!-- ЭКРАН 3: ЖИВОЙ ЧАТ (ДОБАВЛЕН) -->
+    <div id="chat-screen" class="screen">
+        <div class="header">
+            <h2 id="chat-room-title">Чат комнаты</h2>
+            <button class="btn-add" style="background:#333;" onclick="closeChat()">❌</button>
+        </div>
+        <div id="chat-messages"></div>
+        <div class="chat-input-container">
+            <input type="text" id="chat-input" placeholder="Введите сообщение..." onkeypress="if(event.key==='Enter') sendWsMessage()">
+            <button class="btn-send" onclick="sendWsMessage()">➔</button>
+        </div>
+    </div>
+
     <script>
+        // === 🛠️ НАСТРОЙКА АДРЕСОВ ТВОЕГО СЕРВЕРА ===
+        // Вставь сюда свою ссылку от Railway (без слэша на конце)
+        const API_URL = 'https://railway.app';
+        const WS_URL = 'roomer-production.up.railway.app';
+
         // Инициализируем Telegram WebApp
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
 
-        // Получаем ID юзера из ТГ или ставим заглушку
         const tgUserId = tg.initDataUnsafe?.user?.id || 99999;
+        let wsConnection = null;
 
-        // 1. Скачиваем комнаты с нашего Rust-бэкенда
+        // Переключение экранов (Лента / Чат)
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // 1. Скачиваем комнаты с нашего продакшн бэкенда
         async function fetchRooms() {
             try {
-                const res = await fetch('http://127.0.0');
+                const res = await fetch(API_URL + '/rooms');
                 const rooms = await res.json();
                 const list = document.getElementById('rooms-list');
                 
@@ -70,34 +105,75 @@
                 }
 
                 list.innerHTML = rooms.map(room => `
-                    <div class="card" onclick="alert('Тут будет WebSocket чат для комнаты ' + ${room.id})">
+                    <div class="card" onclick="openChat(${room.id}, '${room.title.replace(/'/g, "\\'")}')">
                         <h3>${room.title}</h3>
                         <p>${room.description || ''}</p>
                         <div>${room.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}</div>
                     </div>
                 `).join('');
             } catch (e) {
-                document.getElementById('rooms-list').innerHTML = '<p style="color:red;">Ошибка подключения к Rust-бэкенду</p>';
+                document.getElementById('rooms-list').innerHTML = '<p style="color:red;text-align:center;">Ошибка подключения к удаленному бэкенду на Railway</p>';
             }
         }
 
-        // 2. Отправляем новую комнату на Rust-бэкенд
+        // 2. Отправляем новую комнату на бэкенд
         async function submitRoom() {
             const title = document.getElementById('room-title').value.trim();
             const description = document.getElementById('room-desc').value.trim();
             const tagsRaw = document.getElementById('room-tags').value;
 
             if (!title) return;
-
             const tags = tagsRaw.split(',').map(t => t.trim()).filter(t => t.length > 0);
 
-            await fetch('http://127.0.0', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, description, creator_id: tgUserId, tags })
-            });
+            try {
+                await fetch(API_URL + '/rooms', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, description, creator_id: tgUserId, tags })
+                });
 
-            toggleModal(false);
+                // Очищаем форму, закрываем модалку и обновляем ленту
+                document.getElementById('room-title').value = '';
+                document.getElementById('room-desc').value = '';
+                document.getElementById('room-tags').value = '';
+                toggleModal(false);
+                fetchRooms();
+            } catch (e) {
+                alert('Не удалось отправить данные на сервер');
+            }
+        }
+
+        // 3. Подключение к живым WebSockets чатам Rust
+        function openChat(roomId, roomTitle) {
+            document.getElementById('chat-room-title').innerText = roomTitle;
+            document.getElementById('chat-messages').innerHTML = ''; // Чистим экран чата
+            switchScreen('chat-screen');
+
+            // Открываем нативное защищенное WebSocket-соединение с сервером
+            wsConnection = new WebSocket(WS_URL + '/ws/' + roomId.toString());
+
+            wsConnection.onmessage = function(event) {
+                const msgBox = document.getElementById('chat-messages');
+                const newMsg = document.createElement('div');
+                newMsg.className = 'msg';
+                newMsg.innerText = event.data;
+                msgBox.appendChild(newMsg);
+                msgBox.scrollTop = msgBox.scrollHeight; // Скролл вниз до последнего сообщения
+            };
+        }
+
+        function sendWsMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text || !wsConnection) return;
+
+            wsConnection.send(text); // Пушим сообщение в сокет на сервер Railway
+            input.value = '';
+        }
+
+        function closeChat() {
+            if (wsConnection) { wsConnection.close(); wsConnection = null; }
+            switchScreen('feed-screen');
             fetchRooms();
         }
 
@@ -105,7 +181,7 @@
             document.getElementById('create-modal').style.display = show ? 'block' : 'none';
         }
 
-        // Запускаем первичную подгрузку
+        // Стартуем первичную подгрузку комнат при входе
         fetchRooms();
     </script>
 </body>
