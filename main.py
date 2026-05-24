@@ -10,7 +10,7 @@ from psycopg2.extras import RealDictCursor
 
 app = FastAPI()
 
-# Разрешаем CORS запросы с гитхаба
+# Железобетонный CORS для полной разблокировки запросов с GitHub Pages
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -45,7 +45,7 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 def get_db_connection():
-    # ИСПРАВЛЕНО: Вернули правильный дефолтный адрес пуллера Ирландии без костылей
+    # Читаем плоские переменные Ирландии со стабильным текстовым дефолтом
     return psycopg2.connect(
         host=os.getenv("DB_HOST", "aws-0-eu-west-1.pooler.supabase.com"),
         database="postgres",
@@ -67,7 +67,7 @@ def ai_moderate_text(text: str) -> str:
             clean_words.append(word)
     return " ".join(clean_words)
 
-# Проверка и инициализация базы данных
+# Однократная инициализация структуры БД при старте сервера
 conn = get_db_connection()
 cursor = conn.cursor()
 cursor.execute("CREATE TABLE IF NOT EXISTS tags (id BIGSERIAL PRIMARY KEY, name TEXT UNIQUE NOT NULL);")
@@ -86,7 +86,7 @@ class CreateRoomInput(BaseModel):
 
 @app.get("/")
 def home():
-    return {"status": "FastAPI работает!"}
+    return {"status": "FastAPI работает на 100%!"}
 
 @app.get("/rooms")
 def get_rooms():
@@ -120,39 +120,53 @@ def create_room(payload: CreateRoomInput):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("INSERT INTO rooms (title, description, creator_id) VALUES (%s, %s, %s) RETURNING id", (payload.title, payload.description, payload.creator_id))
-    room_id = cursor.fetchone()[0]
+    room_id = cursor.fetchone()[0] # Безопасное извлечение ID из кортежа
+    
     for tag in payload.tags:
         clean_tag = tag.strip().lower()
         if not clean_tag: continue
         cursor.execute("INSERT INTO tags (name) VALUES (%s) ON CONFLICT (name) DO NOTHING", (clean_tag,))
         cursor.execute("SELECT id FROM tags WHERE name = %s", (clean_tag,))
-        tag_id = cursor.fetchone()[0]
-        cursor.execute("INSERT INTO room_tags (room_id, tag_id) VALUES (%s, %s) ON CONFLICT DO NOTHING", (room_id, tag_id))
+        tag_id_row = cursor.fetchone()
+        if tag_id_row:
+            tag_id = tag_id_row[0]
+            cursor.execute("INSERT INTO room_tags (room_id, tag_id) VALUES (%s, %s) ON CONFLICT DO NOTHING", (room_id, tag_id))
+            
     conn.commit()
     cursor.close()
     conn.close()
     return {"status": "success", "room_id": room_id}
 
-@app.websocket("/ws/{room_id}") # <-- СТРОГО БЕЗ СЛЭША НА КОНЦЕ!
+@app.websocket("/ws/{room_id}")
 async def websocket_endpoint(websocket: WebSocket, room_id: int):
+    # 1. Моментально жмем руку прокси Railway и Firefox
     await manager.connect(room_id, websocket)
     
+    # Отправляем моментальное системное подтверждение
+    try:
+        await websocket.send_text(json.dumps({"text": "системное_сообщение_подключено", "sender_id": -1}))
+    except Exception:
+        manager.disconnect(room_id, websocket)
+        return
+
+    # 2. Потоковая фоновая выгрузка старой истории чата
     def fetch_history():
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
-        cursor.execute("SELECT text, sender_id FROM messages WHERE room_id = %s ORDER BY id ASC", (room_id,))
-        history = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        return history
+        c = get_db_connection()
+        cur = c.cursor(cursor_factory=RealDictCursor)
+        cur.execute("SELECT text, sender_id FROM messages WHERE room_id = %s ORDER BY id ASC", (room_id,))
+        h = cur.fetchall()
+        cur.close()
+        c.close()
+        return h
 
     try:
         history = await asyncio.to_thread(fetch_history)
         for msg in history:
             await websocket.send_text(json.dumps({"text": msg["text"], "sender_id": msg["sender_id"]}))
     except Exception as e:
-        print(f"Ошибка отправки истории: {e}")
+        print(f"Ошибка выгрузки истории чата: {e}")
 
+    # 3. Бесконечный цикл обмена живыми сообщениями
     try:
         while True:
             raw_data = await websocket.receive_text()
@@ -165,18 +179,19 @@ async def websocket_endpoint(websocket: WebSocket, room_id: int):
             clean_text = ai_moderate_text(text)
             
             def save_message():
-                conn = get_db_connection()
-                cursor = conn.cursor()
-                cursor.execute("INSERT INTO messages (room_id, text, sender_id) VALUES (%s, %s, %s)", (room_id, clean_text, sender_id))
-                conn.commit()
-                cursor.close()
-                conn.close()
+                c = get_db_connection()
+                cur = c.cursor()
+                cur.execute("INSERT INTO messages (room_id, text, sender_id) VALUES (%s, %s, %s)", (room_id, clean_text, sender_id))
+                c.commit()
+                cur.close()
+                c.close()
 
+            # Параллельный запуск сохранения без заморозки асинхронного сокета
             await asyncio.to_thread(save_message)
             await manager.broadcast(room_id, {"text": clean_text, "sender_id": sender_id})
             
     except WebSocketDisconnect:
         manager.disconnect(room_id, websocket)
     except Exception as e:
-        print(f"Ошибка сокета: {e}")
+        print(f"Критический сбой WebSocket-сессии: {e}")
         manager.disconnect(room_id, websocket)
