@@ -10,8 +10,7 @@ futures-util = "0.3"
 tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-# Нативный безопасный стек без привязки к OpenSSL в Linux
 tokio-postgres = { version = "0.7", features = ["runtime"] }
-postgres-rustls = "0.24"
+postgres_rustls = "0.24"
 rustls = { version = "0.23", features = ["ring"] }
 webpki-roots = "0.26"
