@@ -4,33 +4,280 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Roomer</title>
-    <!-- Официальный скрипт Telegram SDK (адрес исправлен) -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>/* === ОБНОВЛЕННЫЕ СТИЛИ ЖИВОГО ЧАТА === */
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0F0F13;
+            color: #E8E8ED;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .screen {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* ── Header ── */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: #1A1A24;
+            border-bottom: 1px solid #2A2A38;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: #F0F0F5;
+        }
+
+        .header .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* ── Buttons ── */
+        .btn-add {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: none;
+            background: #2A2A38;
+            color: #C0C0D0;
+            font-size: 20px;
+            font-weight: 300;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, color 0.2s;
+            line-height: 1;
+        }
+
+        .btn-add:hover {
+            background: #3A3A48;
+            color: #FFFFFF;
+        }
+
+        .btn-add:active {
+            background: #4A4A58;
+        }
+
+        .btn-back {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: none;
+            background: #2A2A38;
+            color: #C0C0D0;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .btn-back:hover {
+            background: #3A3A48;
+            color: #FFFFFF;
+        }
+
+        /* ── Rooms Feed ── */
+        #rooms-list {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        #rooms-list .empty-state {
+            text-align: center;
+            color: #6B6B80;
+            font-size: 15px;
+            padding: 48px 16px;
+            line-height: 1.6;
+        }
+
+        .card {
+            background: #1A1A24;
+            border: 1px solid #2A2A38;
+            border-radius: 14px;
+            padding: 16px;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s, transform 0.15s;
+        }
+
+        .card:hover {
+            border-color: #7C4DFF;
+            background: #1E1E2A;
+            transform: translateY(-1px);
+        }
+
+        .card:active {
+            transform: translateY(0);
+        }
+
+        .card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #F0F0F5;
+            margin-bottom: 6px;
+        }
+
+        .card p {
+            font-size: 14px;
+            color: #9B9BB0;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .card .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .card .tag {
+            font-size: 12px;
+            color: #7C4DFF;
+            background: rgba(124, 77, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 6px;
+            letter-spacing: -0.01em;
+        }
+
+        /* ── Modal ── */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .modal-inner {
+            max-width: 400px;
+            margin: 60px auto;
+            background: #1A1A24;
+            border: 1px solid #2A2A38;
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .modal-inner h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #F0F0F5;
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
+        }
+
+        .modal-inner input,
+        .modal-inner textarea {
+            width: 100%;
+            background: #2A2A38;
+            border: 1px solid #3A3A48;
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 15px;
+            font-family: inherit;
+            color: #E8E8ED;
+            outline: none;
+            transition: border-color 0.2s;
+            margin-bottom: 12px;
+        }
+
+        .modal-inner input:focus,
+        .modal-inner textarea:focus {
+            border-color: #7C4DFF;
+        }
+
+        .modal-inner input::placeholder,
+        .modal-inner textarea::placeholder {
+            color: #6B6B80;
+        }
+
+        .modal-inner textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: inherit;
+            border: none;
+            border-radius: 10px;
+            background: #7C4DFF;
+            color: #FFFFFF;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-submit:hover {
+            background: #6C3DFF;
+        }
+
+        .btn-submit:active {
+            background: #5C2DFF;
+        }
+
+        .btn-submit.secondary {
+            background: #2A2A38;
+            color: #C0C0D0;
+            margin-top: 8px;
+        }
+
+        .btn-submit.secondary:hover {
+            background: #3A3A48;
+            color: #F0F0F5;
+        }
+
+        /* ── Chat Screen ── */
         #chat-screen {
             display: none;
             flex-direction: column;
             height: 100vh;
-            box-sizing: border-box;
-            padding: 0;
-            margin: 0;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             background: #0F0F13;
         }
+
         #chat-screen.active {
             display: flex;
         }
-        #chat-screen .header {
-            padding: 16px;
-            background: #1A1A24;
-            margin-bottom: 0;
-            border-bottom: 1px solid #2A2A38;
-        }
-        
-        /* Контейнер сообщений скроллится, оставляя инпут внизу */
+
         #chat-messages {
             flex: 1;
             overflow-y: auto;
@@ -38,57 +285,73 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
-            box-sizing: border-box;
-            background: #0F0F13;
         }
-        
-        /* Общие стили для облачков сообщений */
+
         .msg {
             padding: 10px 14px;
             border-radius: 16px;
             font-size: 15px;
             line-height: 1.4;
-            max-width: 75%;
+            max-width: 80%;
             word-break: break-word;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-            position: relative;
-            animation: fadeIn 0.2s ease-in-out;
+            animation: msgIn 0.2s ease-out;
         }
-        
-        /* Твои сообщения (справа, фиолетовые) */
+
         .msg.my-msg {
             background: #7C4DFF;
             color: #FFFFFF;
             align-self: flex-end;
             border-bottom-right-radius: 4px;
         }
-        
-        /* Чужие сообщения (слева, темно-серые) */
+
         .msg.other-msg {
             background: #2A2A38;
-            color: #FFFFFF;
+            color: #E8E8ED;
             align-self: flex-start;
             border-bottom-left-radius: 4px;
         }
-        
-        /* Зафиксированная панель ввода внизу экрана */
+
+        @keyframes msgIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .chat-input-container {
             padding: 12px 16px;
             background: #1A1A24;
             border-top: 1px solid #2A2A38;
             display: flex;
-            gap: 12px;
+            gap: 10px;
             align-items: center;
-            box-sizing: border-box;
         }
+
         .chat-input-container input {
-            margin-bottom: 0;
+            flex: 1;
             background: #2A2A38;
             border: 1px solid #3A3A48;
             padding: 12px 16px;
             border-radius: 24px;
             font-size: 15px;
+            font-family: inherit;
+            color: #E8E8ED;
+            outline: none;
+            transition: border-color 0.2s;
         }
+
+        .chat-input-container input:focus {
+            border-color: #7C4DFF;
+        }
+
+        .chat-input-container input::placeholder {
+            color: #6B6B80;
+        }
+
         .btn-send {
             background: #7C4DFF;
             color: white;
@@ -100,63 +363,81 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.2s, transform 0.15s;
             flex-shrink: 0;
         }
-        .btn-send:active {
-            background: #651FFF;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
+
+        .btn-send:hover {
+            background: #6C3DFF;
         }
 
+        .btn-send:active {
+            background: #5C2DFF;
+            transform: scale(0.95);
+        }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3A3A48;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4A4A58;
+        }
     </style>
 </head>
 <body>
 
-    <!-- ЭКРАН 1: ЛЕНТА КОМНАТ -->
+    <!-- FEED SCREEN -->
     <div id="feed-screen" class="screen active">
         <div class="header">
-            <h2>🌟 Активные комнаты</h2>
+            <h2>Активные комнаты</h2>
             <button class="btn-add" onclick="toggleModal(true)">+</button>
         </div>
         <div id="rooms-list">Загрузка комнат...</div>
     </div>
 
-    <!-- ЭКРАН 2: ФОРМА СОЗДАНИЯ (МОДАЛКА) -->
+    <!-- MODAL -->
     <div id="create-modal" class="modal">
-        <h2>Запустить свой движ</h2>
-        <input type="text" id="room-title" placeholder="Название комнаты (например: Кодим на Rust)">
-        <textarea id="room-desc" rows="3" placeholder="Описание атмосферы..."></textarea>
-        <input type="text" id="room-tags" placeholder="Кастомные теги через запятую (rust, diy, чат)">
-        <button class="btn-submit" onclick="submitRoom()">Создать комнату</button>
-        <button class="btn-submit" style="background:#333; margin-top: 10px;" onclick="toggleModal(false)">Назад</button>
+        <div class="modal-inner">
+            <h2>Создать комнату</h2>
+            <input type="text" id="room-title" placeholder="Название комнаты">
+            <textarea id="room-desc" rows="3" placeholder="Описание"></textarea>
+            <input type="text" id="room-tags" placeholder="Теги через запятую (rust, design, chat)">
+            <button class="btn-submit" onclick="submitRoom()">Создать</button>
+            <button class="btn-submit secondary" onclick="toggleModal(false)">Отмена</button>
+        </div>
     </div>
 
-    <!-- ЭКРАН 3: ЖИВОЙ ЧАТ (ДОБАВЛЕН) -->
+    <!-- CHAT SCREEN -->
     <div id="chat-screen" class="screen">
         <div class="header">
-            <h2 id="chat-room-title">Чат комнаты</h2>
-            <button class="btn-add" style="background:#333;" onclick="closeChat()">❌</button>
+            <div class="header-left">
+                <button class="btn-back" onclick="closeChat()">&larr;</button>
+                <h2 id="chat-room-title">Чат</h2>
+            </div>
         </div>
         <div id="chat-messages"></div>
         <div class="chat-input-container">
-            <input type="text" id="chat-input" placeholder="Введите сообщение..." onkeypress="if(event.key==='Enter') sendWsMessage()">
-            <button class="btn-send" onclick="sendWsMessage()">➔</button>
+            <input type="text" id="chat-input" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') sendWsMessage()">
+            <button class="btn-send" onclick="sendWsMessage()">&rarr;</button>
         </div>
     </div>
 
     <script>
-        // === 🛠️ НАСТРОЙКА АДРЕСОВ ТВОЕГО СЕРВЕРА ===
-        // Вставь сюда свою ссылку от Railway (без слэша на конце)
         const API_URL = 'https://roomer-production.up.railway.app';
         const WS_URL = 'wss://roomer-production.up.railway.app';
 
-        // Инициализируем Telegram WebApp
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
@@ -164,21 +445,20 @@
         const tgUserId = tg.initDataUnsafe?.user?.id || 99999;
         let wsConnection = null;
 
-        // Переключение экранов (Лента / Чат)
         function switchScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
+            const el = document.getElementById(screenId);
+            if (el) el.classList.add('active');
         }
 
-        // 1. Скачиваем комнаты с нашего продакшн бэкенда
         async function fetchRooms() {
             try {
                 const res = await fetch(API_URL + '/rooms');
                 const rooms = await res.json();
                 const list = document.getElementById('rooms-list');
-                
+
                 if (rooms.length === 0) {
-                    list.innerHTML = '<p style="text-align:center;color:#666;">Комнат пока нет. Будь первым! 🚀</p>';
+                    list.innerHTML = '<div class="empty-state">Комнат пока нет.<br>Создайте первую!</div>';
                     return;
                 }
 
@@ -186,15 +466,14 @@
                     <div class="card" onclick="openChat(${room.id}, '${room.title.replace(/'/g, "\\'")}')">
                         <h3>${room.title}</h3>
                         <p>${room.description || ''}</p>
-                        <div>${room.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}</div>
+                        <div class="tags">${room.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}</div>
                     </div>
                 `).join('');
             } catch (e) {
-                document.getElementById('rooms-list').innerHTML = '<p style="color:red;text-align:center;">Ошибка подключения к удаленному бэкенду на Railway</p>';
+                document.getElementById('rooms-list').innerHTML = '<div class="empty-state" style="color:#E55;">Ошибка подключения к серверу</div>';
             }
         }
 
-        // 2. Отправляем новую комнату на бэкенд
         async function submitRoom() {
             const title = document.getElementById('room-title').value.trim();
             const description = document.getElementById('room-desc').value.trim();
@@ -210,7 +489,6 @@
                     body: JSON.stringify({ title, description, creator_id: tgUserId, tags })
                 });
 
-                // Очищаем форму, закрываем модалку и обновляем ленту
                 document.getElementById('room-title').value = '';
                 document.getElementById('room-desc').value = '';
                 document.getElementById('room-tags').value = '';
@@ -221,35 +499,21 @@
             }
         }
 
-        // 3. Подключение к живым WebSockets чатам Rust
         function openChat(roomId, roomTitle) {
             document.getElementById('chat-room-title').innerText = roomTitle;
-            document.getElementById('chat-messages').innerHTML = ''; 
+            document.getElementById('chat-messages').innerHTML = '';
             switchScreen('chat-screen');
-        
-            // Подключаемся к WebSocket на Railway [INDEX]
+
             wsConnection = new WebSocket(WS_URL + '/ws/' + roomId.toString());
-        
+
             wsConnection.onmessage = function(event) {
                 const msgBox = document.getElementById('chat-messages');
                 const newMsg = document.createElement('div');
-                
-                let messageText = event.data;
-                let isMyMessage = false;
-        
-                // Наш Python-бэкенд пока шлет чистый текст. 
-                // Чтобы сделать разделение, мы временно проверяем префикс (или имя), 
-                // а чуть позже научим бэкенд слать JSON с ID юзера.
-                // Сейчас, если сообщение отправлено тобой в этой сессии, мы пометим его красивым стилем:
-                newMsg.innerText = messageText;
-                
-                // По умолчанию ставим стиль чужого сообщения. 
-                // Когда настроим отправку ID, здесь будет строгая проверка:
-                newMsg.className = 'msg other-msg'; 
-                
+
+                newMsg.innerText = event.data;
+                newMsg.className = 'msg other-msg';
+
                 msgBox.appendChild(newMsg);
-                
-                // Элегантно и плавно скроллим чат в самый низ [INDEX]
                 msgBox.scrollTo({
                     top: msgBox.scrollHeight,
                     behavior: 'smooth'
@@ -257,25 +521,22 @@
             };
         }
 
-
         function sendWsMessage() {
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
             if (!text || !wsConnection) return;
-        
-            wsConnection.send(text); // Пушим в сокет
-            
-            // Локально отображаем свое сообщение со стилем my-msg для мгновенного отклика
+
+            wsConnection.send(text);
+
             const msgBox = document.getElementById('chat-messages');
             const newMsg = document.createElement('div');
             newMsg.className = 'msg my-msg';
             newMsg.innerText = text;
             msgBox.appendChild(newMsg);
             msgBox.scrollTop = msgBox.scrollHeight;
-        
+
             input.value = '';
         }
-
 
         function closeChat() {
             if (wsConnection) { wsConnection.close(); wsConnection = null; }
@@ -287,7 +548,6 @@
             document.getElementById('create-modal').style.display = show ? 'block' : 'none';
         }
 
-        // Стартуем первичную подгрузку комнат при входе
         fetchRooms();
     </script>
 </body>
