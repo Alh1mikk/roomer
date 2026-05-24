@@ -14,7 +14,7 @@ use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 use tower_http::cors::CorsLayer;
 use postgres_native_tls::MakeTlsConnector;
-use native-tls::TlsConnector;
+use native_tls::TlsConnector;
 
 // Клиент БД в tokio-postgres работает через Arc, так как запросы шлются конкурентно
 struct AppState {
@@ -45,7 +45,7 @@ struct RoomListResponse {
     tags: Vec<String>,
 }
 
-@tokio::main]
+#[tokio::main]
 async fn main() {
     // 1. Считываем плоские переменные окружения, которые задали в Railway
     let db_host = std::env::var("DB_HOST").unwrap_or_else(|_| "://supabase.com".to_string());
@@ -177,9 +177,11 @@ async fn create_room_handler(
         if clean_tag.is_empty() { continue; }
 
         let _ = state.db_client.execute("INSERT INTO tags (name) ON CONFLICT (name) DO NOTHING", &[]).await;
-        if let Ok(tag_row) = state.db_client.query_one("SELECT id FROM tags WHERE name = $1", &[&clean_tag]).await {
-            let tag_id: i64 = tag_row.get(0);
-            let _ = state.db_client.execute("INSERT INTO room_tags (room_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", &[&room_id, &tag_id]).await;
+        if let Ok(tag_rows) = state.db_client.query("SELECT id FROM tags WHERE name = $1", &[&clean_tag]).await {
+            if let Some(tag_row) = tag_rows.first() {
+                let tag_id: i64 = tag_row.get(0);
+                let _ = state.db_client.execute("INSERT INTO room_tags (room_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", &[&room_id, &tag_id]).await;
+            }
         }
     }
 
