@@ -10,5 +10,5 @@ futures-util = "0.3"
 tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-# Включаем нативную поддержку TLS прямо внутри самого драйвера
-tokio-postgres = { version = "0.7", features = ["runtime", "with-tls"] }
+tokio-postgres = { version = "0.7", features = ["runtime", "tls"] }
+
