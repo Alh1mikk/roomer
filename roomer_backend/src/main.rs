@@ -13,10 +13,8 @@ use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 use tower_http::cors::CorsLayer;
-use postgres_native_tls::MakeTlsConnector;
-use native_tls::TlsConnector;
+use postgres_rustls::MakeTlsConnector;
 
-// Клиент БД в tokio-postgres работает через Arc, так как запросы шлются конкурентно
 struct AppState {
     db_client: Arc<tokio_postgres::Client>,
     rooms_channels: Mutex<HashMap<i64, broadcast::Sender<String>>>,
@@ -47,16 +45,21 @@ struct RoomListResponse {
 
 #[tokio::main]
 async fn main() {
-    // 1. Считываем плоские переменные окружения, которые задали в Railway
+    // 1. Считываем плоские переменные окружения из панели Railway
     let db_host = std::env::var("DB_HOST").unwrap_or_else(|_| "://supabase.com".to_string());
     let db_user = std::env::var("DB_USER").unwrap_or_else(|_| "postgres.vdbevrnecyvmmxtsnpxn".to_string());
     let db_pass = std::env::var("DB_PASS").unwrap_or_else(|_| "roomerdataba".to_string());
 
-    // 2. Настраиваем SSL коннектор для Supabase
-    let tc = TlsConnector::builder().build().unwrap();
-    let connector = MakeTlsConnector::new(tc);
+    // 2. Настраиваем чистый Rustls коннектор с корневыми сертификатами интернета webpki
+    let mut root_store = rustls::RootCertStore::empty();
+    root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
+    
+    let config = rustls::ClientConfig::builder()
+        .with_root_certificates(root_store)
+        .with_no_client_auth();
+    let connector = MakeTlsConnector::new(config);
 
-    // 3. Конфигурируем подключение строго ПО ПОЛЯМ (Без URL строк!)
+    // 3. Подключаемся К IPv4 пуллеру Supabase строго по отдельным полям
     let (client, connection) = tokio_postgres::Config::new()
         .host(&db_host)
         .port(6543)
@@ -67,16 +70,16 @@ async fn main() {
         .await
         .expect("НЕ УДАЛОСЬ ПОДКЛЮЧИТЬСЯ К SUPABASE POSTGRESQL");
 
-    // Спавним фоновую задачу tokio для удержания соединения с БД
+    // Запускаем фоновый поток удержания пула
     tokio::spawn(async move {
         if let Err(e) = connection.await {
-            eprintln!("Ошибка соединения с БД: {}", e);
+            eprintln!("Ошибка пула базы данных: {}", e);
         }
     });
 
-    println!("✅ Облачная база данных Supabase успешно подключена через tokio-postgres!");
+    println!("✅ Облачная база данных Supabase успешно подключена через tokio-postgres + rustls!");
 
-    // Создаем таблицы на чистом драйвере
+    // Создаем структуру таблиц
     let _ = client.execute("CREATE TABLE IF NOT EXISTS users (id BIGSERIAL PRIMARY KEY, tg_id BIGINT UNIQUE NOT NULL, username TEXT NOT NULL, bio TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);", &[]).await;
     let _ = client.execute("CREATE TABLE IF NOT EXISTS tags (id BIGSERIAL PRIMARY KEY, name TEXT UNIQUE NOT NULL);", &[]).await;
     let _ = client.execute("CREATE TABLE IF NOT EXISTS rooms (id BIGSERIAL PRIMARY KEY, title TEXT NOT NULL, description TEXT, creator_id BIGINT, max_participants INTEGER DEFAULT 5, is_active BOOLEAN DEFAULT TRUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);", &[]).await;
@@ -117,7 +120,7 @@ async fn ws_handler(
 async fn handle_socket(socket: WebSocket, room_id: i64, state: Arc<AppState>) {
     let (mut sender, mut receiver) = socket.split();
 
-    // Загружаем историю чата через tokio-postgres
+    // Загрузка старой истории чата
     if let Ok(rows) = state.db_client.query("SELECT text FROM messages WHERE room_id = $1 ORDER BY id ASC", &[&room_id]).await {
         for row in rows {
             let old_msg: String = row.get(0);
@@ -148,7 +151,6 @@ async fn handle_socket(socket: WebSocket, room_id: i64, state: Arc<AppState>) {
             let clean_text = text.trim().to_string();
             if clean_text.is_empty() { continue; }
 
-            // Инсерт сообщения
             let _ = db_clone.execute("INSERT INTO messages (room_id, text) VALUES ($1, $2)", &[&room_id, &clean_text]).await;
             let _ = tx_clone.send(clean_text);
         }
@@ -164,7 +166,6 @@ async fn create_room_handler(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<CreateRoomInput>,
 ) -> Json<RoomResponse> {
-    // В tokio-postgres результат инсерта с RETURNING забирается через query_one
     let room_row = state.db_client.query_one(
         "INSERT INTO rooms (title, description, creator_id) VALUES ($1, $2, $3) RETURNING id",
         &[&payload.title, &payload.description, &payload.creator_id]
