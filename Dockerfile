@@ -1,15 +1,11 @@
-# Шаг 1: Компиляция Rust-кода на самой свежей версии компилятора
+# Шаг 1: Компиляция Rust-кода на свежей версии
 FROM rust:1.89-slim AS builder
 WORKDIR /app
 
 # Копируем весь репозиторий в контейнер
 COPY . .
 
-# ДОБАВЛЕНО: Объявляем аргумент сборки для Railway
-ARG DATABASE_URL
-ENV DATABASE_URL=$DATABASE_URL
-
-# Заходим внутрь папки бэкенда и запускаем сборку, передавая заглушку для sqlx offline
+# Собираем бинарник. SQLX_OFFLINE говорит компилятору НЕ подключаться к базе в момент сборки
 RUN cd roomer_backend && SQLX_OFFLINE=true cargo build --release
 
 # Шаг 2: Легковесный запуск готового бинарника
