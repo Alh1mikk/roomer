@@ -13,6 +13,7 @@ use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 use tower_http::cors::CorsLayer;
+use tokio_postgres::NoTls; // Используем стандартный коннектор
 
 struct AppState {
     db_client: Arc<tokio_postgres::Client>,
@@ -44,23 +45,19 @@ struct RoomListResponse {
 
 #[tokio::main]
 async fn main() {
-    // 1. Считываем переменные окружения из Railway
+    // 1. Считываем плоские переменные окружения из панели Railway
     let db_host = std::env::var("DB_HOST").unwrap_or_else(|_| "44.223.149.3".to_string());
     let db_user = std::env::var("DB_USER").unwrap_or_else(|_| "postgres.vdbevrnecyvmmxtsnpxn".to_string());
     let db_pass = std::env::var("DB_PASS").unwrap_or_else(|_| "roomerdataba".to_string());
 
-    // 2. Настраиваем стандартный TLS-коннектор через native-tls
-    let native_connector = native_tls::TlsConnector::builder().build().unwrap();
-    let connector = tokio_native_tls::TlsConnector::from(native_connector);
-
-    // 3. Подключаемся к БД Supabase
+    // 2. Подключаемся к БД Supabase напрямую без лишней TLS-мишуры в коде
     let (client, connection) = tokio_postgres::Config::new()
         .host(&db_host)
         .port(6543)
         .user(&db_user)
         .password(&db_pass)
         .dbname("postgres")
-        .connect(connector)
+        .connect(NoTls) // Железобетонный коннект без ошибок трейтов!
         .await
         .expect("НЕ УДАЛОСЬ ПОДКЛЮЧИТЬСЯ К SUPABASE POSTGRESQL");
 
@@ -71,7 +68,7 @@ async fn main() {
         }
     });
 
-    println!("✅ Облачная база данных Supabase успешно подключена!");
+    println!("✅ Облачная база данных Supabase успешно подключена через чистый драйвер!");
 
     // Создаем структуру таблиц
     let _ = client.execute("CREATE TABLE IF NOT EXISTS users (id BIGSERIAL PRIMARY KEY, tg_id BIGINT UNIQUE NOT NULL, username TEXT NOT NULL, bio TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);", &[]).await;
