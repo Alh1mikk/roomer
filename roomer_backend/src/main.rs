@@ -13,7 +13,7 @@ use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 use tower_http::cors::CorsLayer;
-use postgres_rustls::MakeTlsConnector;
+use tokio_postgres_rustls::MakeRustlsConnect;
 
 struct AppState {
     db_client: Arc<tokio_postgres::Client>,
@@ -57,7 +57,7 @@ async fn main() {
     let config = rustls::ClientConfig::builder()
         .with_root_certificates(root_store)
         .with_no_client_auth();
-    let connector = MakeTlsConnector::new(config);
+    let connector = MakeRustlsConnect::new(config);
 
     // 3. Подключаемся К IPv4 пуллеру Supabase строго по отдельным полям
     let (client, connection) = tokio_postgres::Config::new()
