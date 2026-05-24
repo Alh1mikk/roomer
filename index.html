@@ -511,10 +511,20 @@
                 const msgBox = document.getElementById('chat-messages');
                 const newMsg = document.createElement('div');
 
-                const msgData = JSON.parse(event.data);
-                newMsg.innerText = msgData.text;
+                let text, senderId;
 
-                if (Number(msgData.sender_id) === Number(tgUserId)) {
+                try {
+                    const msgData = JSON.parse(event.data);
+                    text = msgData.text;
+                    senderId = msgData.sender_id;
+                } catch {
+                    text = event.data;
+                    senderId = null;
+                }
+
+                newMsg.innerText = text;
+
+                if (senderId != null && Number(senderId) === Number(tgUserId)) {
                     newMsg.className = 'msg my-msg';
                 } else {
                     newMsg.className = 'msg other-msg';
@@ -534,13 +544,6 @@
             if (!text || !wsConnection) return;
 
             wsConnection.send(JSON.stringify({ "text": text, "sender_id": tgUserId }));
-
-            const msgBox = document.getElementById('chat-messages');
-            const newMsg = document.createElement('div');
-            newMsg.className = 'msg my-msg';
-            newMsg.innerText = text;
-            msgBox.appendChild(newMsg);
-            msgBox.scrollTop = msgBox.scrollHeight;
 
             input.value = '';
         }
