@@ -13,8 +13,7 @@ use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 use tower_http::cors::CorsLayer;
-use tokio_postgres::tls::MakeTlsConnect;
-use std::io::Write; // Для сброса буфера логов
+use tokio_postgres_rustls::MakeTlsConnector; // ИСПРАВЛЕНО: импортируем структуру CONNECTOR, а не приватный трейт CONNECT
 
 struct AppState {
     db_client: Arc<tokio_postgres::Client>,
@@ -46,7 +45,7 @@ struct RoomListResponse {
 
 #[tokio::main]
 async fn main() {
-    // 🔥 ФИКС ПАНИКИ RUSTLS: Явно регистрируем крипто-провайдер ring для Supabase [INDEX]
+    // Явно регистрируем крипто-провайдер ring для Supabase [INDEX]
     let _ = rustls::crypto::ring::default_provider().install_default();
 
     // 1. Считываем плоские переменные окружения из панели Railway
@@ -54,16 +53,14 @@ async fn main() {
     let db_user = std::env::var("DB_USER").unwrap_or_else(|_| "postgres.vdbevrnecyvmmxtsnpxn".to_string());
     let db_pass = std::env::var("DB_PASS").unwrap_or_else(|_| "roomerdataba".to_string());
 
-    // 2. Настраиваем чистый Rustls коннектор
+    // 2. Настраиваем чистый Rustls коннектор с корневыми сертификатами webpki [INDEX]
     let mut root_store = rustls::RootCertStore::empty();
     root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
     
     let config = rustls::ClientConfig::builder()
         .with_root_certificates(root_store)
         .with_no_client_auth();
-    
-    // Инициализируем коннектор напрямую через структуру из библиотеки
-    let connector = tokio_postgres_rustls::MakeTlsConnector::new(config);
+    let connector = MakeTlsConnector::new(config);
 
     // 3. Подключаемся к БД
     let (client, connection) = tokio_postgres::Config::new()
@@ -84,7 +81,6 @@ async fn main() {
     });
 
     println!("✅ Облачная база данных Supabase успешно подключена через tokio-postgres + rustls!");
-    std::io::stdout().flush().unwrap(); // Проталкиваем логи в Docker
 
     // Создаем структуру таблиц
     let _ = client.execute("CREATE TABLE IF NOT EXISTS users (id BIGSERIAL PRIMARY KEY, tg_id BIGINT UNIQUE NOT NULL, username TEXT NOT NULL, bio TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);", &[]).await;
@@ -94,7 +90,6 @@ async fn main() {
     let _ = client.execute("CREATE TABLE IF NOT EXISTS messages (id BIGSERIAL PRIMARY KEY, room_id BIGINT REFERENCES rooms(id) ON DELETE CASCADE, text TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);", &[]).await;
 
     println!("📋 Все таблицы в Supabase успешно проверены");
-    std::io::stdout().flush().unwrap();
 
     let shared_state = Arc::new(AppState {
         db_client: Arc::new(client),
@@ -106,13 +101,12 @@ async fn main() {
         .route("/rooms", post(create_room_handler))
         .route("/rooms", get(get_rooms_handler))
         .route("/ws/:room_id", get(ws_handler))
-        .layer(CorsLayer::very_permissive()) // Разрешаем CORS [INDEX]
+        .layer(CorsLayer::very_permissive())
         .with_state(shared_state);
 
     let port = std::env::var("PORT").unwrap_or_else(|_| "3000".to_string());
     let addr: SocketAddr = format!("0.0.0.0:{}", port).parse().unwrap();
     println!("🚀 Сервер Roomer запущен на порту {}", port);
-    std::io::stdout().flush().unwrap();
 
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
