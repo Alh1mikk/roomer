@@ -1,5 +1,5 @@
 # Шаг 1: Компиляция Rust-кода
-FROM rust:1.85-slim AS builder
+FROM rust:1.89-slim AS builder
 WORKDIR /app
 
 # Ставим утилиты сборки и Си-библиотеку sqlite, чтобы компилятор не падал
