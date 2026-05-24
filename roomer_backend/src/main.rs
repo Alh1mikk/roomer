@@ -49,13 +49,13 @@ async fn main() {
     let db_user = std::env::var("DB_USER").unwrap_or_else(|_| "postgres.vdbevrnecyvmmxtsnpxn".to_string());
     let db_pass = std::env::var("DB_PASS").unwrap_or_else(|_| "roomerdataba".to_string());
 
-    // 2. Настраиваем безопасный TLS-коннектор без проверки хостов для прямого IP [INDEX]
+    // 2. Настраиваем безопасный TLS-коннектор напрямую через native-tls
     let mut tls_builder = native_tls::TlsConnector::builder();
     tls_builder.danger_accept_invalid_hostnames(true);
     let native_tls_connector = tls_builder.build().unwrap();
     
-    // Используем правильную структуру из официального плагина [INDEX]
-    let connector = tokio_postgres_native_tls::MakeTlsConnector::new(native_tls_connector);
+    // Обертка-адаптер пишется через встроенный тип самого драйвера
+    let connector = tokio_postgres::tls::MakeTlsConnector::new(native_tls_connector);
 
     // 3. Подключаемся к БД Supabase с TLS шифрованием через IPv4
     let (client, connection) = tokio_postgres::Config::new()
