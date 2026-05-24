@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomer</title>
+    <!-- Официальный скрипт Telegram SDK -->
+    <script src="https://telegram.org"></script>
+    <style>
+        body {
+            background-color: #0F0F13;
+            color: #FFFFFF;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 16px;
+        }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn-add { background: #7C4DFF; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .card { background: #1A1A24; padding: 16px; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; }
+        .card h3 { margin: 0 0 8px 0; font-size: 18px; }
+        .card p { margin: 0 0 12px 0; color: #AAAAAA; font-size: 14px; }
+        .tag { display: inline-block; background: rgba(124, 77, 255, 0.2); color: #B388FF; border: 1px solid #7C4DFF; padding: 4px 8px; border-radius: 6px; font-size: 12px; margin-right: 6px; margin-bottom: 6px; }
+        
+        /* Стили для формы создания комнаты */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0F0F13; padding: 16px; box-sizing: border-box; }
+        input, textarea { width: 100%; background: #1A1A24; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; margin-bottom: 16px; box-sizing: border-box; }
+        .btn-submit { width: 100%; background: #7C4DFF; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+    <!-- ЭКРАН 1: ЛЕНТА КОМНАТ -->
+    <div id="feed-screen">
+        <div class="header">
+            <h2>🌟 Активные комнаты</h2>
+            <button class="btn-add" onclick="toggleModal(true)">+</button>
+        </div>
+        <div id="rooms-list">Загрузка комнат...</div>
+    </div>
+
+    <!-- ЭКРАН 2: ФОРМА СОЗДАНИЯ -->
+    <div id="create-modal" class="modal">
+        <h2>Запустить свой движ</h2>
+        <input type="text" id="room-title" placeholder="Название комнаты (например: Кодим на Rust)">
+        <textarea id="room-desc" rows="3" placeholder="Описание атмосферы..."></textarea>
+        <input type="text" id="room-tags" placeholder="Кастомные теги через запятую (rust, diy, чат)">
+        <button class="btn-submit" onclick="submitRoom()">Создать комнату</button>
+        <button class="btn-submit" style="background:#333; margin-top: 10px;" onclick="toggleModal(false)">Назад</button>
+    </div>
+
+    <script>
+        // Инициализируем Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+
+        // Получаем ID юзера из ТГ или ставим заглушку
+        const tgUserId = tg.initDataUnsafe?.user?.id || 99999;
+
+        // 1. Скачиваем комнаты с нашего Rust-бэкенда
+        async function fetchRooms() {
+            try {
+                const res = await fetch('http://127.0.0');
+                const rooms = await res.json();
+                const list = document.getElementById('rooms-list');
+                
+                if (rooms.length === 0) {
+                    list.innerHTML = '<p style="text-align:center;color:#666;">Комнат пока нет. Будь первым! 🚀</p>';
+                    return;
+                }
+
+                list.innerHTML = rooms.map(room => `
+                    <div class="card" onclick="alert('Тут будет WebSocket чат для комнаты ' + ${room.id})">
+                        <h3>${room.title}</h3>
+                        <p>${room.description || ''}</p>
+                        <div>${room.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}</div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                document.getElementById('rooms-list').innerHTML = '<p style="color:red;">Ошибка подключения к Rust-бэкенду</p>';
+            }
+        }
+
+        // 2. Отправляем новую комнату на Rust-бэкенд
+        async function submitRoom() {
+            const title = document.getElementById('room-title').value.trim();
+            const description = document.getElementById('room-desc').value.trim();
+            const tagsRaw = document.getElementById('room-tags').value;
+
+            if (!title) return;
+
+            const tags = tagsRaw.split(',').map(t => t.trim()).filter(t => t.length > 0);
+
+            await fetch('http://127.0.0', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, description, creator_id: tgUserId, tags })
+            });
+
+            toggleModal(false);
+            fetchRooms();
+        }
+
+        function toggleModal(show) {
+            document.getElementById('create-modal').style.display = show ? 'block' : 'none';
+        }
+
+        // Запускаем первичную подгрузку
+        fetchRooms();
+    </script>
+</body>
+</html>
