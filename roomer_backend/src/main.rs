@@ -13,7 +13,7 @@ use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 use tower_http::cors::CorsLayer;
-use tokio_postgres_rustls::MakeTlsConnect;
+use tokio_postgres::tls::MakeTlsConnect;
 use std::io::Write; // Для сброса буфера логов
 
 struct AppState {
@@ -54,14 +54,16 @@ async fn main() {
     let db_user = std::env::var("DB_USER").unwrap_or_else(|_| "postgres.vdbevrnecyvmmxtsnpxn".to_string());
     let db_pass = std::env::var("DB_PASS").unwrap_or_else(|_| "roomerdataba".to_string());
 
-    // 2. Настраиваем чистый Rustls коннектор с корневыми сертификатами webpki [INDEX]
+    // 2. Настраиваем чистый Rustls коннектор
     let mut root_store = rustls::RootCertStore::empty();
     root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
     
     let config = rustls::ClientConfig::builder()
         .with_root_certificates(root_store)
         .with_no_client_auth();
-    let connector = MakeTlsConnect::new(config);
+    
+    // Инициализируем коннектор напрямую через структуру из библиотеки
+    let connector = tokio_postgres_rustls::MakeTlsConnector::new(config);
 
     // 3. Подключаемся к БД
     let (client, connection) = tokio_postgres::Config::new()
