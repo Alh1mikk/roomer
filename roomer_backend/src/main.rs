@@ -13,7 +13,6 @@ use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 use tower_http::cors::CorsLayer;
-use tokio_postgres::NoTls; // Используем стандартный коннектор
 
 struct AppState {
     db_client: Arc<tokio_postgres::Client>,
@@ -50,14 +49,22 @@ async fn main() {
     let db_user = std::env::var("DB_USER").unwrap_or_else(|_| "postgres.vdbevrnecyvmmxtsnpxn".to_string());
     let db_pass = std::env::var("DB_PASS").unwrap_or_else(|_| "roomerdataba".to_string());
 
-    // 2. Подключаемся к БД Supabase напрямую без лишней TLS-мишуры в коде
+    // 2. Инициализируем официальный TLS-клиент, встроенный в tokio-postgres
+    let mut tls_builder = native_tls::TlsConnector::builder();
+    // Отключаем проверку доменного имени, так как мы стучимся по прямому IP-адресу
+    tls_builder.danger_accept_invalid_hostnames(true);
+    
+    let native_tls_connector = tls_builder.build().unwrap();
+    let connector = tokio_postgres::tls::MakeTlsConnector::new(native_tls_connector);
+
+    // 3. Конфигурируем и подключаемся к БД Supabase с TLS шифрованием через IPv4
     let (client, connection) = tokio_postgres::Config::new()
         .host(&db_host)
         .port(6543)
         .user(&db_user)
         .password(&db_pass)
         .dbname("postgres")
-        .connect(NoTls) // Железобетонный коннект без ошибок трейтов!
+        .connect(connector) // Передаем безопасный шифрованный коннектор
         .await
         .expect("НЕ УДАЛОСЬ ПОДКЛЮЧИТЬСЯ К SUPABASE POSTGRESQL");
 
@@ -68,7 +75,7 @@ async fn main() {
         }
     });
 
-    println!("✅ Облачная база данных Supabase успешно подключена через чистый драйвер!");
+    println!("✅ Облачная база данных Supabase успешно подключена через нативный TLS!");
 
     // Создаем структуру таблиц
     let _ = client.execute("CREATE TABLE IF NOT EXISTS users (id BIGSERIAL PRIMARY KEY, tg_id BIGINT UNIQUE NOT NULL, username TEXT NOT NULL, bio TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);", &[]).await;
@@ -209,3 +216,4 @@ async fn get_rooms_handler(State(state): State<Arc<AppState>>) -> Json<Vec<RoomL
 
     Json(rooms)
 }
+
