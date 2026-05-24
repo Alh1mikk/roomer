@@ -45,6 +45,7 @@ struct RoomListResponse {
 
 #[tokio::main]
 async fn main() {
+    // Считываем строку подключения строго в рантайме при запуске контейнера
     let db_url = std::env::var("DATABASE_URL")
         .expect("ПЕРЕМЕННАЯ ОКРУЖЕНИЯ DATABASE_URL НЕ НАЙДЕНА!");
 
@@ -57,11 +58,11 @@ async fn main() {
     println!("✅ Облачная база данных Supabase успешно подключена!");
 
     // Создаем таблицы в базе данных Supabase
-    sqlx::query("CREATE TABLE IF NOT EXISTS users (id BIGSERIAL PRIMARY KEY, tg_id BIGINT UNIQUE NOT NULL, username TEXT NOT NULL, bio TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);").execute(&pool).await.unwrap();
-    sqlx::query("CREATE TABLE IF NOT EXISTS tags (id BIGSERIAL PRIMARY KEY, name TEXT UNIQUE NOT NULL);").execute(&pool).await.unwrap();
-    sqlx::query("CREATE TABLE IF NOT EXISTS rooms (id BIGSERIAL PRIMARY KEY, title TEXT NOT NULL, description TEXT, creator_id BIGINT, max_participants INTEGER DEFAULT 5, is_active BOOLEAN DEFAULT TRUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);").execute(&pool).await.unwrap();
-    sqlx::query("CREATE TABLE IF NOT EXISTS room_tags (room_id BIGINT REFERENCES rooms(id) ON DELETE CASCADE, tag_id BIGINT REFERENCES tags(id) ON DELETE CASCADE, PRIMARY KEY (room_id, tag_id));").execute(&pool).await.unwrap();
-    sqlx::query("CREATE TABLE IF NOT EXISTS messages (id BIGSERIAL PRIMARY KEY, room_id BIGINT REFERENCES rooms(id) ON DELETE CASCADE, text TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);").execute(&pool).await.unwrap();
+    let _ = sqlx::query("CREATE TABLE IF NOT EXISTS users (id BIGSERIAL PRIMARY KEY, tg_id BIGINT UNIQUE NOT NULL, username TEXT NOT NULL, bio TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);").execute(&pool).await;
+    let _ = sqlx::query("CREATE TABLE IF NOT EXISTS tags (id BIGSERIAL PRIMARY KEY, name TEXT UNIQUE NOT NULL);").execute(&pool).await;
+    let _ = sqlx::query("CREATE TABLE IF NOT EXISTS rooms (id BIGSERIAL PRIMARY KEY, title TEXT NOT NULL, description TEXT, creator_id BIGINT, max_participants INTEGER DEFAULT 5, is_active BOOLEAN DEFAULT TRUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);").execute(&pool).await;
+    let _ = sqlx::query("CREATE TABLE IF NOT EXISTS room_tags (room_id BIGINT REFERENCES rooms(id) ON DELETE CASCADE, tag_id BIGINT REFERENCES tags(id) ON DELETE CASCADE, PRIMARY KEY (room_id, tag_id));").execute(&pool).await;
+    let _ = sqlx::query("CREATE TABLE IF NOT EXISTS messages (id BIGSERIAL PRIMARY KEY, room_id BIGINT REFERENCES rooms(id) ON DELETE CASCADE, text TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);").execute(&pool).await;
 
     println!("📋 Все таблицы в Supabase успешно проверены");
 
@@ -75,7 +76,7 @@ async fn main() {
         .route("/rooms", post(create_room_handler))
         .route("/rooms", get(get_rooms_handler))
         .route("/ws/:room_id", get(ws_handler))
-        .layer(CorsLayer::very_permissive()) // Разрешаем CORS-запросы с гитхаба
+        .layer(CorsLayer::very_permissive())
         .with_state(shared_state);
 
     let port = std::env::var("PORT").unwrap_or_else(|_| "3000".to_string());
@@ -97,15 +98,17 @@ async fn ws_handler(
 async fn handle_socket(socket: WebSocket, room_id: i64, state: Arc<AppState>) {
     let (mut sender, mut receiver) = socket.split();
 
-    let history_rows = sqlx::query("SELECT text FROM messages WHERE room_id = $1 ORDER BY id ASC")
+    // Чистый рантайм-запрос к базе данных
+    if let Ok(history_rows) = sqlx::query("SELECT text FROM messages WHERE room_id = $1 ORDER BY id ASC")
         .bind(room_id)
         .fetch_all(&state.pool)
         .await
-        .unwrap();
-
-    for row in history_rows {
-        let old_msg: String = row.get("text");
-        if sender.send(Message::Text(old_msg)).await.is_err() { return; }
+    {
+        for row in history_rows {
+            if let Ok(old_msg) = row.try_get::<String, _>("text") {
+                if sender.send(Message::Text(old_msg)).await.is_err() { return; }
+            }
+        }
     }
 
     let tx = {
@@ -148,6 +151,7 @@ async fn create_room_handler(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<CreateRoomInput>,
 ) -> Json<RoomResponse> {
+    // Используем чистый sqlx::query вместо макросов
     let room_row = sqlx::query("INSERT INTO rooms (title, description, creator_id) VALUES ($1, $2, $3) RETURNING id")
         .bind(&payload.title).bind(&payload.description).bind(payload.creator_id)
         .fetch_one(&state.pool).await.unwrap();
@@ -158,10 +162,11 @@ async fn create_room_handler(
         let clean_tag = raw_tag.trim().to_lowercase();
         if clean_tag.is_empty() { continue; }
 
-        sqlx::query("INSERT INTO tags (name) ON CONFLICT (name) DO NOTHING").bind(&clean_tag).execute(&state.pool).await.unwrap();
-        let tag_row = sqlx::query("SELECT id FROM tags WHERE name = $1").bind(&clean_tag).fetch_one(&state.pool).await.unwrap();
-        let tag_id: i64 = tag_row.get("id");
-        sqlx::query("INSERT INTO room_tags (room_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING").bind(room_id).bind(tag_id).execute(&state.pool).await.unwrap();
+        let _ = sqlx::query("INSERT INTO tags (name) ON CONFLICT (name) DO NOTHING").bind(&clean_tag).execute(&state.pool).await;
+        if let Ok(tag_row) = sqlx::query("SELECT id FROM tags WHERE name = $1").bind(&clean_tag).fetch_one(&state.pool).await {
+            let tag_id: i64 = tag_row.get("id");
+            let _ = sqlx::query("INSERT INTO room_tags (room_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING").bind(room_id).bind(tag_id).execute(&state.pool).await;
+        }
     }
 
     Json(RoomResponse { status: "success".to_string(), room_id })
@@ -180,14 +185,19 @@ async fn get_rooms_handler(State(state): State<Arc<AppState>>) -> Json<Vec<RoomL
     .fetch_all(&state.pool).await.unwrap();
 
     let rooms = rows.into_iter().map(|row| {
-        let tags_str: Option<String> = row.get("room_tags");
+        let tags_str: Option<String> = row.try_get("room_tags").unwrap_or(None);
         let tags = match tags_str {
             Some(s) => s.split(',').map(|t| t.to_string()).collect(),
             None => vec![],
         };
-        // ИСПРАВЛЕНО: Теперь синтаксис получения строки title строго соответствует стандартам Rust sqlx
-        let title: String = row.get("title");
-        RoomListResponse { id: row.get("id"), title, description: row.get("description"), creator_id: row.get("creator_id"), tags }
+        let title: String = row.try_get("title").unwrap_or_else(|_| "Без названия".to_string());
+        RoomListResponse { 
+            id: row.try_get("id").unwrap_or(0), 
+            title, 
+            description: row.try_get("description").unwrap_or(None), 
+            creator_id: row.try_get("creator_id").unwrap_or(None), 
+            tags 
+        }
     }).collect();
 
     Json(rooms)
