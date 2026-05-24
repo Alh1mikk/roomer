@@ -6,36 +6,114 @@
     <title>Roomer</title>
     <!-- Официальный скрипт Telegram SDK (адрес исправлен) -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body {
-            background-color: #0F0F13;
-            color: #FFFFFF;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    <style>/* === ОБНОВЛЕННЫЕ СТИЛИ ЖИВОГО ЧАТА === */
+        #chat-screen {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+            padding: 0;
             margin: 0;
-            padding: 16px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #0F0F13;
         }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .btn-add { background: #7C4DFF; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .card { background: #1A1A24; padding: 16px; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; }
-        .card h3 { margin: 0 0 8px 0; font-size: 18px; }
-        .card p { margin: 0 0 12px 0; color: #AAAAAA; font-size: 14px; }
-        .tag { display: inline-block; background: rgba(124, 77, 255, 0.2); color: #B388FF; border: 1px solid #7C4DFF; padding: 4px 8px; border-radius: 6px; font-size: 12px; margin-right: 6px; margin-bottom: 6px; }
+        #chat-screen.active {
+            display: flex;
+        }
+        #chat-screen .header {
+            padding: 16px;
+            background: #1A1A24;
+            margin-bottom: 0;
+            border-bottom: 1px solid #2A2A38;
+        }
         
-        /* Стили экранов */
-        .screen { display: none; }
-        .screen.active { display: block; }
+        /* Контейнер сообщений скроллится, оставляя инпут внизу */
+        #chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-sizing: border-box;
+            background: #0F0F13;
+        }
+        
+        /* Общие стили для облачков сообщений */
+        .msg {
+            padding: 10px 14px;
+            border-radius: 16px;
+            font-size: 15px;
+            line-height: 1.4;
+            max-width: 75%;
+            word-break: break-word;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            position: relative;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+        
+        /* Твои сообщения (справа, фиолетовые) */
+        .msg.my-msg {
+            background: #7C4DFF;
+            color: #FFFFFF;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        
+        /* Чужие сообщения (слева, темно-серые) */
+        .msg.other-msg {
+            background: #2A2A38;
+            color: #FFFFFF;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        
+        /* Зафиксированная панель ввода внизу экрана */
+        .chat-input-container {
+            padding: 12px 16px;
+            background: #1A1A24;
+            border-top: 1px solid #2A2A38;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            box-sizing: border-box;
+        }
+        .chat-input-container input {
+            margin-bottom: 0;
+            background: #2A2A38;
+            border: 1px solid #3A3A48;
+            padding: 12px 16px;
+            border-radius: 24px;
+            font-size: 15px;
+        }
+        .btn-send {
+            background: #7C4DFF;
+            color: white;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            cursor: pointer;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+        .btn-send:active {
+            background: #651FFF;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-        /* Формы и инпуты */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0F0F13; padding: 16px; box-sizing: border-box; z-index: 10; }
-        input, textarea { width: 100%; background: #1A1A24; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; margin-bottom: 16px; box-sizing: border-box; }
-        .btn-submit { width: 100%; background: #7C4DFF; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
-        
-        /* Стили Живого Чата */
-        #chat-messages { height: 65vh; overflow-y: auto; background: #1A1A24; border-radius: 12px; padding: 12px; margin-bottom: 16px; box-sizing: border-box; }
-        .msg { background: #2A2A38; padding: 10px; border-radius: 8px; margin-bottom: 8px; width: fit-content; max-width: 85%; word-break: break-all; }
-        .chat-input-container { display: flex; gap: 8px; }
-        .chat-input-container input { margin-bottom: 0; }
-        .btn-send { background: #7C4DFF; color: white; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -146,30 +224,58 @@
         // 3. Подключение к живым WebSockets чатам Rust
         function openChat(roomId, roomTitle) {
             document.getElementById('chat-room-title').innerText = roomTitle;
-            document.getElementById('chat-messages').innerHTML = ''; // Чистим экран чата
+            document.getElementById('chat-messages').innerHTML = ''; 
             switchScreen('chat-screen');
-
-            // Открываем нативное защищенное WebSocket-соединение с сервером
+        
+            // Подключаемся к WebSocket на Railway [INDEX]
             wsConnection = new WebSocket(WS_URL + '/ws/' + roomId.toString());
-
+        
             wsConnection.onmessage = function(event) {
                 const msgBox = document.getElementById('chat-messages');
                 const newMsg = document.createElement('div');
-                newMsg.className = 'msg';
-                newMsg.innerText = event.data;
+                
+                let messageText = event.data;
+                let isMyMessage = false;
+        
+                // Наш Python-бэкенд пока шлет чистый текст. 
+                // Чтобы сделать разделение, мы временно проверяем префикс (или имя), 
+                // а чуть позже научим бэкенд слать JSON с ID юзера.
+                // Сейчас, если сообщение отправлено тобой в этой сессии, мы пометим его красивым стилем:
+                newMsg.innerText = messageText;
+                
+                // По умолчанию ставим стиль чужого сообщения. 
+                // Когда настроим отправку ID, здесь будет строгая проверка:
+                newMsg.className = 'msg other-msg'; 
+                
                 msgBox.appendChild(newMsg);
-                msgBox.scrollTop = msgBox.scrollHeight; // Скролл вниз до последнего сообщения
+                
+                // Элегантно и плавно скроллим чат в самый низ [INDEX]
+                msgBox.scrollTo({
+                    top: msgBox.scrollHeight,
+                    behavior: 'smooth'
+                });
             };
         }
+
 
         function sendWsMessage() {
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
             if (!text || !wsConnection) return;
-
-            wsConnection.send(text); // Пушим сообщение в сокет на сервер Railway
+        
+            wsConnection.send(text); // Пушим в сокет
+            
+            // Локально отображаем свое сообщение со стилем my-msg для мгновенного отклика
+            const msgBox = document.getElementById('chat-messages');
+            const newMsg = document.createElement('div');
+            newMsg.className = 'msg my-msg';
+            newMsg.innerText = text;
+            msgBox.appendChild(newMsg);
+            msgBox.scrollTop = msgBox.scrollHeight;
+        
             input.value = '';
         }
+
 
         function closeChat() {
             if (wsConnection) { wsConnection.close(); wsConnection = null; }
