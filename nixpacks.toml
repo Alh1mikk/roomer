@@ -1,7 +1,7 @@
 [phases.build]
-# Явно говорим зайти в папку и запустить сборку Rust
+# Заходим в папку и компилируем релизный бинарник
 cmds = ["cd roomer_backend && cargo build --release"]
 
 [start]
-# Явно говорим, откуда запускать готовый бинарник
-cmd = "./roomer_backend/target/release/roomer_backend"
+# Заходим в папку бэкенда и запускаем его через встроенную команду cargo
+cmd = "cd roomer_backend && cargo run --release"
