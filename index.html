@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Roomer</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -329,6 +329,7 @@
             display: flex;
             gap: 10px;
             align-items: center;
+            padding-bottom: calc(12px + env(safe-area-inset-bottom));
         }
 
         .chat-input-container input {
@@ -510,8 +511,14 @@
                 const msgBox = document.getElementById('chat-messages');
                 const newMsg = document.createElement('div');
 
-                newMsg.innerText = event.data;
-                newMsg.className = 'msg other-msg';
+                const msgData = JSON.parse(event.data);
+                newMsg.innerText = msgData.text;
+
+                if (Number(msgData.sender_id) === Number(tgUserId)) {
+                    newMsg.className = 'msg my-msg';
+                } else {
+                    newMsg.className = 'msg other-msg';
+                }
 
                 msgBox.appendChild(newMsg);
                 msgBox.scrollTo({
@@ -526,7 +533,7 @@
             const text = input.value.trim();
             if (!text || !wsConnection) return;
 
-            wsConnection.send(text);
+            wsConnection.send(JSON.stringify({ "text": text, "sender_id": tgUserId }));
 
             const msgBox = document.getElementById('chat-messages');
             const newMsg = document.createElement('div');
