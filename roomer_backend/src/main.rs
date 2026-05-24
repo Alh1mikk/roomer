@@ -44,15 +44,15 @@ struct RoomListResponse {
 
 #[tokio::main]
 async fn main() {
-    // Явно регистрируем крипто-провайдер ring для Supabase [INDEX]
+    // Инициализируем крипто-провайдер ring для Supabase [INDEX]
     let _ = rustls::crypto::ring::default_provider().install_default();
 
-    // 1. Считываем плоские переменные окружения из панели Railway
+    // 1. Считываем переменные окружения из Railway
     let db_host = std::env::var("DB_HOST").unwrap_or_else(|_| "44.223.149.3".to_string());
     let db_user = std::env::var("DB_USER").unwrap_or_else(|_| "postgres.vdbevrnecyvmmxtsnpxn".to_string());
     let db_pass = std::env::var("DB_PASS").unwrap_or_else(|_| "roomerdataba".to_string());
 
-    // 2. Настраиваем чистый Rustls коннектор с корневыми сертификатами webpki
+    // 2. Настраиваем чистый Rustls коннектор через стабильный postgres-rustls [INDEX]
     let mut root_store = rustls::RootCertStore::empty();
     root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
     
@@ -60,11 +60,10 @@ async fn main() {
         .with_root_certificates(root_store)
         .with_no_client_auth();
     
-    // ИСПОЛЬЗУЕМ ПОЛНЫЙ ПУТЬ К СТРУКТУРЕ (БЕЗ ИМПОРТОВ ВВЕРХУ):
-    let connector = tokio_postgres_rustls::MakeTlsConnector::new(config);
+    // ИСПОЛЬЗУЕМ СТАБИЛЬНУЮ СТРУКТУРУ ИЗ POSTGRES_RUSTLS [INDEX]
+    let connector = postgres_rustls::MakeTlsConnector::new(config);
 
-
-    // 3. Подключаемся к БД
+    // 3. Подключаемся к БД Supabase
     let (client, connection) = tokio_postgres::Config::new()
         .host(&db_host)
         .port(6543)
@@ -82,7 +81,7 @@ async fn main() {
         }
     });
 
-    println!("✅ Облачная база данных Supabase успешно подключена через tokio-postgres + rustls!");
+    println!("✅ Облачная база данных Supabase успешно подключена!");
 
     // Создаем структуру таблиц
     let _ = client.execute("CREATE TABLE IF NOT EXISTS users (id BIGSERIAL PRIMARY KEY, tg_id BIGINT UNIQUE NOT NULL, username TEXT NOT NULL, bio TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);", &[]).await;
