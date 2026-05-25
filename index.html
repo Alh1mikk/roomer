@@ -478,15 +478,15 @@
     </div>
 
     <script>
-        // === 🛠️ НАСТРОЙКА АДРЕСОВ ПРОДАКШН СЕРВЕРА AMVERA ===
+        // === НАСТРОЙКА АДРЕСОВ ===
         const API_URL = 'https://roomer-alh1mikk.amvera.io';
         const WS_URL = 'wss://roomer-alh1mikk.amvera.io';
-
-        // Инициализируем Telegram WebApp SDK
+        
+        // Инициализация Telegram WebApp
         let tg = null;
         let tgUserId = Math.floor(Math.random() * 90000) + 10000;
         let tgUserName = "Аноним";
-
+        
         if (window.Telegram && window.Telegram.WebApp) {
             tg = window.Telegram.WebApp;
             tg.ready();
@@ -496,59 +496,59 @@
                 tgUserName = tg.initDataUnsafe.user.first_name || "Юзер Telegram";
             }
         }
-
+        
         let wsConnection = null;
         let pingInterval = null;
-        let reconnectTimeout = null;
         let currentRoomId = null;
-        let currentRoomTitle = '';
         let shouldReconnect = false;
-
-        function updateConnectionStatus(status) {
-            const statusEl = document.getElementById('connection-status');
-            if (!statusEl) return;
-            
-            statusEl.className = 'connection-status';
-            switch(status) {
-                case 'connected':
-                    statusEl.className += ' status-connected';
-                    statusEl.textContent = 'онлайн';
-                    break;
-                case 'disconnected':
-                    statusEl.className += ' status-disconnected';
-                    statusEl.textContent = 'офлайн';
-                    break;
-                case 'connecting':
-                    statusEl.className += ' status-connecting';
-                    statusEl.textContent = 'подключение...';
-                    break;
-            }
-        }
-
+        
         function switchScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             const el = document.getElementById(screenId);
             if (el) el.classList.add('active');
         }
-
-        // 1. Загрузка активных комнат с бэкенда Amvera
+        
+        // Функция для fetch с CORS
+        async function apiFetch(url, options = {}) {
+            const defaultOptions = {
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            };
+            
+            const mergedOptions = { ...defaultOptions, ...options };
+            if (mergedOptions.headers) {
+                mergedOptions.headers = { ...defaultOptions.headers, ...options.headers };
+            }
+            
+            console.log('Fetching:', API_URL + url);
+            const response = await fetch(API_URL + url, mergedOptions);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return response.json();
+        }
+        
+        // Загрузка комнат
         async function fetchRooms() {
             try {
-                const res = await fetch(API_URL + '/rooms');
-                if (!res.ok) throw new Error('Network response was not ok');
+                console.log('Fetching rooms...');
+                const rooms = await apiFetch('/rooms');
+                console.log('Rooms loaded:', rooms);
                 
-                const rooms = await res.json();
                 const list = document.getElementById('rooms-list');
-
-                if (rooms.length === 0) {
+                if (!rooms || rooms.length === 0) {
                     list.innerHTML = '<div class="empty-state">Комнат пока нет.<br>Создайте первую!</div>';
                     return;
                 }
-
+        
                 list.innerHTML = rooms.map(room => `
-                    <div class="card" onclick="openChat(${room.id}, '${room.title.replace(/'/g, "\\'")}')">
+                    <div class="card" onclick="openChat(${room.id}, '${(room.title || '').replace(/'/g, "\\'")}')">
                         <h3>
-                            ${room.title}
+                            ${room.title || 'Без названия'}
                             ${room.online ? `<span class="online-badge">● ${room.online}</span>` : ''}
                         </h3>
                         <p>${room.description || ''}</p>
@@ -557,28 +557,26 @@
                 `).join('');
             } catch (e) {
                 console.error('Error fetching rooms:', e);
-                document.getElementById('rooms-list').innerHTML = '<div class="empty-state" style="color:#E55;">Ошибка подключения к серверу Amvera</div>';
+                document.getElementById('rooms-list').innerHTML = 
+                    `<div class="empty-state" style="color:#E55;">Ошибка подключения: ${e.message}</div>`;
             }
         }
-
-        // 2. Создание новой комнаты
+        
+        // Создание комнаты
         async function submitRoom() {
             const title = document.getElementById('room-title').value.trim();
             const description = document.getElementById('room-desc').value.trim();
             const tagsRaw = document.getElementById('room-tags').value;
-
+        
             if (!title) return;
             const tags = tagsRaw.split(',').map(t => t.trim()).filter(t => t.length > 0);
-
+        
             try {
-                const response = await fetch(API_URL + '/rooms', {
+                await apiFetch('/rooms', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ title, description, creator_id: tgUserId, tags })
                 });
-
-                if (!response.ok) throw new Error('Failed to create room');
-
+        
                 document.getElementById('room-title').value = '';
                 document.getElementById('room-desc').value = '';
                 document.getElementById('room-tags').value = '';
@@ -586,191 +584,111 @@
                 fetchRooms();
             } catch (e) {
                 console.error('Error creating room:', e);
-                alert('Не удалось отправить данные на сервер');
+                alert('Не удалось создать комнату: ' + e.message);
             }
         }
-
-        // Функция для добавления сообщения в чат
-        function addMessageToChat(text, senderId, type = 'message') {
-            const msgBox = document.getElementById('chat-messages');
-            if (!msgBox) return;
-
-            const newMsg = document.createElement('div');
-
-            if (type === 'system') {
-                newMsg.className = 'msg system-msg';
-                newMsg.textContent = text;
-            } else {
-                newMsg.textContent = text;
-                if (senderId != null && Number(senderId) === Number(tgUserId)) {
-                    newMsg.className = 'msg my-msg';
-                } else {
-                    newMsg.className = 'msg other-msg';
-                }
-            }
-
-            msgBox.appendChild(newMsg);
-            
-            // Плавный скролл вниз
-            setTimeout(() => {
-                msgBox.scrollTo({
-                    top: msgBox.scrollHeight,
-                    behavior: 'smooth'
-                });
-            }, 50);
-        }
-
-        // Функция для установки WebSocket с keep-alive
+        
+        // WebSocket подключение
         function setupWebSocket(roomId) {
             if (wsConnection) {
-                wsConnection.onclose = null; // Убираем старый обработчик
+                wsConnection.onclose = null;
                 wsConnection.close();
                 wsConnection = null;
             }
-
+        
             if (pingInterval) {
                 clearInterval(pingInterval);
                 pingInterval = null;
             }
-
-            updateConnectionStatus('connecting');
-            
-            const wsUrl = WS_URL + '/ws/' + roomId.toString();
-            console.log("🔌 Подключение к WebSocket:", wsUrl);
+        
+            const wsUrl = WS_URL + '/ws/' + roomId;
+            console.log("🔌 Connecting to WebSocket:", wsUrl);
             
             try {
                 wsConnection = new WebSocket(wsUrl);
             } catch (e) {
-                console.error("❌ Ошибка создания WebSocket:", e);
-                updateConnectionStatus('disconnected');
-                addMessageToChat('❌ Не удалось подключиться к чату', null, 'system');
+                console.error("❌ WebSocket creation error:", e);
                 return;
             }
-
-            // Таймаут на подключение
-            const connectionTimeout = setTimeout(() => {
-                if (wsConnection && wsConnection.readyState !== WebSocket.OPEN) {
-                    console.error("❌ Таймаут подключения WebSocket");
-                    wsConnection.close();
-                }
-            }, 10000);
-
+        
             wsConnection.onopen = function() {
-                clearTimeout(connectionTimeout);
-                console.log("✅ WebSocket подключен к комнате", roomId);
-                updateConnectionStatus('connected');
+                console.log("✅ WebSocket connected to room", roomId);
                 
-                // Запускаем ping каждые 25 секунд для поддержания соединения
                 pingInterval = setInterval(() => {
                     if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
-                        try {
-                            wsConnection.send(JSON.stringify({ type: 'ping' }));
-                        } catch (e) {
-                            console.error("❌ Ошибка отправки ping:", e);
-                        }
+                        wsConnection.send(JSON.stringify({ type: 'ping' }));
                     }
                 }, 25000);
             };
-
+        
             wsConnection.onerror = function(error) {
-                clearTimeout(connectionTimeout);
-                console.error("❌ Ошибка WebSocket:", error);
-                updateConnectionStatus('disconnected');
-                addMessageToChat('⚠️ Ошибка соединения с чатом', null, 'system');
+                console.error("❌ WebSocket error:", error);
             };
-
+        
             wsConnection.onclose = function(event) {
-                clearTimeout(connectionTimeout);
-                console.log("🔌 WebSocket закрыт. Код:", event.code, "Причина:", event.reason);
+                console.log("🔌 WebSocket closed. Code:", event.code);
                 
                 if (pingInterval) {
                     clearInterval(pingInterval);
                     pingInterval = null;
                 }
                 
-                updateConnectionStatus('disconnected');
-                
-                // Переподключение только если мы все еще должны быть в этой комнате
                 if (shouldReconnect && currentRoomId === roomId) {
-                    const reconnectDelay = event.code === 1006 ? 2000 : 5000;
-                    console.log(`🔄 Переподключение через ${reconnectDelay/1000}с...`);
-                    
-                    addMessageToChat('🔄 Переподключение...', null, 'system');
-                    
-                    reconnectTimeout = setTimeout(() => {
+                    setTimeout(() => {
                         if (shouldReconnect && currentRoomId === roomId) {
                             setupWebSocket(roomId);
                         }
-                    }, reconnectDelay);
+                    }, 2000);
                 }
             };
-
+        
             wsConnection.onmessage = function(event) {
                 try {
                     const msgData = JSON.parse(event.data);
+                    const msgBox = document.getElementById('chat-messages');
                     
-                    // Обработка разных типов сообщений
-                    switch(msgData.type) {
-                        case 'ping':
-                            // Отвечаем на ping сервера
-                            if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
-                                wsConnection.send(JSON.stringify({ type: 'pong' }));
-                            }
-                            return;
-                            
-                        case 'pong':
-                            // Просто игнорируем
-                            return;
-                            
-                        case 'system':
-                            // Системные сообщения
-                            addMessageToChat(msgData.text, null, 'system');
-                            return;
-                            
-                        case 'message':
-                        default:
-                            // Обычные сообщения
-                            const text = msgData.text;
-                            const senderId = msgData.sender_id;
-                            
-                            if (!text) return;
-                            
-                            // Игнорируем технические сообщения
-                            if (text === "системное_сообщение_подключено" || senderId === -1) {
-                                console.log("🚀 WebSocket рукопожатие с сервером Amvera успешно!");
-                                return;
-                            }
-                            
-                            addMessageToChat(text, senderId, 'message');
+                    if (!msgBox) return;
+                    
+                    if (msgData.type === 'ping' || msgData.type === 'pong') {
+                        return;
                     }
+                    
+                    if (msgData.text === "системное_сообщение_подключено" || msgData.sender_id === -1) {
+                        console.log("🚀 WebSocket handshake successful");
+                        return;
+                    }
+                    
+                    const newMsg = document.createElement('div');
+                    newMsg.textContent = msgData.text;
+                    
+                    if (msgData.type === 'system') {
+                        newMsg.className = 'msg system-msg';
+                    } else if (msgData.sender_id != null && Number(msgData.sender_id) === Number(tgUserId)) {
+                        newMsg.className = 'msg my-msg';
+                    } else {
+                        newMsg.className = 'msg other-msg';
+                    }
+                    
+                    msgBox.appendChild(newMsg);
+                    msgBox.scrollTo({ top: msgBox.scrollHeight, behavior: 'smooth' });
+                    
                 } catch (e) {
-                    console.error("❌ Ошибка обработки сообщения:", e, event.data);
-                    // Если это не JSON, показываем как обычный текст
-                    addMessageToChat(event.data, null, 'message');
+                    console.error("❌ Message parse error:", e);
                 }
             };
         }
-
-        // 3. Подключение к веб-сокету чата комнаты
+        
         function openChat(roomId, roomTitle) {
-            console.log(`📱 Открываем чат комнаты #${roomId}: ${roomTitle}`);
-            
             currentRoomId = roomId;
-            currentRoomTitle = roomTitle;
             shouldReconnect = true;
             
             document.getElementById('chat-room-title').innerText = roomTitle;
             document.getElementById('chat-messages').innerHTML = '';
-            
             switchScreen('chat-screen');
             
-            // Небольшая задержка перед подключением WebSocket
-            setTimeout(() => {
-                setupWebSocket(roomId);
-            }, 100);
+            setTimeout(() => setupWebSocket(roomId), 100);
         }
-
-        // 4. Отправка сообщения в сокет
+        
         function sendWsMessage() {
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
@@ -778,36 +696,17 @@
             if (!text) return;
             
             if (!wsConnection || wsConnection.readyState !== WebSocket.OPEN) {
-                addMessageToChat('⚠️ Нет подключения к чату. Переподключаемся...', null, 'system');
-                
-                if (currentRoomId) {
-                    setupWebSocket(currentRoomId);
-                }
+                if (currentRoomId) setupWebSocket(currentRoomId);
                 return;
             }
-
-            try {
-                wsConnection.send(JSON.stringify({ 
-                    "text": text, 
-                    "sender_id": tgUserId 
-                }));
-                input.value = '';
-            } catch (e) {
-                console.error("❌ Ошибка отправки сообщения:", e);
-                addMessageToChat('❌ Не удалось отправить сообщение', null, 'system');
-            }
-        }
-
-        function closeChat() {
-            console.log("🚪 Закрываем чат");
             
+            wsConnection.send(JSON.stringify({ text: text, sender_id: tgUserId }));
+            input.value = '';
+        }
+        
+        function closeChat() {
             shouldReconnect = false;
             currentRoomId = null;
-            
-            if (reconnectTimeout) {
-                clearTimeout(reconnectTimeout);
-                reconnectTimeout = null;
-            }
             
             if (pingInterval) {
                 clearInterval(pingInterval);
@@ -815,59 +714,27 @@
             }
             
             if (wsConnection) {
-                wsConnection.onclose = null; // Убираем обработчик чтобы не было переподключения
+                wsConnection.onclose = null;
                 wsConnection.close();
                 wsConnection = null;
             }
             
-            updateConnectionStatus('disconnected');
             switchScreen('feed-screen');
             fetchRooms();
         }
-
+        
         function toggleModal(show) {
             document.getElementById('create-modal').style.display = show ? 'block' : 'none';
         }
-
-        // Закрытие модального окна при клике вне его
+        
+        // Закрытие модального окна
         document.getElementById('create-modal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                toggleModal(false);
-            }
+            if (e.target === this) toggleModal(false);
         });
-
-        // Обработка закрытия страницы
-        window.addEventListener('beforeunload', () => {
-            if (wsConnection) {
-                wsConnection.onclose = null;
-                wsConnection.close();
-            }
-        });
-
-        // Обработка видимости страницы
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                console.log("📱 Страница скрыта");
-            } else {
-                console.log("📱 Страница видна");
-                // Обновляем список комнат когда страница становится видимой
-                if (!currentRoomId) {
-                    fetchRooms();
-                }
-            }
-        });
-
-        // Первичный запуск загрузки ленты
+        
+        // Запуск
         fetchRooms();
-        
-        // Периодическое обновление списка комнат
-        setInterval(() => {
-            if (!currentRoomId) {
-                fetchRooms();
-            }
-        }, 30000);
-        
-        console.log("🚀 Roomer инициализирован!");
+        console.log("🚀 Roomer initialized!");
     </script>
 </body>
 </html>
