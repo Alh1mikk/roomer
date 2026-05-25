@@ -1,8 +1,10 @@
 import os
 import json
 import asyncio
+from pathlib import Path
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import List, Dict
 import psycopg2
@@ -73,7 +75,21 @@ cursor = conn.cursor()
 cursor.execute("CREATE TABLE IF NOT EXISTS tags (id BIGSERIAL PRIMARY KEY, name TEXT UNIQUE NOT NULL);")
 cursor.execute("CREATE TABLE IF NOT EXISTS rooms (id BIGSERIAL PRIMARY KEY, title TEXT NOT NULL, description TEXT, creator_id BIGINT, is_active BOOLEAN DEFAULT TRUE);")
 cursor.execute("CREATE TABLE IF NOT EXISTS room_tags (room_id BIGINT REFERENCES rooms(id) ON DELETE CASCADE, tag_id BIGINT REFERENCES tags(id) ON DELETE CASCADE, PRIMARY KEY (room_id, tag_id));")
-cursor.execute("CREATE TABLE IF NOT EXISTS messages (id BIGSERIAL PRIMARY KEY, room_id BIGINT REFERENCES rooms(id) ON DELETE CASCADE, text TEXT NOT NULL, sender_id BIGINT DEFAULT 0);")
+cursor.execute("CREATE TABLE IF NOT EXISTS messages (id BIGSERIAL PRIMARY KEY, room_id BIGINT REFERENCES rooms(id) ON DELETE CASCADE, text TEXT NOT NULL);")
+conn.commit()
+# Миграция: добавляем sender_id, если колонки ещё нет
+cursor.execute("""
+    DO $$
+    BEGIN
+        IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_name='messages' AND column_name='sender_id'
+        ) THEN
+            ALTER TABLE messages ADD COLUMN sender_id BIGINT DEFAULT 0;
+        END IF;
+    END
+    $$;
+""")
 conn.commit()
 cursor.close()
 conn.close()
@@ -84,9 +100,13 @@ class CreateRoomInput(BaseModel):
     creator_id: int
     tags: List[str]
 
+# ─── Отдаём index.html по корневому пути ───
 @app.get("/")
 def home():
-    return {"status": "FastAPI работает на 100%!"}
+    html_path = Path(__file__).parent / "index.html"
+    if html_path.exists():
+        return FileResponse(str(html_path))
+    return {"status": "FastAPI работает на 100%!", "note": "index.html не найден"}
 
 @app.get("/rooms")
 def get_rooms():
