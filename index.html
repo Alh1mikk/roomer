@@ -70,6 +70,79 @@
             gap: 8px;
         }
 
+        /* ── Search bar ── */
+        .search-bar {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            background: #1A1A24;
+            gap: 8px;
+            border-bottom: 1px solid #2A2A38;
+        }
+
+        .search-bar input {
+            flex: 1;
+            background: #2A2A38;
+            border: 1px solid #3A3A48;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #E8E8ED;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-bar input:focus {
+            border-color: #7C4DFF;
+        }
+
+        .search-bar input::placeholder {
+            color: #6B6B80;
+        }
+
+        .search-bar .btn-clear {
+            background: transparent;
+            border: none;
+            color: #6B6B80;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 8px;
+            display: none;
+        }
+
+        .search-bar .btn-clear.visible {
+            display: block;
+        }
+
+        /* ── Tabs ── */
+        .tabs {
+            display: flex;
+            background: #1A1A24;
+            border-bottom: 1px solid #2A2A38;
+            padding: 0 16px;
+        }
+
+        .tab {
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6B6B80;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: color 0.2s, border-color 0.2s;
+            user-select: none;
+        }
+
+        .tab:hover {
+            color: #C0C0D0;
+        }
+
+        .tab.active {
+            color: #7C4DFF;
+            border-bottom-color: #7C4DFF;
+        }
+
         /* ── Status indicator ── */
         .connection-status {
             font-size: 11px;
@@ -212,6 +285,13 @@
             background: rgba(107, 107, 128, 0.1);
             padding: 2px 8px;
             border-radius: 10px;
+        }
+
+        .card .last-visited {
+            font-size: 11px;
+            color: #6B6B80;
+            display: block;
+            margin-top: 4px;
         }
 
         /* ── Loading shimmer ── */
@@ -569,11 +649,19 @@
     <!-- FEED SCREEN -->
     <div id="feed-screen" class="screen active">
         <div class="header">
-            <h2>Активные комнаты</h2>
+            <h2>Roomer</h2>
             <div class="header-right">
                 <button class="btn-icon btn-refresh" onclick="refreshRooms(this)" title="Обновить">⟳</button>
                 <button class="btn-icon" onclick="toggleModal(true)" title="Создать комнату">+</button>
             </div>
+        </div>
+        <div class="search-bar">
+            <input type="text" id="search-input" placeholder="Поиск комнат по названию, описанию, тегам..." autocomplete="off">
+            <button class="btn-clear" id="btn-clear-search" onclick="clearSearch()">✕</button>
+        </div>
+        <div class="tabs">
+            <div class="tab active" data-tab="all" onclick="switchTab('all')">Все комнаты</div>
+            <div class="tab" data-tab="my" onclick="switchTab('my')">Мои комнаты</div>
         </div>
         <div id="rooms-list">
             <div class="loading-shimmer"></div>
@@ -622,14 +710,14 @@
         const API_URL = 'https://roomer-alh1mikk.amvera.io';
         const WS_URL = 'wss://roomer-alh1mikk.amvera.io';
 
-        // Инициализация Telegram WebApp
-        let tg = null;
+        // ─── Данные пользователя ───
         let tgUserId = Math.floor(Math.random() * 90000) + 10000;
         let tgUserName = "Аноним";
-        let onlineCount = 0;
+        let userDbId = null;
 
+        // Инициализация Telegram WebApp
         if (window.Telegram && window.Telegram.WebApp) {
-            tg = window.Telegram.WebApp;
+            const tg = window.Telegram.WebApp;
             tg.ready();
             tg.expand();
             if (tg.initDataUnsafe?.user?.id) {
@@ -638,12 +726,17 @@
             }
         }
 
+        // ─── Состояние ───
         let wsConnection = null;
         let pingInterval = null;
         let currentRoomId = null;
         let shouldReconnect = false;
         let reconnectAttempts = 0;
         let lastPongTime = Date.now();
+        let onlineCount = 0;
+        let currentTab = 'all';
+        let searchQuery = '';
+        let searchTimer = null;
 
         // ─── Утилиты ───
 
@@ -651,6 +744,17 @@
             if (!dateStr) return '';
             const d = new Date(dateStr);
             return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            const now = new Date();
+            const diff = now - d;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            if (days === 0) return 'сегодня';
+            if (days === 1) return 'вчера';
+            return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
         }
 
         function showToast(text, duration = 2500) {
@@ -696,7 +800,8 @@
             }
         }
 
-        // Функция для fetch с CORS
+        // ─── API ───
+
         async function apiFetch(url, options = {}) {
             const defaultOptions = {
                 mode: 'cors',
@@ -719,15 +824,62 @@
             return response.json();
         }
 
+        // ─── Авторизация ───
+
+        async function loginUser() {
+            try {
+                const result = await apiFetch('/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        tg_id: tgUserId,
+                        name: tgUserName,
+                        username: tgUserName
+                    })
+                });
+                if (result.status === 'success') {
+                    userDbId = result.user_id;
+                    console.log(`✅ Авторизован: id=${userDbId}, tg_id=${tgUserId}, имя=${result.name}`);
+                }
+            } catch (e) {
+                console.warn('⚠️ Auth failed (non-critical):', e.message);
+            }
+        }
+
         // ─── Загрузка комнат ───
 
         async function fetchRooms() {
             const list = document.getElementById('rooms-list');
+            let url = '/rooms';
+
+            if (currentTab === 'my') {
+                if (userDbId) {
+                    url = '/my-rooms?tg_id=' + tgUserId;
+                } else {
+                    list.innerHTML = '<div class="empty-state">Авторизуйтесь через Telegram,<br>чтобы видеть свои комнаты</div>';
+                    return;
+                }
+            }
+
+            if (searchQuery.trim()) {
+                if (currentTab === 'my' && userDbId) {
+                    // Для "моих комнат" фильтруем через поиск по всем (можно улучшить)
+                    url = '/rooms/search?q=' + encodeURIComponent(searchQuery);
+                } else {
+                    url = '/rooms/search?q=' + encodeURIComponent(searchQuery);
+                }
+            }
+
             try {
-                const rooms = await apiFetch('/rooms');
+                const rooms = await apiFetch(url);
 
                 if (!rooms || rooms.length === 0) {
-                    list.innerHTML = '<div class="empty-state">Комнат пока нет.<br>Создайте первую!</div>';
+                    if (searchQuery) {
+                        list.innerHTML = '<div class="empty-state">Ничего не найдено по запросу<br>"' + searchQuery + '"</div>';
+                    } else if (currentTab === 'my') {
+                        list.innerHTML = '<div class="empty-state">Вы ещё не посетили ни одной комнаты.<br>Найдите интересную во вкладке "Все комнаты"!</div>';
+                    } else {
+                        list.innerHTML = '<div class="empty-state">Комнат пока нет.<br>Создайте первую!</div>';
+                    }
                     return;
                 }
 
@@ -741,6 +893,7 @@
                             </h3>
                             <p>${room.description || ''}</p>
                             <div class="tags">${(room.tags || []).map(tag => `<span class="tag">#${tag}</span>`).join('')}</div>
+                            ${room.last_visited ? `<span class="last-visited">были ${formatDate(room.last_visited)}</span>` : ''}
                         </div>
                     `;
                 }).join('');
@@ -760,6 +913,52 @@
         function refreshRooms(btn) {
             btn.classList.add('spinning');
             setTimeout(() => btn.classList.remove('spinning'), 600);
+            document.getElementById('rooms-list').innerHTML = `
+                <div class="loading-shimmer"></div>
+                <div class="loading-shimmer"></div>
+                <div class="loading-shimmer"></div>
+            `;
+            fetchRooms();
+        }
+
+        // ─── Поиск ───
+
+        function onSearchInput() {
+            const input = document.getElementById('search-input');
+            const clearBtn = document.getElementById('btn-clear-search');
+            searchQuery = input.value.trim();
+            
+            clearBtn.classList.toggle('visible', input.value.length > 0);
+            
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                if (currentTab === 'my' && !userDbId) return;
+                document.getElementById('rooms-list').innerHTML = `
+                    <div class="loading-shimmer"></div>
+                    <div class="loading-shimmer"></div>
+                    <div class="loading-shimmer"></div>
+                `;
+                fetchRooms();
+            }, 300);
+        }
+
+        function clearSearch() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('btn-clear-search').classList.remove('visible');
+            searchQuery = '';
+            document.getElementById('rooms-list').innerHTML = `
+                <div class="loading-shimmer"></div>
+                <div class="loading-shimmer"></div>
+                <div class="loading-shimmer"></div>
+            `;
+            fetchRooms();
+        }
+
+        // ─── Табы ───
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
             document.getElementById('rooms-list').innerHTML = `
                 <div class="loading-shimmer"></div>
                 <div class="loading-shimmer"></div>
@@ -827,7 +1026,6 @@
             updateConnectionStatus('connecting');
 
             const wsUrl = WS_URL + '/ws/' + roomId;
-            console.log("🔌 Connecting to WebSocket:", wsUrl);
 
             try {
                 wsConnection = new WebSocket(wsUrl);
@@ -843,10 +1041,8 @@
                 reconnectAttempts = 0;
                 lastPongTime = Date.now();
 
-                // Пинг каждые 20 секунд
                 pingInterval = setInterval(() => {
                     if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
-                        // Если не было pong больше 45 секунд — переподключаемся
                         if (Date.now() - lastPongTime > 45000) {
                             console.log("⚠️ No pong received, reconnecting...");
                             reconnectWs(roomId);
@@ -885,10 +1081,8 @@
                 try {
                     const data = JSON.parse(event.data);
                     const msgBox = document.getElementById('chat-messages');
-
                     if (!msgBox) return;
 
-                    // Обработка по типу сообщения
                     const type = data.type || 'message';
 
                     if (type === 'pong') {
@@ -906,11 +1100,8 @@
                     if (type === 'system') {
                         const systemMsg = document.createElement('div');
                         systemMsg.className = 'msg system-msg';
-                        
-                        let text = data.text || '';
-                        systemMsg.textContent = text;
-                        
-                        // Показываем онлайн при подключении/отключении
+                        systemMsg.textContent = data.text || '';
+
                         if (data.online !== undefined) {
                             updateOnlineCount(data.online);
                             const onlineSpan = document.createElement('span');
@@ -918,7 +1109,7 @@
                             onlineSpan.textContent = '● ' + data.online + ' в сети';
                             systemMsg.appendChild(onlineSpan);
                         }
-                        
+
                         msgBox.appendChild(systemMsg);
                         msgBox.scrollTo({ top: msgBox.scrollHeight, behavior: 'smooth' });
                         return;
@@ -926,26 +1117,23 @@
 
                     if (type === 'message') {
                         const newMsg = document.createElement('div');
-                        
                         const textEl = document.createElement('span');
                         textEl.textContent = data.text || '';
                         newMsg.appendChild(textEl);
-                        
-                        // Отображаем время
+
                         if (data.timestamp) {
                             const timeEl = document.createElement('div');
                             timeEl.className = 'msg-time';
                             timeEl.textContent = formatTime(data.timestamp);
                             newMsg.appendChild(timeEl);
                         }
-                        
-                        // Определяем, наше сообщение или нет
+
                         if (data.sender_id != null && Number(data.sender_id) === Number(tgUserId)) {
                             newMsg.className = 'msg my-msg';
                         } else {
                             newMsg.className = 'msg other-msg';
                         }
-                        
+
                         msgBox.appendChild(newMsg);
                         msgBox.scrollTo({ top: msgBox.scrollHeight, behavior: 'smooth' });
                         return;
@@ -973,7 +1161,7 @@
             setupWebSocket(roomId);
         }
 
-        function openChat(roomId, roomTitle) {
+        async function openChat(roomId, roomTitle) {
             currentRoomId = roomId;
             shouldReconnect = true;
             onlineCount = 0;
@@ -983,6 +1171,13 @@
             document.getElementById('chat-messages').innerHTML = '';
             updateConnectionStatus('connecting');
             switchScreen('chat-screen');
+
+            // Записываем посещение
+            try {
+                await apiFetch('/rooms/' + roomId + '/visit?tg_id=' + tgUserId, { method: 'POST' });
+            } catch (e) {
+                // Не критично
+            }
 
             setTimeout(() => setupWebSocket(roomId), 100);
         }
@@ -1039,12 +1234,10 @@
 
         // ─── События ───
 
-        // Закрытие модального окна по клику вне
         document.getElementById('create-modal').addEventListener('click', function(e) {
             if (e.target === this) toggleModal(false);
         });
 
-        // Закрытие модалки по Escape
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 const modal = document.getElementById('create-modal');
@@ -1052,7 +1245,6 @@
             }
         });
 
-        // Отправка по Enter в чате
         document.getElementById('chat-input').addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -1060,18 +1252,20 @@
             }
         });
 
-        // Disable/enable send button based on input
         document.getElementById('chat-input').addEventListener('input', function() {
             const btn = document.getElementById('btn-send');
             btn.disabled = this.value.trim().length === 0;
         });
 
-        // Отправка по кнопке
         document.getElementById('btn-send').addEventListener('click', sendWsMessage);
 
+        document.getElementById('search-input').addEventListener('input', onSearchInput);
+
         // ─── Запуск ───
-        fetchRooms();
-        console.log("🚀 Roomer v2 initialized!");
+        loginUser().then(() => {
+            fetchRooms();
+        });
+        console.log("🚀 Roomer v2.1 initialized!");
     </script>
 </body>
 </html>
