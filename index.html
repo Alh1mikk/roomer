@@ -434,22 +434,24 @@
         </div>
     </div>
 
-    <script>
-        // Определяем окружение: если localhost — локальный сервер, иначе — продакшен на Railway
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        const API_URL = isLocal ? window.location.origin : 'https://roomer-production.up.railway.app';
-        const WS_URL = isLocal ? window.location.origin.replace(/^http/, 'ws') : 'wss://roomer-production.up.railway.app';
+        <script>
+        // === 🛠️ НАСТРОЙКА АДРЕСОВ ПРОДАКШН СЕРВЕРА AMVERA ===
+        const API_URL = 'https://amvera.io';
+        const WS_URL = 'wss://roomer-alh1mikk.amvera.io';
 
-        // Если пользователь не из Telegram — используем случайный ID
+        // Инициализируем Telegram WebApp SDK
+        let tg = null;
         let tgUserId = Math.floor(Math.random() * 90000) + 10000;
+        let tgUserName = "Аноним";
 
-        // Пробуем получить настоящий ID из Telegram WebApp, если он есть
         if (window.Telegram && window.Telegram.WebApp) {
-            const tg = window.Telegram.WebApp;
+            tg = window.Telegram.WebApp;
             tg.ready();
             tg.expand();
             if (tg.initDataUnsafe?.user?.id) {
                 tgUserId = tg.initDataUnsafe.user.id;
+                // Забираем реальное имя из Телеграма [INDEX]
+                tgUserName = tg.initDataUnsafe.user.first_name || "Юзер Telegram";
             }
         }
 
@@ -461,6 +463,7 @@
             if (el) el.classList.add('active');
         }
 
+        // 1. Загрузка активных комнат с бэкенда Amvera
         async function fetchRooms() {
             try {
                 const res = await fetch(API_URL + '/rooms');
@@ -480,10 +483,11 @@
                     </div>
                 `).join('');
             } catch (e) {
-                document.getElementById('rooms-list').innerHTML = '<div class="empty-state" style="color:#E55;">Ошибка подключения к серверу</div>';
+                document.getElementById('rooms-list').innerHTML = '<div class="empty-state" style="color:#E55;">Ошибка подключения к серверу Amvera</div>';
             }
         }
 
+        // 2. Создание новой комнаты
         async function submitRoom() {
             const title = document.getElementById('room-title').value.trim();
             const description = document.getElementById('room-desc').value.trim();
@@ -509,12 +513,12 @@
             }
         }
 
+        // 3. Подключение к веб-сокету чата комнаты
         function openChat(roomId, roomTitle) {
             document.getElementById('chat-room-title').innerText = roomTitle;
             document.getElementById('chat-messages').innerHTML = '';
             switchScreen('chat-screen');
 
-            // Если старое соединение не закрылось — принудительно рубим его
             if (wsConnection) { wsConnection.close(); }
 
             console.log("Пытаемся подключиться к сокету:", WS_URL + '/ws/' + roomId.toString());
@@ -523,11 +527,11 @@
             wsConnection.onerror = function(error) {
                 console.error("Ошибка WebSocket:", error);
                 const msgBox = document.getElementById('chat-messages');
-                msgBox.innerHTML = '<p style="color:#FF5252; text-align:center; font-size:13px;">⚠️ Ошибка сети сокета.</p>';
+                msgBox.innerHTML = '<p style="color:#FF5252; text-align:center; font-size:13px;">⚠️ Ошибка сети сокета. Переподключение...</p>';
             };
 
             wsConnection.onclose = function(event) {
-                console.warn("Соединение закрыто сервером. Код:", event.code, "Причина:", event.reason);
+                console.warn("Соединение закрыто сервером. Код:", event.code);
             };
 
             wsConnection.onmessage = function(event) {
@@ -538,6 +542,13 @@
 
                 try {
                     const msgData = JSON.parse(event.data);
+                    
+                    // ХАК ДЛЯ AMVERA: Игнорируем технический пакет приветствия, чтобы не выводить его на экран
+                    if (msgData.text === "системное_сообщение_подключено" || msgData.sender_id === -1) {
+                        console.log("🚀 Вебсокет успешно пожал руку серверу Amvera!");
+                        return;
+                    }
+
                     text = msgData.text;
                     senderId = msgData.sender_id;
                 } catch {
@@ -547,6 +558,7 @@
 
                 newMsg.innerText = text;
 
+                // Цветовая разметка: свои фиолетовые справа, чужие серые слева [INDEX]
                 if (senderId != null && Number(senderId) === Number(tgUserId)) {
                     newMsg.className = 'msg my-msg';
                 } else {
@@ -554,6 +566,8 @@
                 }
 
                 msgBox.appendChild(newMsg);
+                
+                // Плавный скролл вниз
                 msgBox.scrollTo({
                     top: msgBox.scrollHeight,
                     behavior: 'smooth'
@@ -561,12 +575,13 @@
             };
         }
 
-
+        // 4. Отправка сообщения в сокет
         function sendWsMessage() {
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
             if (!text || !wsConnection) return;
 
+            // Передаем структурированный JSON с текстом и твоим реальным Telegram ID [INDEX]
             wsConnection.send(JSON.stringify({ "text": text, "sender_id": tgUserId }));
 
             input.value = '';
@@ -582,6 +597,7 @@
             document.getElementById('create-modal').style.display = show ? 'block' : 'none';
         }
 
+        // Первичный запуск загрузки ленты
         fetchRooms();
     </script>
 </body>
