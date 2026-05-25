@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
     <html lang="ru">
     <head>
         <meta charset="UTF-8">
@@ -670,7 +670,7 @@
             </div>
         </div>
 
-        <!-- MODAL -->
+        <!-- MODAL for creating room -->
         <div id="create-modal" class="modal">
             <div class="modal-inner">
                 <h2>Создать комнату</h2>
@@ -711,27 +711,58 @@
             const WS_URL = 'wss://roomer-alh1mikk.amvera.io';
 
         // ─── Данные пользователя ───
-        let tgUserId = Math.floor(Math.random() * 90000) + 10000;
+        // Сохраняем ID в sessionStorage (только на время сессии), чтобы не было
+        // пересечения между разными браузерами/устройствами
+        let tgUserId = parseInt(sessionStorage.getItem('roomer_user_id'));
         let tgUserName = "Аноним";
         let userDbId = null;
         let isTelegramUser = false;
 
-        // Определение Telegram окружения
-        const isTelegramBrowser = navigator.userAgent.includes('Telegram');
-        if (window.Telegram && window.Telegram.WebApp) {
+        // Детектим Telegram: проверяем, что window.Telegram.WebApp существует
+        // и имеет initDataUnsafe — это гарантирует, что мы действительно внутри Telegram
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
             const tg = window.Telegram.WebApp;
-            tg.ready();
-            tg.expand();
-            // Пользователь открыл приложение в Telegram — отмечаем это
-            isTelegramUser = true;
-            if (tg.initDataUnsafe?.user?.id) {
+            try { tg.ready(); tg.expand(); } catch(e) {}
+            
+            if (tg.initDataUnsafe.user?.id) {
+                // Пользователь аутентифицирован в Telegram Mini App
                 tgUserId = tg.initDataUnsafe.user.id;
                 tgUserName = tg.initDataUnsafe.user.first_name || "Юзер Telegram";
+                isTelegramUser = true;
+                console.log('✅ Telegram Mini App user:', tgUserId, tgUserName);
+            } else {
+                // Открыто внутри Telegram (встроенный браузер), но без данных пользователя
+                // Создаём ID на основе chat_instance (стабильный для этой сессии)
+                if (tg.initDataUnsafe.chat_instance) {
+                    tgUserId = parseInt(tg.initDataUnsafe.chat_instance.slice(-8), 16);
+                } else {
+                    // Генерируем, но сохраняем на сессию
+                    tgUserId = Math.floor(Math.random() * 90000) + 10000;
+                }
+                isTelegramUser = true;
+                console.log('✅ In-Telegram browser (no user data)');
             }
-        } else if (isTelegramBrowser) {
-            // Встроенный браузер Telegram (не Mini App)
-            isTelegramUser = true;
+            // Сохраняем ID на время сессии
+            sessionStorage.setItem('roomer_user_id', tgUserId.toString());
+        } else {
+            // Обычный браузер — генерируем случайный ID на сессию
+            tgUserId = Math.floor(Math.random() * 90000) + 10000;
+            sessionStorage.setItem('roomer_user_id', tgUserId.toString());
+            console.log('ℹ️ Regular browser, anonymous ID:', tgUserId);
         }
+        
+        // Проверяем URL параметры на случай передачи tg_id через ссылку
+        (function checkUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('tg_id')) {
+                tgUserId = parseInt(params.get('tg_id'));
+                isTelegramUser = true;
+                console.log('✅ Telegram user from URL param:', tgUserId);
+            }
+            if (params.has('username')) {
+                tgUserName = params.get('username');
+            }
+        })();
 
             // ─── Состояние ───
             let wsConnection = null;
@@ -859,16 +890,15 @@
                 let url = '/rooms';
 
                 if (currentTab === 'my') {
+                    if (!isTelegramUser) {
+                        list.innerHTML = '<div class="empty-state">Для доступа к истории войдите через Telegram</div>';
+                        return;
+                    }
                     url = '/my-rooms?tg_id=' + tgUserId;
                 }
 
                 if (searchQuery.trim()) {
-                    if (currentTab === 'my' && userDbId) {
-                        // Для "моих комнат" фильтруем через поиск по всем (можно улучшить)
-                        url = '/rooms/search?q=' + encodeURIComponent(searchQuery);
-                    } else {
-                        url = '/rooms/search?q=' + encodeURIComponent(searchQuery);
-                    }
+                    url = '/rooms/search?q=' + encodeURIComponent(searchQuery);
                 }
 
                 try {
@@ -878,7 +908,7 @@
                         if (searchQuery) {
                             list.innerHTML = '<div class="empty-state">Ничего не найдено по запросу<br>"' + searchQuery + '"</div>';
                         } else if (currentTab === 'my') {
-                            list.innerHTML = '<div class="empty-state">Вы ещё не посетили ни одной комнаты.<br>Найдите интересную во вкладке "Все комнаты"!</div>';
+                            list.innerHTML = '<div class="empty-state">Вы ещё не создали ни одной комнаты.<br>Создайте её через кнопку +</div>';
                         } else {
                             list.innerHTML = '<div class="empty-state">Комнат пока нет.<br>Создайте первую!</div>';
                         }
@@ -933,7 +963,7 @@
                 
                 clearTimeout(searchTimer);
                 searchTimer = setTimeout(() => {
-                    if (currentTab === 'my' && !userDbId) return;
+                    if (currentTab === 'my' && !isTelegramUser) return;
                     document.getElementById('rooms-list').innerHTML = `
                         <div class="loading-shimmer"></div>
                         <div class="loading-shimmer"></div>
@@ -1129,7 +1159,6 @@
                                 newMsg.appendChild(timeEl);
                             }
 
-                            // Все сообщения отображаем одинаково (без sender_id)
                             newMsg.className = 'msg other-msg';
 
                             msgBox.appendChild(newMsg);
@@ -1254,12 +1283,11 @@
         // ─── Запуск ───
         loginUser().then(() => {
             fetchRooms();
-            // Если пользователь на вкладке "Мои" и логин только что прошел — обновляем
             if (currentTab === 'my') {
                 fetchRooms();
             }
         });
-        console.log("🚀 Roomer v2.1 initialized!");
+        console.log("🚀 Roomer v2.1 initialized! User: id=" + tgUserId + " name=" + tgUserName + " tg=" + isTelegramUser);
         </script>
     </body>
     </html>
