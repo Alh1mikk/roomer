@@ -435,9 +435,10 @@
     </div>
 
     <script>
-        // Используем локальный сервер
-        const API_URL = window.location.origin;
-        const WS_URL = window.location.origin.replace(/^http/, 'ws');
+        // Определяем окружение: если localhost — локальный сервер, иначе — продакшен на Railway
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const API_URL = isLocal ? window.location.origin : 'https://roomer-production.up.railway.app';
+        const WS_URL = isLocal ? window.location.origin.replace(/^http/, 'ws') : 'wss://roomer-production.up.railway.app';
 
         // Если пользователь не из Telegram — используем случайный ID
         let tgUserId = Math.floor(Math.random() * 90000) + 10000;
