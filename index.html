@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Roomer</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         *, *::before, *::after {
             box-sizing: border-box;
@@ -21,7 +20,7 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        .screen {
+        .screen { 
             display: none;
             min-height: 100vh;
         }
@@ -436,14 +435,23 @@
     </div>
 
     <script>
-        const API_URL = 'https://roomer-production.up.railway.app';
-        const WS_URL = 'wss://roomer-production.up.railway.app';
+        // Используем локальный сервер
+        const API_URL = window.location.origin;
+        const WS_URL = window.location.origin.replace(/^http/, 'ws');
 
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
+        // Если пользователь не из Telegram — используем случайный ID
+        let tgUserId = Math.floor(Math.random() * 90000) + 10000;
 
-        const tgUserId = tg.initDataUnsafe?.user?.id || 99999;
+        // Пробуем получить настоящий ID из Telegram WebApp, если он есть
+        if (window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            tg.ready();
+            tg.expand();
+            if (tg.initDataUnsafe?.user?.id) {
+                tgUserId = tg.initDataUnsafe.user.id;
+            }
+        }
+
         let wsConnection = null;
 
         function switchScreen(screenId) {
@@ -511,11 +519,10 @@
             console.log("Пытаемся подключиться к сокету:", WS_URL + '/ws/' + roomId.toString());
             wsConnection = new WebSocket(WS_URL + '/ws/' + roomId.toString());
 
-            // ХАК ДЛЯ ТРАБЛШУТИНГА: Ловим ошибки сокета в Firefox
             wsConnection.onerror = function(error) {
-                console.error("Критическая ошибка WebSocket в Firefox:", error);
+                console.error("Ошибка WebSocket:", error);
                 const msgBox = document.getElementById('chat-messages');
-                msgBox.innerHTML = '<p style="color:#FF5252; text-align:center; font-size:13px;">⚠️ Ошибка сети сокета. Firefox заблокировал соединение.</p>';
+                msgBox.innerHTML = '<p style="color:#FF5252; text-align:center; font-size:13px;">⚠️ Ошибка сети сокета.</p>';
             };
 
             wsConnection.onclose = function(event) {
