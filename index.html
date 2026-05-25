@@ -718,31 +718,37 @@
         let userDbId = null;
         let isTelegramUser = false;
 
-        // Детектим Telegram: проверяем, что window.Telegram.WebApp существует
-        // и имеет initDataUnsafe — это гарантирует, что мы действительно внутри Telegram
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
+        // Детектим Telegram: сам факт существования window.Telegram.WebApp
+        // означает, что мы внутри Telegram (Mini App или встроенный браузер)
+        if (window.Telegram && window.Telegram.WebApp) {
             const tg = window.Telegram.WebApp;
             try { tg.ready(); tg.expand(); } catch(e) {}
             
-            if (tg.initDataUnsafe.user?.id) {
+            isTelegramUser = true;
+            
+            if (tg.initDataUnsafe?.user?.id) {
                 // Пользователь аутентифицирован в Telegram Mini App
                 tgUserId = tg.initDataUnsafe.user.id;
                 tgUserName = tg.initDataUnsafe.user.first_name || "Юзер Telegram";
-                isTelegramUser = true;
                 console.log('✅ Telegram Mini App user:', tgUserId, tgUserName);
             } else {
-                // Открыто внутри Telegram (встроенный браузер), но без данных пользователя
-                // Создаём ID на основе chat_instance (стабильный для этой сессии)
-                if (tg.initDataUnsafe.chat_instance) {
-                    tgUserId = parseInt(tg.initDataUnsafe.chat_instance.slice(-8), 16);
+                // Открыто внутри Telegram, но без данных пользователя
+                // (встроенный браузер или Mini App без авторизации)
+                // Генерируем ID на основе hash-части initData, если есть
+                if (tg.initData) {
+                    // initData — это строка вида "query_id=...&user=..."
+                    // Используем хеш от initData для стабильного ID в рамках чата
+                    let hash = 0;
+                    for (let i = 0; i < tg.initData.length; i++) {
+                        hash = ((hash << 5) - hash) + tg.initData.charCodeAt(i);
+                        hash |= 0;
+                    }
+                    tgUserId = Math.abs(hash) % 90000 + 10000;
                 } else {
-                    // Генерируем, но сохраняем на сессию
                     tgUserId = Math.floor(Math.random() * 90000) + 10000;
                 }
-                isTelegramUser = true;
-                console.log('✅ In-Telegram browser (no user data)');
+                console.log('✅ In-Telegram context (no user data)');
             }
-            // Сохраняем ID на время сессии
             sessionStorage.setItem('roomer_user_id', tgUserId.toString());
         } else {
             // Обычный браузер — генерируем случайный ID на сессию
