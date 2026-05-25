@@ -1,1312 +1,1380 @@
 <!DOCTYPE html>
-    <html lang="ru">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <title>Roomer</title>
-        <style>
-            *, *::before, *::after {
-                box-sizing: border-box;
-                margin: 0;
-                padding: 0;
-            }
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Roomer</title>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-            body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-                background: #0F0F13;
-                color: #E8E8ED;
-                min-height: 100vh;
-                -webkit-font-smoothing: antialiased;
-                -moz-osx-font-smoothing: grayscale;
-            }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0F0F13;
+            color: #E8E8ED;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
 
-            .screen { 
-                display: none;
-                min-height: 100vh;
-            }
+        /* ── Debug Bar ── */
+        #debug-bar {
+            background: #1a3a5c;
+            color: #8ec8f2;
+            font-size: 11px;
+            padding: 6px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px;
+            border-bottom: 1px solid #2a5a8c;
+            line-height: 1.4;
+        }
+        #debug-bar .debug-label { color: #5a9aca; }
+        #debug-bar .debug-val { color: #c0e0ff; font-weight: 500; }
+        #debug-bar .debug-ok { color: #4CAF50; }
+        #debug-bar .debug-warn { color: #FF9800; }
 
-            .screen.active {
-                display: block;
-            }
+        .screen { 
+            display: none;
+            min-height: 100vh;
+        }
 
-            /* ── Header ── */
-            .header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 16px 20px;
-                background: #1A1A24;
-                border-bottom: 1px solid #2A2A38;
-                position: sticky;
-                top: 0;
-                z-index: 10;
-            }
+        .screen.active {
+            display: block;
+        }
 
-            .header h2 {
-                font-size: 18px;
-                font-weight: 600;
-                letter-spacing: -0.02em;
-                color: #F0F0F5;
-                flex-shrink: 0;
-            }
+        /* ── Header ── */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: #1A1A24;
+            border-bottom: 1px solid #2A2A38;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
 
-            .header .header-left {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                min-width: 0;
-                flex: 1;
-            }
+        .header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: #F0F0F5;
+            flex-shrink: 0;
+        }
 
-            .header .header-left h2 {
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
+        .header .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            flex: 1;
+        }
 
-            .header-right {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            }
+        .header .header-left h2 {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-            /* ── Search bar ── */
-            .search-bar {
-                display: flex;
-                align-items: center;
-                padding: 8px 16px;
-                background: #1A1A24;
-                gap: 8px;
-                border-bottom: 1px solid #2A2A38;
-            }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-            .search-bar input {
-                flex: 1;
-                background: #2A2A38;
-                border: 1px solid #3A3A48;
-                border-radius: 10px;
-                padding: 10px 14px;
-                font-size: 14px;
-                font-family: inherit;
-                color: #E8E8ED;
-                outline: none;
-                transition: border-color 0.2s;
-            }
+        /* ── Search bar ── */
+        .search-bar {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            background: #1A1A24;
+            gap: 8px;
+            border-bottom: 1px solid #2A2A38;
+        }
 
-            .search-bar input:focus {
-                border-color: #7C4DFF;
-            }
+        .search-bar input {
+            flex: 1;
+            background: #2A2A38;
+            border: 1px solid #3A3A48;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #E8E8ED;
+            outline: none;
+            transition: border-color 0.2s;
+        }
 
-            .search-bar input::placeholder {
-                color: #6B6B80;
-            }
+        .search-bar input:focus {
+            border-color: #7C4DFF;
+        }
 
-            .search-bar .btn-clear {
-                background: transparent;
-                border: none;
-                color: #6B6B80;
-                font-size: 18px;
-                cursor: pointer;
-                padding: 4px 8px;
-                display: none;
-            }
+        .search-bar input::placeholder {
+            color: #6B6B80;
+        }
 
-            .search-bar .btn-clear.visible {
-                display: block;
-            }
+        .search-bar .btn-clear {
+            background: transparent;
+            border: none;
+            color: #6B6B80;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 8px;
+            display: none;
+        }
 
-            /* ── Tabs ── */
-            .tabs {
-                display: flex;
-                background: #1A1A24;
-                border-bottom: 1px solid #2A2A38;
-                padding: 0 16px;
-            }
+        .search-bar .btn-clear.visible {
+            display: block;
+        }
 
-            .tab {
-                padding: 12px 16px;
-                font-size: 14px;
-                font-weight: 500;
-                color: #6B6B80;
-                cursor: pointer;
-                border-bottom: 2px solid transparent;
-                transition: color 0.2s, border-color 0.2s;
-                user-select: none;
-            }
+        /* ── Tabs ── */
+        .tabs {
+            display: flex;
+            background: #1A1A24;
+            border-bottom: 1px solid #2A2A38;
+            padding: 0 16px;
+        }
 
-            .tab:hover {
-                color: #C0C0D0;
-            }
+        .tab {
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6B6B80;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: color 0.2s, border-color 0.2s;
+            user-select: none;
+        }
 
-            .tab.active {
-                color: #7C4DFF;
-                border-bottom-color: #7C4DFF;
-            }
+        .tab:hover {
+            color: #C0C0D0;
+        }
 
-            /* ── Status indicator ── */
-            .connection-status {
-                font-size: 11px;
-                padding: 3px 8px;
-                border-radius: 12px;
-                white-space: nowrap;
-            }
+        .tab.active {
+            color: #7C4DFF;
+            border-bottom-color: #7C4DFF;
+        }
 
-            .status-connected {
-                background: rgba(76, 175, 80, 0.2);
-                color: #4CAF50;
-            }
+        /* ── Status indicator ── */
+        .connection-status {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            white-space: nowrap;
+        }
 
-            .status-disconnected {
-                background: rgba(244, 67, 54, 0.2);
-                color: #F44336;
-            }
+        .status-connected {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+        }
 
-            .status-connecting {
-                background: rgba(255, 152, 0, 0.2);
-                color: #FF9800;
-            }
+        .status-disconnected {
+            background: rgba(244, 67, 54, 0.2);
+            color: #F44336;
+        }
 
-            /* ── Online badge in header ── */
-            .online-badge-header {
-                font-size: 12px;
-                color: #4CAF50;
-                background: rgba(76, 175, 80, 0.12);
-                padding: 3px 10px;
-                border-radius: 12px;
-                white-space: nowrap;
-            }
+        .status-connecting {
+            background: rgba(255, 152, 0, 0.2);
+            color: #FF9800;
+        }
 
-            /* ── Buttons ── */
-            .btn-icon {
-                width: 36px;
-                height: 36px;
-                border-radius: 10px;
-                border: none;
-                background: #2A2A38;
-                color: #C0C0D0;
-                font-size: 18px;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: background 0.2s, color 0.2s, transform 0.15s;
-                flex-shrink: 0;
-            }
+        /* ── Online badge in header ── */
+        .online-badge-header {
+            font-size: 12px;
+            color: #4CAF50;
+            background: rgba(76, 175, 80, 0.12);
+            padding: 3px 10px;
+            border-radius: 12px;
+            white-space: nowrap;
+        }
 
-            .btn-icon:hover {
-                background: #3A3A48;
-                color: #FFFFFF;
-            }
+        /* ── Buttons ── */
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: none;
+            background: #2A2A38;
+            color: #C0C0D0;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, color 0.2s, transform 0.15s;
+            flex-shrink: 0;
+        }
 
-            .btn-icon:active {
-                background: #4A4A58;
-                transform: scale(0.93);
-            }
+        .btn-icon:hover {
+            background: #3A3A48;
+            color: #FFFFFF;
+        }
 
-            /* ── Rooms Feed ── */
-            #rooms-list {
-                padding: 16px;
-                display: flex;
-                flex-direction: column;
-                gap: 12px;
-            }
+        .btn-icon:active {
+            background: #4A4A58;
+            transform: scale(0.93);
+        }
 
-            #rooms-list .empty-state {
-                text-align: center;
-                color: #6B6B80;
-                font-size: 15px;
-                padding: 48px 16px;
-                line-height: 1.6;
-            }
+        /* ── Rooms Feed ── */
+        #rooms-list {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
 
-            .card {
-                background: #1A1A24;
-                border: 1px solid #2A2A38;
-                border-radius: 14px;
-                padding: 16px;
-                cursor: pointer;
-                transition: border-color 0.2s, background 0.2s, transform 0.15s;
-            }
+        #rooms-list .empty-state {
+            text-align: center;
+            color: #6B6B80;
+            font-size: 15px;
+            padding: 48px 16px;
+            line-height: 1.6;
+        }
 
-            .card:hover {
-                border-color: #7C4DFF;
-                background: #1E1E2A;
-                transform: translateY(-1px);
-            }
+        .card {
+            background: #1A1A24;
+            border: 1px solid #2A2A38;
+            border-radius: 14px;
+            padding: 16px;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s, transform 0.15s;
+        }
 
-            .card:active {
+        .card:hover {
+            border-color: #7C4DFF;
+            background: #1E1E2A;
+            transform: translateY(-1px);
+        }
+
+        .card:active {
+            transform: translateY(0);
+        }
+
+        .card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #F0F0F5;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .card p {
+            font-size: 14px;
+            color: #9B9BB0;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .card .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .card .tag {
+            font-size: 12px;
+            color: #7C4DFF;
+            background: rgba(124, 77, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 6px;
+            letter-spacing: -0.01em;
+        }
+
+        .card .online-badge {
+            font-size: 11px;
+            color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .card .member-count {
+            font-size: 12px;
+            color: #6B6B80;
+            background: rgba(107, 107, 128, 0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .card .last-visited {
+            font-size: 11px;
+            color: #6B6B80;
+            display: block;
+            margin-top: 4px;
+        }
+
+        /* ── Loading shimmer ── */
+        .loading-shimmer {
+            background: linear-gradient(90deg, #1A1A24 25%, #222233 50%, #1A1A24 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s ease-in-out infinite;
+            border-radius: 14px;
+            height: 120px;
+            margin-bottom: 12px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .loading-text {
+            text-align: center;
+            color: #6B6B80;
+            padding: 24px;
+            font-size: 14px;
+        }
+
+        /* ── Refresh animation ── */
+        .btn-refresh.spinning {
+            animation: spin 0.6s ease-in-out;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ── Modal ── */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .modal-inner {
+            max-width: 400px;
+            margin: 60px auto;
+            background: #1A1A24;
+            border: 1px solid #2A2A38;
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .modal-inner h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #F0F0F5;
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
+        }
+
+        .modal-inner label {
+            display: block;
+            font-size: 13px;
+            color: #9B9BB0;
+            margin-bottom: 6px;
+            margin-top: 4px;
+        }
+
+        .modal-inner input,
+        .modal-inner textarea {
+            width: 100%;
+            background: #2A2A38;
+            border: 1px solid #3A3A48;
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 15px;
+            font-family: inherit;
+            color: #E8E8ED;
+            outline: none;
+            transition: border-color 0.2s;
+            margin-bottom: 12px;
+        }
+
+        .modal-inner input:focus,
+        .modal-inner textarea:focus {
+            border-color: #7C4DFF;
+        }
+
+        .modal-inner input::placeholder,
+        .modal-inner textarea::placeholder {
+            color: #6B6B80;
+        }
+
+        .modal-inner .char-count {
+            text-align: right;
+            font-size: 11px;
+            color: #6B6B80;
+            margin-top: -8px;
+            margin-bottom: 12px;
+        }
+
+        .modal-inner textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: inherit;
+            border: none;
+            border-radius: 10px;
+            background: #7C4DFF;
+            color: #FFFFFF;
+            cursor: pointer;
+            transition: background 0.2s, opacity 0.2s;
+        }
+
+        .btn-submit:hover {
+            background: #6C3DFF;
+        }
+
+        .btn-submit:active {
+            background: #5C2DFF;
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-submit.secondary {
+            background: #2A2A38;
+            color: #C0C0D0;
+            margin-top: 8px;
+        }
+
+        .btn-submit.secondary:hover {
+            background: #3A3A48;
+            color: #F0F0F5;
+        }
+
+        /* ── Chat Screen ── */
+        #chat-screen {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #0F0F13;
+        }
+
+        #chat-screen.active {
+            display: flex;
+        }
+
+        #chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .msg {
+            padding: 10px 14px;
+            border-radius: 16px;
+            font-size: 15px;
+            line-height: 1.4;
+            max-width: 80%;
+            word-break: break-word;
+            animation: msgIn 0.2s ease-out;
+            position: relative;
+        }
+
+        .msg .msg-time {
+            font-size: 10px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        .msg.my-msg {
+            background: #7C4DFF;
+            color: #FFFFFF;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .msg.my-msg .msg-time {
+            color: rgba(255,255,255,0.5);
+        }
+
+        .msg.other-msg {
+            background: #2A2A38;
+            color: #E8E8ED;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .msg.other-msg .msg-time {
+            color: rgba(255,255,255,0.25);
+        }
+
+        .msg.system-msg {
+            background: transparent;
+            color: #6B6B80;
+            align-self: center;
+            font-size: 13px;
+            font-style: italic;
+            text-align: center;
+            max-width: 100%;
+            padding: 6px 12px;
+        }
+
+        .msg.system-msg .msg-online {
+            display: block;
+            font-size: 11px;
+            font-style: normal;
+            color: #4CAF50;
+            margin-top: 2px;
+        }
+
+        @keyframes msgIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
                 transform: translateY(0);
             }
+        }
 
-            .card h3 {
-                font-size: 16px;
-                font-weight: 600;
-                color: #F0F0F5;
-                margin-bottom: 6px;
-                display: flex;
-                align-items: center;
-                flex-wrap: wrap;
-                gap: 6px;
-            }
+        .chat-input-container {
+            padding: 12px 16px;
+            background: #1A1A24;
+            border-top: 1px solid #2A2A38;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding-bottom: calc(12px + env(safe-area-inset-bottom));
+        }
 
-            .card p {
-                font-size: 14px;
-                color: #9B9BB0;
-                line-height: 1.5;
-                margin-bottom: 10px;
-            }
+        .chat-input-container input {
+            flex: 1;
+            background: #2A2A38;
+            border: 1px solid #3A3A48;
+            padding: 12px 16px;
+            border-radius: 24px;
+            font-size: 15px;
+            font-family: inherit;
+            color: #E8E8ED;
+            outline: none;
+            transition: border-color 0.2s;
+        }
 
-            .card .tags {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 6px;
-            }
+        .chat-input-container input:focus {
+            border-color: #7C4DFF;
+        }
 
-            .card .tag {
-                font-size: 12px;
-                color: #7C4DFF;
-                background: rgba(124, 77, 255, 0.1);
-                padding: 4px 10px;
-                border-radius: 6px;
-                letter-spacing: -0.01em;
-            }
+        .chat-input-container input::placeholder {
+            color: #6B6B80;
+        }
 
-            .card .online-badge {
-                font-size: 11px;
-                color: #4CAF50;
-                background: rgba(76, 175, 80, 0.1);
-                padding: 2px 8px;
-                border-radius: 10px;
-            }
+        .btn-send {
+            background: #7C4DFF;
+            color: white;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s, opacity 0.2s;
+            flex-shrink: 0;
+        }
 
-            .card .member-count {
-                font-size: 12px;
-                color: #6B6B80;
-                background: rgba(107, 107, 128, 0.1);
-                padding: 2px 8px;
-                border-radius: 10px;
-            }
+        .btn-send:hover {
+            background: #6C3DFF;
+        }
 
-            .card .last-visited {
-                font-size: 11px;
-                color: #6B6B80;
-                display: block;
-                margin-top: 4px;
-            }
+        .btn-send:active {
+            background: #5C2DFF;
+            transform: scale(0.95);
+        }
 
-            /* ── Loading shimmer ── */
-            .loading-shimmer {
-                background: linear-gradient(90deg, #1A1A24 25%, #222233 50%, #1A1A24 75%);
-                background-size: 200% 100%;
-                animation: shimmer 1.5s ease-in-out infinite;
-                border-radius: 14px;
-                height: 120px;
-                margin-bottom: 12px;
-            }
+        .btn-send:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
 
-            @keyframes shimmer {
-                0% { background-position: 200% 0; }
-                100% { background-position: -200% 0; }
-            }
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
 
-            .loading-text {
-                text-align: center;
-                color: #6B6B80;
-                padding: 24px;
-                font-size: 14px;
-            }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
 
-            /* ── Refresh animation ── */
-            .btn-refresh.spinning {
-                animation: spin 0.6s ease-in-out;
-            }
+        ::-webkit-scrollbar-thumb {
+            background: #3A3A48;
+            border-radius: 4px;
+        }
 
-            @keyframes spin {
-                to { transform: rotate(360deg); }
-            }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4A4A58;
+        }
 
-            /* ── Modal ── */
-            .modal {
-                display: none;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.7);
-                backdrop-filter: blur(8px);
-                z-index: 100;
-                padding: 24px;
-                overflow-y: auto;
-            }
+        /* ── toast ── */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #1A1A24;
+            border: 1px solid #2A2A38;
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-size: 13px;
+            color: #E8E8ED;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 200;
+            pointer-events: none;
+            white-space: nowrap;
+        }
 
-            .modal-inner {
-                max-width: 400px;
-                margin: 60px auto;
-                background: #1A1A24;
-                border: 1px solid #2A2A38;
-                border-radius: 16px;
-                padding: 24px;
-            }
+        .toast.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
 
-            .modal-inner h2 {
-                font-size: 20px;
-                font-weight: 600;
-                color: #F0F0F5;
-                margin-bottom: 20px;
-                letter-spacing: -0.02em;
-            }
+    <!-- DEBUG BAR — удалите когда всё заработает -->
+    <div id="debug-bar">
+        <span><span class="debug-label">TG ID:</span> <span id="dbg-tgid" class="debug-val">—</span></span>
+        <span><span class="debug-label">Имя:</span> <span id="dbg-name" class="debug-val">—</span></span>
+        <span><span class="debug-label">WebApp:</span> <span id="dbg-webapp" class="debug-warn">—</span></span>
+        <span><span class="debug-label">initData:</span> <span id="dbg-initdata" class="debug-warn">—</span></span>
+        <span><span class="debug-label">User:</span> <span id="dbg-user" class="debug-warn">—</span></span>
+        <span><span class="debug-label">Вериф:</span> <span id="dbg-verified" class="debug-warn">—</span></span>
+    </div>
 
-            .modal-inner label {
-                display: block;
-                font-size: 13px;
-                color: #9B9BB0;
-                margin-bottom: 6px;
-                margin-top: 4px;
-            }
+    <!-- TOAST -->
+    <div id="toast" class="toast"></div>
 
-            .modal-inner input,
-            .modal-inner textarea {
-                width: 100%;
-                background: #2A2A38;
-                border: 1px solid #3A3A48;
-                border-radius: 10px;
-                padding: 12px 14px;
-                font-size: 15px;
-                font-family: inherit;
-                color: #E8E8ED;
-                outline: none;
-                transition: border-color 0.2s;
-                margin-bottom: 12px;
-            }
-
-            .modal-inner input:focus,
-            .modal-inner textarea:focus {
-                border-color: #7C4DFF;
-            }
-
-            .modal-inner input::placeholder,
-            .modal-inner textarea::placeholder {
-                color: #6B6B80;
-            }
-
-            .modal-inner .char-count {
-                text-align: right;
-                font-size: 11px;
-                color: #6B6B80;
-                margin-top: -8px;
-                margin-bottom: 12px;
-            }
-
-            .modal-inner textarea {
-                resize: vertical;
-                min-height: 80px;
-            }
-
-            .btn-submit {
-                width: 100%;
-                padding: 12px;
-                font-size: 15px;
-                font-weight: 600;
-                font-family: inherit;
-                border: none;
-                border-radius: 10px;
-                background: #7C4DFF;
-                color: #FFFFFF;
-                cursor: pointer;
-                transition: background 0.2s, opacity 0.2s;
-            }
-
-            .btn-submit:hover {
-                background: #6C3DFF;
-            }
-
-            .btn-submit:active {
-                background: #5C2DFF;
-            }
-
-            .btn-submit:disabled {
-                opacity: 0.5;
-                cursor: not-allowed;
-            }
-
-            .btn-submit.secondary {
-                background: #2A2A38;
-                color: #C0C0D0;
-                margin-top: 8px;
-            }
-
-            .btn-submit.secondary:hover {
-                background: #3A3A48;
-                color: #F0F0F5;
-            }
-
-            /* ── Chat Screen ── */
-            #chat-screen {
-                display: none;
-                flex-direction: column;
-                height: 100vh;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                background: #0F0F13;
-            }
-
-            #chat-screen.active {
-                display: flex;
-            }
-
-            #chat-messages {
-                flex: 1;
-                overflow-y: auto;
-                padding: 16px;
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .msg {
-                padding: 10px 14px;
-                border-radius: 16px;
-                font-size: 15px;
-                line-height: 1.4;
-                max-width: 80%;
-                word-break: break-word;
-                animation: msgIn 0.2s ease-out;
-                position: relative;
-            }
-
-            .msg .msg-time {
-                font-size: 10px;
-                color: rgba(255,255,255,0.4);
-                margin-top: 4px;
-                text-align: right;
-            }
-
-            .msg.my-msg {
-                background: #7C4DFF;
-                color: #FFFFFF;
-                align-self: flex-end;
-                border-bottom-right-radius: 4px;
-            }
-
-            .msg.my-msg .msg-time {
-                color: rgba(255,255,255,0.5);
-            }
-
-            .msg.other-msg {
-                background: #2A2A38;
-                color: #E8E8ED;
-                align-self: flex-start;
-                border-bottom-left-radius: 4px;
-            }
-
-            .msg.other-msg .msg-time {
-                color: rgba(255,255,255,0.25);
-            }
-
-            .msg.system-msg {
-                background: transparent;
-                color: #6B6B80;
-                align-self: center;
-                font-size: 13px;
-                font-style: italic;
-                text-align: center;
-                max-width: 100%;
-                padding: 6px 12px;
-            }
-
-            .msg.system-msg .msg-online {
-                display: block;
-                font-size: 11px;
-                font-style: normal;
-                color: #4CAF50;
-                margin-top: 2px;
-            }
-
-            @keyframes msgIn {
-                from {
-                    opacity: 0;
-                    transform: translateY(6px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-
-            .chat-input-container {
-                padding: 12px 16px;
-                background: #1A1A24;
-                border-top: 1px solid #2A2A38;
-                display: flex;
-                gap: 10px;
-                align-items: center;
-                padding-bottom: calc(12px + env(safe-area-inset-bottom));
-            }
-
-            .chat-input-container input {
-                flex: 1;
-                background: #2A2A38;
-                border: 1px solid #3A3A48;
-                padding: 12px 16px;
-                border-radius: 24px;
-                font-size: 15px;
-                font-family: inherit;
-                color: #E8E8ED;
-                outline: none;
-                transition: border-color 0.2s;
-            }
-
-            .chat-input-container input:focus {
-                border-color: #7C4DFF;
-            }
-
-            .chat-input-container input::placeholder {
-                color: #6B6B80;
-            }
-
-            .btn-send {
-                background: #7C4DFF;
-                color: white;
-                border: none;
-                width: 44px;
-                height: 44px;
-                border-radius: 50%;
-                font-size: 18px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                transition: background 0.2s, transform 0.15s, opacity 0.2s;
-                flex-shrink: 0;
-            }
-
-            .btn-send:hover {
-                background: #6C3DFF;
-            }
-
-            .btn-send:active {
-                background: #5C2DFF;
-                transform: scale(0.95);
-            }
-
-            .btn-send:disabled {
-                opacity: 0.4;
-                cursor: not-allowed;
-                transform: none;
-            }
-
-            /* ── Scrollbar ── */
-            ::-webkit-scrollbar {
-                width: 4px;
-            }
-
-            ::-webkit-scrollbar-track {
-                background: transparent;
-            }
-
-            ::-webkit-scrollbar-thumb {
-                background: #3A3A48;
-                border-radius: 4px;
-            }
-
-            ::-webkit-scrollbar-thumb:hover {
-                background: #4A4A58;
-            }
-
-            /* ── toast ── */
-            .toast {
-                position: fixed;
-                bottom: 80px;
-                left: 50%;
-                transform: translateX(-50%) translateY(20px);
-                background: #1A1A24;
-                border: 1px solid #2A2A38;
-                border-radius: 12px;
-                padding: 10px 20px;
-                font-size: 13px;
-                color: #E8E8ED;
-                opacity: 0;
-                transition: opacity 0.3s, transform 0.3s;
-                z-index: 200;
-                pointer-events: none;
-                white-space: nowrap;
-            }
-
-            .toast.visible {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-        </style>
-    </head>
-    <body>
-
-        <!-- TOAST -->
-        <div id="toast" class="toast"></div>
-
-        <!-- FEED SCREEN -->
-        <div id="feed-screen" class="screen active">
-            <div class="header">
-                <h2>Roomer</h2>
-                <div class="header-right">
-                    <button class="btn-icon btn-refresh" onclick="refreshRooms(this)" title="Обновить">⟳</button>
-                    <button class="btn-icon" onclick="toggleModal(true)" title="Создать комнату">+</button>
-                </div>
-            </div>
-            <div class="search-bar">
-                <input type="text" id="search-input" placeholder="Поиск комнат по названию, описанию, тегам..." autocomplete="off">
-                <button class="btn-clear" id="btn-clear-search" onclick="clearSearch()">✕</button>
-            </div>
-            <div class="tabs">
-                <div class="tab active" data-tab="all" onclick="switchTab('all')">Все комнаты</div>
-                <div class="tab" data-tab="my" onclick="switchTab('my')">Мои комнаты</div>
-            </div>
-            <div id="rooms-list">
-                <div class="loading-shimmer"></div>
-                <div class="loading-shimmer"></div>
-                <div class="loading-shimmer"></div>
+    <!-- FEED SCREEN -->
+    <div id="feed-screen" class="screen active">
+        <div class="header">
+            <h2>Roomer</h2>
+            <div class="header-right">
+                <button class="btn-icon btn-refresh" onclick="refreshRooms(this)" title="Обновить">⟳</button>
+                <button class="btn-icon" onclick="toggleModal(true)" title="Создать комнату">+</button>
             </div>
         </div>
+        <div class="search-bar">
+            <input type="text" id="search-input" placeholder="Поиск комнат по названию, описанию, тегам..." autocomplete="off">
+            <button class="btn-clear" id="btn-clear-search" onclick="clearSearch()">✕</button>
+        </div>
+        <div class="tabs">
+            <div class="tab active" data-tab="all" onclick="switchTab('all')">Все комнаты</div>
+            <div class="tab" data-tab="my" onclick="switchTab('my')">Мои комнаты</div>
+        </div>
+        <div id="rooms-list">
+            <div class="loading-shimmer"></div>
+            <div class="loading-shimmer"></div>
+            <div class="loading-shimmer"></div>
+        </div>
+    </div>
 
-        <!-- MODAL for creating room -->
-        <div id="create-modal" class="modal">
-            <div class="modal-inner">
-                <h2>Создать комнату</h2>
-                <label for="room-title">Название</label>
-                <input type="text" id="room-title" maxlength="100" placeholder="Название комнаты">
-                <label for="room-desc">Описание</label>
-                <textarea id="room-desc" rows="3" maxlength="500" placeholder="О чём эта комната?"></textarea>
-                <label for="room-tags">Теги</label>
-                <input type="text" id="room-tags" placeholder="rust, design, chat (через запятую)">
-                <div class="char-count">до 10 тегов</div>
-                <button class="btn-submit" id="btn-create-room" onclick="submitRoom()">Создать комнату</button>
-                <button class="btn-submit secondary" onclick="toggleModal(false)">Отмена</button>
+    <!-- MODAL for creating room -->
+    <div id="create-modal" class="modal">
+        <div class="modal-inner">
+            <h2>Создать комнату</h2>
+            <label for="room-title">Название</label>
+            <input type="text" id="room-title" maxlength="100" placeholder="Название комнаты">
+            <label for="room-desc">Описание</label>
+            <textarea id="room-desc" rows="3" maxlength="500" placeholder="О чём эта комната?"></textarea>
+            <label for="room-tags">Теги</label>
+            <input type="text" id="room-tags" placeholder="rust, design, chat (через запятую)">
+            <div class="char-count">до 10 тегов</div>
+            <button class="btn-submit" id="btn-create-room" onclick="submitRoom()">Создать комнату</button>
+            <button class="btn-submit secondary" onclick="toggleModal(false)">Отмена</button>
+        </div>
+    </div>
+
+    <!-- CHAT SCREEN -->
+    <div id="chat-screen" class="screen">
+        <div class="header">
+            <div class="header-left">
+                <button class="btn-icon" onclick="closeChat()">←</button>
+                <h2 id="chat-room-title">Чат</h2>
+            </div>
+            <div class="header-right">
+                <span id="online-count" class="online-badge-header" style="display:none">● 0</span>
+                <span id="connection-status" class="connection-status status-connecting">...</span>
             </div>
         </div>
-
-        <!-- CHAT SCREEN -->
-        <div id="chat-screen" class="screen">
-            <div class="header">
-                <div class="header-left">
-                    <button class="btn-icon" onclick="closeChat()">←</button>
-                    <h2 id="chat-room-title">Чат</h2>
-                </div>
-                <div class="header-right">
-                    <span id="online-count" class="online-badge-header" style="display:none">● 0</span>
-                    <span id="connection-status" class="connection-status status-connecting">...</span>
-                </div>
-            </div>
-            <div id="chat-messages"></div>
-            <div class="chat-input-container">
-                <input type="text" id="chat-input" placeholder="Сообщение..." maxlength="500" autocomplete="off">
-                <button class="btn-send" id="btn-send" disabled>→</button>
-            </div>
+        <div id="chat-messages"></div>
+        <div class="chat-input-container">
+            <input type="text" id="chat-input" placeholder="Сообщение..." maxlength="500" autocomplete="off">
+            <button class="btn-send" id="btn-send" disabled>→</button>
         </div>
+    </div>
 
-        <script>
-            // === НАСТРОЙКА АДРЕСОВ ===
-            const API_URL = 'https://roomer-alh1mikk.amvera.io';
-            const WS_URL = 'wss://roomer-alh1mikk.amvera.io';
+    <script>
+        // === НАСТРОЙКА АДРЕСОВ ===
+        const API_URL = 'https://roomer-alh1mikk.amvera.io';
+        const WS_URL = 'wss://roomer-alh1mikk.amvera.io';
 
         // ─── Данные пользователя ───
-        // Сохраняем ID в sessionStorage (только на время сессии), чтобы не было
-        // пересечения между разными браузерами/устройствами
-        let tgUserId = parseInt(sessionStorage.getItem('roomer_user_id'));
-        let tgUserName = "Аноним";
-        let userDbId = null;
-        let isTelegramUser = false;
+        let tgUserId = null;           // Telegram ID (число)
+        let tgUserName = "Аноним";     // Имя пользователя
+        let userDbId = null;           // ID в вашей базе данных
+        let isTelegramUser = false;    // Флаг: пользователь из Telegram
+        let isVerifiedUser = false;    // Флаг: пользователь прошёл проверку initData
+        let tgInitData = "";           // Сырая строка initData от Telegram
 
-        // Детектим Telegram: сам факт существования window.Telegram.WebApp
-        // означает, что мы внутри Telegram (Mini App или встроенный браузер)
+        // ═══════════════════════════════════════════
+        // ОПРЕДЕЛЕНИЕ ПОЛЬЗОВАТЕЛЯ
+        // ═══════════════════════════════════════════
+
+        // 1. Пробуем получить данные из Telegram WebApp (Mini App)
         if (window.Telegram && window.Telegram.WebApp) {
             const tg = window.Telegram.WebApp;
             try { tg.ready(); tg.expand(); } catch(e) {}
             
-            isTelegramUser = true;
+            isTelegramUser = true;  // Мы внутри Telegram!
             
+            // Сохраняем initData для отправки на сервер
+            if (tg.initData) {
+                tgInitData = tg.initData;
+            }
+            
+            // Проверяем, есть ли данные пользователя
             if (tg.initDataUnsafe?.user?.id) {
-                // Пользователь аутентифицирован в Telegram Mini App
                 tgUserId = tg.initDataUnsafe.user.id;
-                tgUserName = tg.initDataUnsafe.user.first_name || "Юзер Telegram";
+                tgUserName = tg.initDataUnsafe.user.first_name || tgUserName;
                 console.log('✅ Telegram Mini App user:', tgUserId, tgUserName);
             } else {
-                // Открыто внутри Telegram, но без данных пользователя
-                // (встроенный браузер или Mini App без авторизации)
-                // Генерируем ID на основе hash-части initData, если есть
-                if (tg.initData) {
-                    // initData — это строка вида "query_id=...&user=..."
-                    // Используем хеш от initData для стабильного ID в рамках чата
-                    let hash = 0;
-                    for (let i = 0; i < tg.initData.length; i++) {
-                        hash = ((hash << 5) - hash) + tg.initData.charCodeAt(i);
-                        hash |= 0;
-                    }
-                    tgUserId = Math.abs(hash) % 90000 + 10000;
-                } else {
-                    tgUserId = Math.floor(Math.random() * 90000) + 10000;
-                }
-                console.log('✅ In-Telegram context (no user data)');
+                console.log('⚠️ В Telegram, но без данных пользователя (initDataUnsafe.user пуст)');
             }
-            sessionStorage.setItem('roomer_user_id', tgUserId.toString());
-        } else {
-            // Обычный браузер — генерируем случайный ID на сессию
-            tgUserId = Math.floor(Math.random() * 90000) + 10000;
-            sessionStorage.setItem('roomer_user_id', tgUserId.toString());
-            console.log('ℹ️ Regular browser, anonymous ID:', tgUserId);
         }
-        
-        // Проверяем URL параметры на случай передачи tg_id через ссылку
-        (function checkUrlParams() {
+
+        // 2. Проверяем URL параметры (если перешли по ссылке с tg_id)
+        if (!tgUserId) {
             const params = new URLSearchParams(window.location.search);
             if (params.has('tg_id')) {
                 tgUserId = parseInt(params.get('tg_id'));
+                tgUserName = params.get('username') || tgUserName;
                 isTelegramUser = true;
-                console.log('✅ Telegram user from URL param:', tgUserId);
+                console.log('✅ Telegram user from URL params:', tgUserId);
             }
-            if (params.has('username')) {
-                tgUserName = params.get('username');
+        }
+
+        // 3. Если после всех проверок ID нет — генерируем временный
+        if (!tgUserId) {
+            const savedId = sessionStorage.getItem('roomer_temp_id');
+            if (savedId) {
+                tgUserId = parseInt(savedId);
+            } else {
+                tgUserId = Math.floor(Math.random() * 90000) + 10000;
+                sessionStorage.setItem('roomer_temp_id', tgUserId.toString());
             }
-        })();
+            console.log('ℹ️ Temporary anonymous ID:', tgUserId);
+        }
 
-            // ─── Состояние ───
-            let wsConnection = null;
-            let pingInterval = null;
-            let currentRoomId = null;
-            let shouldReconnect = false;
-            let reconnectAttempts = 0;
-            let lastPongTime = Date.now();
-            let onlineCount = 0;
-            let currentTab = 'all';
-            let searchQuery = '';
-            let searchTimer = null;
+        // Сохраняем в sessionStorage
+        if (isTelegramUser && tgUserId) {
+            sessionStorage.setItem('roomer_tg_id', tgUserId.toString());
+            sessionStorage.setItem('roomer_tg_name', tgUserName);
+            if (tgInitData) {
+                sessionStorage.setItem('roomer_initdata', tgInitData);
+            }
+        }
 
-            // ─── Утилиты ───
+        // ═══════════════════════════════════════════
+        // ДЕБАГ-ПАНЕЛЬ
+        // ═══════════════════════════════════════════
+        function updateDebugBar() {
+            document.getElementById('dbg-tgid').textContent = tgUserId || '—';
+            document.getElementById('dbg-name').textContent = tgUserName || '—';
+            document.getElementById('dbg-webapp').textContent = (!!window.Telegram?.WebApp) ? '✅' : '❌ нет';
+            document.getElementById('dbg-initdata').textContent = tgInitData ? '✅ есть' : '❌ нет';
+            document.getElementById('dbg-user').textContent = (tgUserId && tgUserId > 10000) ? '✅' : '⚠️ аноним';
+            document.getElementById('dbg-verified').textContent = isVerifiedUser ? '✅' : '❌ нет';
+        }
+        updateDebugBar();
 
-            function formatTime(dateStr) {
-                if (!dateStr) return '';
-                const d = new Date(dateStr);
-                return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        console.log('🔍 DEBUG INFO:');
+        console.log('  has WebApp:', !!window.Telegram?.WebApp);
+        console.log('  initData exists:', !!tgInitData);
+        console.log('  initData length:', tgInitData.length);
+        console.log('  initDataUnsafe.user:', window.Telegram?.WebApp?.initDataUnsafe?.user);
+        console.log('  tgUserId:', tgUserId);
+        console.log('  tgUserName:', tgUserName);
+        console.log('  isTelegramUser:', isTelegramUser);
+
+        // ─── Состояние ───
+        let wsConnection = null;
+        let pingInterval = null;
+        let currentRoomId = null;
+        let shouldReconnect = false;
+        let reconnectAttempts = 0;
+        let lastPongTime = Date.now();
+        let onlineCount = 0;
+        let currentTab = 'all';
+        let searchQuery = '';
+        let searchTimer = null;
+
+        // ─── Утилиты ───
+
+        function formatTime(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            const now = new Date();
+            const diff = now - d;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            if (days === 0) return 'сегодня';
+            if (days === 1) return 'вчера';
+            return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+        }
+
+        function showToast(text, duration = 2500) {
+            const el = document.getElementById('toast');
+            el.textContent = text;
+            el.classList.add('visible');
+            clearTimeout(el._hideTimeout);
+            el._hideTimeout = setTimeout(() => el.classList.remove('visible'), duration);
+        }
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            const el = document.getElementById(screenId);
+            if (el) el.classList.add('active');
+        }
+
+        function updateConnectionStatus(state) {
+            const el = document.getElementById('connection-status');
+            if (!el) return;
+            const texts = {
+                connected: 'онлайн',
+                connecting: '...',
+                disconnected: 'офлайн'
+            };
+            const classes = {
+                connected: 'status-connected',
+                connecting: 'status-connecting',
+                disconnected: 'status-disconnected'
+            };
+            el.textContent = texts[state] || texts.disconnected;
+            el.className = 'connection-status ' + (classes[state] || classes.disconnected);
+        }
+
+        function updateOnlineCount(count) {
+            const el = document.getElementById('online-count');
+            if (!el) return;
+            onlineCount = count;
+            if (count > 0) {
+                el.textContent = '● ' + count;
+                el.style.display = '';
+            } else {
+                el.style.display = 'none';
+            }
+        }
+
+        // ─── API ───
+
+        async function apiFetch(url, options = {}) {
+            const defaultOptions = {
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            };
+
+            const mergedOptions = { ...defaultOptions, ...options };
+            if (mergedOptions.headers) {
+                mergedOptions.headers = { ...defaultOptions.headers, ...options.headers };
             }
 
-            function formatDate(dateStr) {
-                if (!dateStr) return '';
-                const d = new Date(dateStr);
-                const now = new Date();
-                const diff = now - d;
-                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                if (days === 0) return 'сегодня';
-                if (days === 1) return 'вчера';
-                return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+            const response = await fetch(API_URL + url, mergedOptions);
+
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errText || response.statusText}`);
             }
 
-            function showToast(text, duration = 2500) {
-                const el = document.getElementById('toast');
-                el.textContent = text;
-                el.classList.add('visible');
-                clearTimeout(el._hideTimeout);
-                el._hideTimeout = setTimeout(() => el.classList.remove('visible'), duration);
-            }
+            return response.json();
+        }
 
-            function switchScreen(screenId) {
-                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-                const el = document.getElementById(screenId);
-                if (el) el.classList.add('active');
-            }
+        // ─── Авторизация ───
 
-            function updateConnectionStatus(state) {
-                const el = document.getElementById('connection-status');
-                if (!el) return;
-                const texts = {
-                    connected: 'онлайн',
-                    connecting: '...',
-                    disconnected: 'офлайн'
-                };
-                const classes = {
-                    connected: 'status-connected',
-                    connecting: 'status-connecting',
-                    disconnected: 'status-disconnected'
-                };
-                el.textContent = texts[state] || texts.disconnected;
-                el.className = 'connection-status ' + (classes[state] || classes.disconnected);
-            }
-
-            function updateOnlineCount(count) {
-                const el = document.getElementById('online-count');
-                if (!el) return;
-                onlineCount = count;
-                if (count > 0) {
-                    el.textContent = '● ' + count;
-                    el.style.display = '';
-                } else {
-                    el.style.display = 'none';
-                }
-            }
-
-            // ─── API ───
-
-            async function apiFetch(url, options = {}) {
-                const defaultOptions = {
-                    mode: 'cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                };
-
-                const mergedOptions = { ...defaultOptions, ...options };
-                if (mergedOptions.headers) {
-                    mergedOptions.headers = { ...defaultOptions.headers, ...options.headers };
-                }
-
-                const response = await fetch(API_URL + url, mergedOptions);
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-
-                return response.json();
-            }
-
-            // ─── Авторизация ───
-
-            async function loginUser() {
-                // Собираем initData, если мы в Telegram
-                let initDataStr = "";
-                try {
-                    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
-                        initDataStr = window.Telegram.WebApp.initData;
-                    }
-                } catch(e) {
-                    console.warn('⚠️ initData read error:', e);
-                }
+        async function loginUser() {
+            console.log('🔐 loginUser(): tg_id=' + tgUserId + ', hasInitData=' + !!tgInitData);
+            
+            try {
+                const result = await apiFetch('/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        tg_id: tgUserId,
+                        username: tgUserName,
+                        bio: "",
+                        init_data: tgInitData
+                    })
+                });
                 
-                try {
-                    const result = await apiFetch('/auth/login', {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            tg_id: tgUserId,
-                            username: tgUserName,
-                            bio: "",
-                            init_data: initDataStr
-                        })
+                if (result.status === 'success') {
+                    userDbId = result.user_id;
+                    tgUserId = result.tg_id;        // Сервер мог вернуть другой ID
+                    tgUserName = result.username;    // Сервер мог вернуть другое имя
+                    isVerifiedUser = result.is_verified || false;
+                    
+                    console.log('✅ Auth OK:', {
+                        db_id: userDbId,
+                        tg_id: tgUserId,
+                        username: tgUserName,
+                        verified: isVerifiedUser
                     });
-                    if (result.status === 'success') {
-                        userDbId = result.user_id;
-                        console.log(`✅ Авторизован: id=${userDbId}, tg_id=${tgUserId}, username=${result.username}`);
-                    } else if (result.error) {
-                        console.warn('⚠️ Auth error:', result.error);
-                    }
-                } catch (e) {
-                    console.warn('⚠️ Auth failed (non-critical):', e.message);
+                    
+                    // Обновляем sessionStorage
+                    sessionStorage.setItem('roomer_tg_id', tgUserId.toString());
+                    sessionStorage.setItem('roomer_tg_name', tgUserName);
+                    
+                    updateDebugBar();
+                } else if (result.error) {
+                    console.warn('⚠️ Auth error:', result.error);
                 }
+            } catch (e) {
+                console.warn('⚠️ Auth failed (non-critical):', e.message);
+            }
+        }
+
+        // ─── Загрузка комнат ───
+
+        async function fetchRooms() {
+            const list = document.getElementById('rooms-list');
+            let url = '/rooms';
+
+            if (currentTab === 'my') {
+                if (!tgUserId || tgUserId < 1) {
+                    list.innerHTML = '<div class="empty-state">Для доступа к истории войдите через Telegram</div>';
+                    return;
+                }
+                url = '/my-rooms?tg_id=' + tgUserId;
             }
 
-            // ─── Загрузка комнат ───
+            if (searchQuery.trim()) {
+                url = '/rooms/search?q=' + encodeURIComponent(searchQuery);
+            }
 
-            async function fetchRooms() {
-                const list = document.getElementById('rooms-list');
-                let url = '/rooms';
+            try {
+                const rooms = await apiFetch(url);
 
-                if (currentTab === 'my') {
-                    if (!isTelegramUser) {
-                        list.innerHTML = '<div class="empty-state">Для доступа к истории войдите через Telegram</div>';
-                        return;
+                if (!rooms || rooms.length === 0) {
+                    if (searchQuery) {
+                        list.innerHTML = '<div class="empty-state">Ничего не найдено по запросу<br>"' + searchQuery + '"</div>';
+                    } else if (currentTab === 'my') {
+                        list.innerHTML = '<div class="empty-state">Вы ещё не создали ни одной комнаты.<br>Создайте её через кнопку +</div>';
+                    } else {
+                        list.innerHTML = '<div class="empty-state">Комнат пока нет.<br>Создайте первую!</div>';
                     }
-                    url = '/my-rooms?tg_id=' + tgUserId;
+                    return;
                 }
 
-                if (searchQuery.trim()) {
-                    url = '/rooms/search?q=' + encodeURIComponent(searchQuery);
-                }
-
-                try {
-                    const rooms = await apiFetch(url);
-
-                    if (!rooms || rooms.length === 0) {
-                        if (searchQuery) {
-                            list.innerHTML = '<div class="empty-state">Ничего не найдено по запросу<br>"' + searchQuery + '"</div>';
-                        } else if (currentTab === 'my') {
-                            list.innerHTML = '<div class="empty-state">Вы ещё не создали ни одной комнаты.<br>Создайте её через кнопку +</div>';
-                        } else {
-                            list.innerHTML = '<div class="empty-state">Комнат пока нет.<br>Создайте первую!</div>';
-                        }
-                        return;
-                    }
-
-                    list.innerHTML = rooms.map(room => {
-                        const safeTitle = (room.title || 'Без названия').replace(/'/g, "\\'");
-                        return `
-                            <div class="card" onclick="openChat(${room.id}, '${safeTitle}')">
-                                <h3>
-                                    ${room.title || 'Без названия'}
-                                    ${room.online > 0 ? `<span class="online-badge">● ${room.online}</span>` : ''}
-                                </h3>
-                                <p>${room.description || ''}</p>
-                                <div class="tags">${(room.tags || []).map(tag => `<span class="tag">#${tag}</span>`).join('')}</div>
-                            </div>
-                        `;
-                    }).join('');
-                } catch (e) {
-                    console.error('Error fetching rooms:', e);
-                    list.innerHTML = `
-                        <div class="empty-state" style="color:#E55;">
-                            Ошибка подключения<br>
-                            <span style="font-size:13px;color:#9B9BB0;">${e.message}</span>
-                            <br><br>
-                            <button class="btn-submit" style="width:auto;padding:10px 24px;display:inline-block;" onclick="fetchRooms()">Повторить</button>
+                list.innerHTML = rooms.map(room => {
+                    const safeTitle = (room.title || 'Без названия').replace(/'/g, "\\'");
+                    return `
+                        <div class="card" onclick="openChat(${room.id}, '${safeTitle}')">
+                            <h3>
+                                ${room.title || 'Без названия'}
+                                ${room.online > 0 ? `<span class="online-badge">● ${room.online}</span>` : ''}
+                            </h3>
+                            <p>${room.description || ''}</p>
+                            <div class="tags">${(room.tags || []).map(tag => `<span class="tag">#${tag}</span>`).join('')}</div>
                         </div>
                     `;
-                }
+                }).join('');
+            } catch (e) {
+                console.error('Error fetching rooms:', e);
+                list.innerHTML = `
+                    <div class="empty-state" style="color:#E55;">
+                        Ошибка подключения<br>
+                        <span style="font-size:13px;color:#9B9BB0;">${e.message}</span>
+                        <br><br>
+                        <button class="btn-submit" style="width:auto;padding:10px 24px;display:inline-block;" onclick="fetchRooms()">Повторить</button>
+                    </div>
+                `;
             }
+        }
 
-            function refreshRooms(btn) {
-                btn.classList.add('spinning');
-                setTimeout(() => btn.classList.remove('spinning'), 600);
+        function refreshRooms(btn) {
+            btn.classList.add('spinning');
+            setTimeout(() => btn.classList.remove('spinning'), 600);
+            document.getElementById('rooms-list').innerHTML = `
+                <div class="loading-shimmer"></div>
+                <div class="loading-shimmer"></div>
+                <div class="loading-shimmer"></div>
+            `;
+            fetchRooms();
+        }
+
+        // ─── Поиск ───
+
+        function onSearchInput() {
+            const input = document.getElementById('search-input');
+            const clearBtn = document.getElementById('btn-clear-search');
+            searchQuery = input.value.trim();
+            
+            clearBtn.classList.toggle('visible', input.value.length > 0);
+            
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
                 document.getElementById('rooms-list').innerHTML = `
                     <div class="loading-shimmer"></div>
                     <div class="loading-shimmer"></div>
                     <div class="loading-shimmer"></div>
                 `;
                 fetchRooms();
+            }, 300);
+        }
+
+        function clearSearch() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('btn-clear-search').classList.remove('visible');
+            searchQuery = '';
+            document.getElementById('rooms-list').innerHTML = `
+                <div class="loading-shimmer"></div>
+                <div class="loading-shimmer"></div>
+                <div class="loading-shimmer"></div>
+            `;
+            fetchRooms();
+        }
+
+        // ─── Табы ───
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+            document.getElementById('rooms-list').innerHTML = `
+                <div class="loading-shimmer"></div>
+                <div class="loading-shimmer"></div>
+                <div class="loading-shimmer"></div>
+            `;
+            fetchRooms();
+        }
+
+        // ─── Создание комнаты ───
+
+        async function submitRoom() {
+            const title = document.getElementById('room-title').value.trim();
+            const description = document.getElementById('room-desc').value.trim();
+            const tagsRaw = document.getElementById('room-tags').value;
+            const btn = document.getElementById('btn-create-room');
+
+            if (!title) {
+                showToast('Введите название комнаты');
+                return;
             }
 
-            // ─── Поиск ───
+            const tags = tagsRaw.split(',').map(t => t.trim()).filter(t => t.length > 0).slice(0, 10);
 
-            function onSearchInput() {
-                const input = document.getElementById('search-input');
-                const clearBtn = document.getElementById('btn-clear-search');
-                searchQuery = input.value.trim();
-                
-                clearBtn.classList.toggle('visible', input.value.length > 0);
-                
-                clearTimeout(searchTimer);
-                searchTimer = setTimeout(() => {
-                    if (currentTab === 'my' && !isTelegramUser) return;
-                    document.getElementById('rooms-list').innerHTML = `
-                        <div class="loading-shimmer"></div>
-                        <div class="loading-shimmer"></div>
-                        <div class="loading-shimmer"></div>
-                    `;
-                    fetchRooms();
-                }, 300);
-            }
+            btn.disabled = true;
+            btn.textContent = 'Создание...';
 
-            function clearSearch() {
-                document.getElementById('search-input').value = '';
-                document.getElementById('btn-clear-search').classList.remove('visible');
-                searchQuery = '';
-                document.getElementById('rooms-list').innerHTML = `
-                    <div class="loading-shimmer"></div>
-                    <div class="loading-shimmer"></div>
-                    <div class="loading-shimmer"></div>
-                `;
+            try {
+                await apiFetch('/rooms', {
+                    method: 'POST',
+                    body: JSON.stringify({ title, description, creator_id: tgUserId, tags })
+                });
+
+                document.getElementById('room-title').value = '';
+                document.getElementById('room-desc').value = '';
+                document.getElementById('room-tags').value = '';
+                toggleModal(false);
+                showToast('Комната создана!');
                 fetchRooms();
+            } catch (e) {
+                console.error('Error creating room:', e);
+                showToast('Ошибка: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Создать комнату';
+            }
+        }
+
+        // ─── WebSocket ───
+
+        function setupWebSocket(roomId) {
+            if (wsConnection) {
+                wsConnection.onclose = null;
+                wsConnection.onerror = null;
+                wsConnection.close();
+                wsConnection = null;
             }
 
-            // ─── Табы ───
-
-            function switchTab(tab) {
-                currentTab = tab;
-                document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-                document.getElementById('rooms-list').innerHTML = `
-                    <div class="loading-shimmer"></div>
-                    <div class="loading-shimmer"></div>
-                    <div class="loading-shimmer"></div>
-                `;
-                fetchRooms();
+            if (pingInterval) {
+                clearInterval(pingInterval);
+                pingInterval = null;
             }
 
-            // ─── Создание комнаты ───
+            reconnectAttempts = 0;
+            lastPongTime = Date.now();
+            updateConnectionStatus('connecting');
 
-            async function submitRoom() {
-                const title = document.getElementById('room-title').value.trim();
-                const description = document.getElementById('room-desc').value.trim();
-                const tagsRaw = document.getElementById('room-tags').value;
-                const btn = document.getElementById('btn-create-room');
+            // Передаём tg_id и имя пользователя в WebSocket URL
+            const wsUrl = WS_URL + '/ws/' + roomId + '?user_name=' + encodeURIComponent(tgUserName) + '&tg_id=' + tgUserId;
 
-                if (!title) {
-                    showToast('Введите название комнаты');
-                    return;
-                }
-
-                const tags = tagsRaw.split(',').map(t => t.trim()).filter(t => t.length > 0).slice(0, 10);
-
-                btn.disabled = true;
-                btn.textContent = 'Создание...';
-
-                try {
-                    await apiFetch('/rooms', {
-                        method: 'POST',
-                        body: JSON.stringify({ title, description, creator_id: tgUserId, tags })
-                    });
-
-                    document.getElementById('room-title').value = '';
-                    document.getElementById('room-desc').value = '';
-                    document.getElementById('room-tags').value = '';
-                    toggleModal(false);
-                    showToast('Комната создана!');
-                    fetchRooms();
-                } catch (e) {
-                    console.error('Error creating room:', e);
-                    showToast('Ошибка: ' + e.message);
-                } finally {
-                    btn.disabled = false;
-                    btn.textContent = 'Создать комнату';
-                }
+            try {
+                wsConnection = new WebSocket(wsUrl);
+            } catch (e) {
+                console.error("❌ WebSocket creation error:", e);
+                updateConnectionStatus('disconnected');
+                return;
             }
 
-            // ─── WebSocket ───
-
-            function setupWebSocket(roomId) {
-                if (wsConnection) {
-                    wsConnection.onclose = null;
-                    wsConnection.onerror = null;
-                    wsConnection.close();
-                    wsConnection = null;
-                }
-
-                if (pingInterval) {
-                    clearInterval(pingInterval);
-                    pingInterval = null;
-                }
-
+            wsConnection.onopen = function() {
+                console.log("✅ WebSocket connected to room", roomId);
+                updateConnectionStatus('connected');
                 reconnectAttempts = 0;
                 lastPongTime = Date.now();
-                updateConnectionStatus('connecting');
 
-                const wsUrl = WS_URL + '/ws/' + roomId;
-
-                try {
-                    wsConnection = new WebSocket(wsUrl);
-                } catch (e) {
-                    console.error("❌ WebSocket creation error:", e);
-                    updateConnectionStatus('disconnected');
-                    return;
-                }
-
-                wsConnection.onopen = function() {
-                    console.log("✅ WebSocket connected to room", roomId);
-                    updateConnectionStatus('connected');
-                    reconnectAttempts = 0;
-                    lastPongTime = Date.now();
-
-                    pingInterval = setInterval(() => {
-                        if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
-                            if (Date.now() - lastPongTime > 45000) {
-                                console.log("⚠️ No pong received, reconnecting...");
-                                reconnectWs(roomId);
-                                return;
-                            }
-                            wsConnection.send(JSON.stringify({ type: 'ping' }));
+                pingInterval = setInterval(() => {
+                    if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+                        if (Date.now() - lastPongTime > 45000) {
+                            console.log("⚠️ No pong received, reconnecting...");
+                            reconnectWs(roomId);
+                            return;
                         }
-                    }, 20000);
-                };
-
-                wsConnection.onerror = function(error) {
-                    console.error("❌ WebSocket error:", error);
-                };
-
-                wsConnection.onclose = function(event) {
-                    console.log("🔌 WebSocket closed. Code:", event.code);
-                    updateConnectionStatus('disconnected');
-
-                    if (pingInterval) {
-                        clearInterval(pingInterval);
-                        pingInterval = null;
+                        wsConnection.send(JSON.stringify({ type: 'ping' }));
                     }
+                }, 20000);
+            };
 
-                    if (shouldReconnect && currentRoomId === roomId) {
-                        reconnectAttempts++;
-                        const delay = Math.min(1000 * Math.pow(1.5, reconnectAttempts), 10000);
-                        setTimeout(() => {
-                            if (shouldReconnect && currentRoomId === roomId) {
-                                setupWebSocket(roomId);
-                            }
-                        }, delay);
-                    }
-                };
+            wsConnection.onerror = function(error) {
+                console.error("❌ WebSocket error:", error);
+            };
 
-                wsConnection.onmessage = function(event) {
-                    try {
-                        const data = JSON.parse(event.data);
-                        const msgBox = document.getElementById('chat-messages');
-                        if (!msgBox) return;
-
-                        const type = data.type || 'message';
-
-                        if (type === 'pong') {
-                            lastPongTime = Date.now();
-                            return;
-                        }
-
-                        if (type === 'ping') {
-                            if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
-                                wsConnection.send(JSON.stringify({ type: 'pong' }));
-                            }
-                            return;
-                        }
-
-                        if (type === 'system') {
-                            const systemMsg = document.createElement('div');
-                            systemMsg.className = 'msg system-msg';
-                            systemMsg.textContent = data.text || '';
-
-                            if (data.online !== undefined) {
-                                updateOnlineCount(data.online);
-                                const onlineSpan = document.createElement('span');
-                                onlineSpan.className = 'msg-online';
-                                onlineSpan.textContent = '● ' + data.online + ' в сети';
-                                systemMsg.appendChild(onlineSpan);
-                            }
-
-                            msgBox.appendChild(systemMsg);
-                            msgBox.scrollTo({ top: msgBox.scrollHeight, behavior: 'smooth' });
-                            return;
-                        }
-
-                        if (type === 'message') {
-                            const newMsg = document.createElement('div');
-                            const textEl = document.createElement('span');
-                            textEl.textContent = data.text || '';
-                            newMsg.appendChild(textEl);
-
-                            if (data.timestamp) {
-                                const timeEl = document.createElement('div');
-                                timeEl.className = 'msg-time';
-                                timeEl.textContent = formatTime(data.timestamp);
-                                newMsg.appendChild(timeEl);
-                            }
-
-                            newMsg.className = 'msg other-msg';
-
-                            msgBox.appendChild(newMsg);
-                            msgBox.scrollTo({ top: msgBox.scrollHeight, behavior: 'smooth' });
-                            return;
-                        }
-
-                    } catch (e) {
-                        console.error("❌ Message parse error:", e);
-                    }
-                };
-            }
-
-            function reconnectWs(roomId) {
-                shouldReconnect = false;
-                if (wsConnection) {
-                    wsConnection.onclose = null;
-                    wsConnection.onerror = null;
-                    wsConnection.close();
-                    wsConnection = null;
-                }
-                if (pingInterval) {
-                    clearInterval(pingInterval);
-                    pingInterval = null;
-                }
-                shouldReconnect = true;
-                setupWebSocket(roomId);
-            }
-
-            async function openChat(roomId, roomTitle) {
-                currentRoomId = roomId;
-                shouldReconnect = true;
-                onlineCount = 0;
-                updateOnlineCount(0);
-
-                document.getElementById('chat-room-title').innerText = roomTitle;
-                document.getElementById('chat-messages').innerHTML = '';
-                updateConnectionStatus('connecting');
-                switchScreen('chat-screen');
-
-                setTimeout(() => setupWebSocket(roomId), 100);
-            }
-
-            function sendWsMessage() {
-                const input = document.getElementById('chat-input');
-                const text = input.value.trim();
-
-                if (!text) return;
-
-                if (!wsConnection || wsConnection.readyState !== WebSocket.OPEN) {
-                    showToast('Нет подключения');
-                    if (currentRoomId) setupWebSocket(currentRoomId);
-                    return;
-                }
-
-                wsConnection.send(JSON.stringify({ 
-                    type: 'message',
-                    text: text
-                }));
-                input.value = '';
-                document.getElementById('btn-send').disabled = true;
-            }
-
-            function closeChat() {
-                shouldReconnect = false;
-                currentRoomId = null;
-
-                if (pingInterval) {
-                    clearInterval(pingInterval);
-                    pingInterval = null;
-                }
-
-                if (wsConnection) {
-                    wsConnection.onclose = null;
-                    wsConnection.onerror = null;
-                    wsConnection.close();
-                    wsConnection = null;
-                }
-
+            wsConnection.onclose = function(event) {
+                console.log("🔌 WebSocket closed. Code:", event.code);
                 updateConnectionStatus('disconnected');
-                updateOnlineCount(0);
-                switchScreen('feed-screen');
-                fetchRooms();
+
+                if (pingInterval) {
+                    clearInterval(pingInterval);
+                    pingInterval = null;
+                }
+
+                if (shouldReconnect && currentRoomId === roomId) {
+                    reconnectAttempts++;
+                    const delay = Math.min(1000 * Math.pow(1.5, reconnectAttempts), 10000);
+                    setTimeout(() => {
+                        if (shouldReconnect && currentRoomId === roomId) {
+                            setupWebSocket(roomId);
+                        }
+                    }, delay);
+                }
+            };
+
+            wsConnection.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    const msgBox = document.getElementById('chat-messages');
+                    if (!msgBox) return;
+
+                    const type = data.type || 'message';
+
+                    if (type === 'pong') {
+                        lastPongTime = Date.now();
+                        return;
+                    }
+
+                    if (type === 'ping') {
+                        if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+                            wsConnection.send(JSON.stringify({ type: 'pong' }));
+                        }
+                        return;
+                    }
+
+                    if (type === 'system') {
+                        const systemMsg = document.createElement('div');
+                        systemMsg.className = 'msg system-msg';
+                        systemMsg.textContent = data.text || '';
+
+                        if (data.online !== undefined) {
+                            updateOnlineCount(data.online);
+                            const onlineSpan = document.createElement('span');
+                            onlineSpan.className = 'msg-online';
+                            onlineSpan.textContent = '● ' + data.online + ' в сети';
+                            systemMsg.appendChild(onlineSpan);
+                        }
+
+                        msgBox.appendChild(systemMsg);
+                        msgBox.scrollTo({ top: msgBox.scrollHeight, behavior: 'smooth' });
+                        return;
+                    }
+
+                    if (type === 'message') {
+                        const newMsg = document.createElement('div');
+                        const textEl = document.createElement('span');
+                        textEl.textContent = data.text || '';
+                        newMsg.appendChild(textEl);
+
+                        if (data.timestamp) {
+                            const timeEl = document.createElement('div');
+                            timeEl.className = 'msg-time';
+                            timeEl.textContent = formatTime(data.timestamp);
+                            newMsg.appendChild(timeEl);
+                        }
+
+                        newMsg.className = 'msg other-msg';
+
+                        msgBox.appendChild(newMsg);
+                        msgBox.scrollTo({ top: msgBox.scrollHeight, behavior: 'smooth' });
+                        return;
+                    }
+
+                } catch (e) {
+                    console.error("❌ Message parse error:", e);
+                }
+            };
+        }
+
+        function reconnectWs(roomId) {
+            shouldReconnect = false;
+            if (wsConnection) {
+                wsConnection.onclose = null;
+                wsConnection.onerror = null;
+                wsConnection.close();
+                wsConnection = null;
+            }
+            if (pingInterval) {
+                clearInterval(pingInterval);
+                pingInterval = null;
+            }
+            shouldReconnect = true;
+            setupWebSocket(roomId);
+        }
+
+        async function openChat(roomId, roomTitle) {
+            currentRoomId = roomId;
+            shouldReconnect = true;
+            onlineCount = 0;
+            updateOnlineCount(0);
+
+            document.getElementById('chat-room-title').innerText = roomTitle;
+            document.getElementById('chat-messages').innerHTML = '';
+            updateConnectionStatus('connecting');
+            switchScreen('chat-screen');
+
+            setTimeout(() => setupWebSocket(roomId), 100);
+        }
+
+        function sendWsMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+
+            if (!text) return;
+
+            if (!wsConnection || wsConnection.readyState !== WebSocket.OPEN) {
+                showToast('Нет подключения');
+                if (currentRoomId) setupWebSocket(currentRoomId);
+                return;
             }
 
-            function toggleModal(show) {
-                document.getElementById('create-modal').style.display = show ? 'block' : 'none';
-                if (show) {
-                    document.getElementById('room-title').focus();
-                }
+            wsConnection.send(JSON.stringify({ 
+                type: 'message',
+                text: text
+            }));
+            input.value = '';
+            document.getElementById('btn-send').disabled = true;
+        }
+
+        function closeChat() {
+            shouldReconnect = false;
+            currentRoomId = null;
+
+            if (pingInterval) {
+                clearInterval(pingInterval);
+                pingInterval = null;
             }
 
-            // ─── События ───
+            if (wsConnection) {
+                wsConnection.onclose = null;
+                wsConnection.onerror = null;
+                wsConnection.close();
+                wsConnection = null;
+            }
 
-            document.getElementById('create-modal').addEventListener('click', function(e) {
-                if (e.target === this) toggleModal(false);
-            });
-
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    const modal = document.getElementById('create-modal');
-                    if (modal.style.display === 'block') toggleModal(false);
-                }
-            });
-
-            document.getElementById('chat-input').addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendWsMessage();
-                }
-            });
-
-            document.getElementById('chat-input').addEventListener('input', function() {
-                const btn = document.getElementById('btn-send');
-                btn.disabled = this.value.trim().length === 0;
-            });
-
-            document.getElementById('btn-send').addEventListener('click', sendWsMessage);
-
-            document.getElementById('search-input').addEventListener('input', onSearchInput);
-
-        // ─── Запуск ───
-        loginUser().then(() => {
+            updateConnectionStatus('disconnected');
+            updateOnlineCount(0);
+            switchScreen('feed-screen');
             fetchRooms();
-            if (currentTab === 'my') {
-                fetchRooms();
+        }
+
+        function toggleModal(show) {
+            document.getElementById('create-modal').style.display = show ? 'block' : 'none';
+            if (show) {
+                document.getElementById('room-title').focus();
+            }
+        }
+
+        // ─── События ───
+
+        document.getElementById('create-modal').addEventListener('click', function(e) {
+            if (e.target === this) toggleModal(false);
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('create-modal');
+                if (modal.style.display === 'block') toggleModal(false);
             }
         });
-        console.log("🚀 Roomer v2.1 initialized! User: id=" + tgUserId + " name=" + tgUserName + " tg=" + isTelegramUser);
-        </script>
-    </body>
-    </html>
+
+        document.getElementById('chat-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendWsMessage();
+            }
+        });
+
+        document.getElementById('chat-input').addEventListener('input', function() {
+            const btn = document.getElementById('btn-send');
+            btn.disabled = this.value.trim().length === 0;
+        });
+
+        document.getElementById('btn-send').addEventListener('click', sendWsMessage);
+
+        document.getElementById('search-input').addEventListener('input', onSearchInput);
+
+        // ─── ЗАПУСК ───
+        console.log("🚀 Roomer v2.2 initializing...");
+        console.log("📋 Init data available:", !!tgInitData);
+        
+        loginUser().then(() => {
+            console.log("📋 After login: tgUserId=" + tgUserId + ", isVerified=" + isVerifiedUser);
+            fetchRooms();
+        });
+        
+        console.log("🚀 Roomer initialized! User: id=" + tgUserId + " name=" + tgUserName + " tg=" + isTelegramUser);
+    </script>
+</body>
+</html>
