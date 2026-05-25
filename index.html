@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
     <html lang="ru">
     <head>
         <meta charset="UTF-8">
@@ -839,13 +839,13 @@
                         method: 'POST',
                         body: JSON.stringify({
                             tg_id: tgUserId,
-                            name: tgUserName,
-                            username: tgUserName
+                            username: tgUserName,
+                            bio: ""
                         })
                     });
                     if (result.status === 'success') {
                         userDbId = result.user_id;
-                        console.log(`✅ Авторизован: id=${userDbId}, tg_id=${tgUserId}, имя=${result.name}`);
+                        console.log(`✅ Авторизован: id=${userDbId}, tg_id=${tgUserId}, username=${result.username}`);
                     }
                 } catch (e) {
                     console.warn('⚠️ Auth failed (non-critical):', e.message);
@@ -859,16 +859,7 @@
                 let url = '/rooms';
 
                 if (currentTab === 'my') {
-                    if (userDbId) {
-                        url = '/my-rooms?tg_id=' + tgUserId;
-                    } else if (isTelegramUser) {
-                        // Пользователь из Telegram, но ещё не в БД — показываем пустой список
-                        list.innerHTML = '<div class="empty-state">Вы ещё не посетили ни одной комнаты.</div>';
-                        return;
-                    } else {
-                        list.innerHTML = '<div class="empty-state">Для доступа к истории войдите через Telegram</div>';
-                        return;
-                    }
+                    url = '/my-rooms?tg_id=' + tgUserId;
                 }
 
                 if (searchQuery.trim()) {
@@ -904,7 +895,6 @@
                                 </h3>
                                 <p>${room.description || ''}</p>
                                 <div class="tags">${(room.tags || []).map(tag => `<span class="tag">#${tag}</span>`).join('')}</div>
-                                ${room.last_visited ? `<span class="last-visited">были ${formatDate(room.last_visited)}</span>` : ''}
                             </div>
                         `;
                     }).join('');
@@ -1139,11 +1129,8 @@
                                 newMsg.appendChild(timeEl);
                             }
 
-                            if (data.sender_id != null && Number(data.sender_id) === Number(tgUserId)) {
-                                newMsg.className = 'msg my-msg';
-                            } else {
-                                newMsg.className = 'msg other-msg';
-                            }
+                            // Все сообщения отображаем одинаково (без sender_id)
+                            newMsg.className = 'msg other-msg';
 
                             msgBox.appendChild(newMsg);
                             msgBox.scrollTo({ top: msgBox.scrollHeight, behavior: 'smooth' });
@@ -1183,13 +1170,6 @@
                 updateConnectionStatus('connecting');
                 switchScreen('chat-screen');
 
-                // Записываем посещение
-                try {
-                    await apiFetch('/rooms/' + roomId + '/visit?tg_id=' + tgUserId, { method: 'POST' });
-                } catch (e) {
-                    // Не критично
-                }
-
                 setTimeout(() => setupWebSocket(roomId), 100);
             }
 
@@ -1207,8 +1187,7 @@
 
                 wsConnection.send(JSON.stringify({ 
                     type: 'message',
-                    text: text, 
-                    sender_id: tgUserId 
+                    text: text
                 }));
                 input.value = '';
                 document.getElementById('btn-send').disabled = true;
