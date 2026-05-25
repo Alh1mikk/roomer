@@ -55,6 +55,29 @@
             gap: 10px;
         }
 
+        /* ── Status indicator ── */
+        .connection-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            margin-left: 10px;
+        }
+
+        .status-connected {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+        }
+
+        .status-disconnected {
+            background: rgba(244, 67, 54, 0.2);
+            color: #F44336;
+        }
+
+        .status-connecting {
+            background: rgba(255, 152, 0, 0.2);
+            color: #FF9800;
+        }
+
         /* ── Buttons ── */
         .btn-add {
             width: 36px;
@@ -164,6 +187,15 @@
             padding: 4px 10px;
             border-radius: 6px;
             letter-spacing: -0.01em;
+        }
+
+        .card .online-badge {
+            font-size: 11px;
+            color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
         }
 
         /* ── Modal ── */
@@ -310,6 +342,16 @@
             border-bottom-left-radius: 4px;
         }
 
+        .msg.system-msg {
+            background: transparent;
+            color: #6B6B80;
+            align-self: center;
+            font-size: 13px;
+            font-style: italic;
+            text-align: center;
+            max-width: 100%;
+        }
+
         @keyframes msgIn {
             from {
                 opacity: 0;
@@ -425,6 +467,7 @@
             <div class="header-left">
                 <button class="btn-back" onclick="closeChat()">&larr;</button>
                 <h2 id="chat-room-title">Чат</h2>
+                <span id="connection-status" class="connection-status status-connecting">подключение...</span>
             </div>
         </div>
         <div id="chat-messages"></div>
@@ -434,7 +477,7 @@
         </div>
     </div>
 
-        <script>
+    <script>
         // === 🛠️ НАСТРОЙКА АДРЕСОВ ПРОДАКШН СЕРВЕРА AMVERA ===
         const API_URL = 'https://roomer-alh1mikk.amvera.io';
         const WS_URL = 'wss://roomer-alh1mikk.amvera.io';
@@ -450,12 +493,37 @@
             tg.expand();
             if (tg.initDataUnsafe?.user?.id) {
                 tgUserId = tg.initDataUnsafe.user.id;
-                // Забираем реальное имя из Телеграма [INDEX]
                 tgUserName = tg.initDataUnsafe.user.first_name || "Юзер Telegram";
             }
         }
 
         let wsConnection = null;
+        let pingInterval = null;
+        let reconnectTimeout = null;
+        let currentRoomId = null;
+        let currentRoomTitle = '';
+        let shouldReconnect = false;
+
+        function updateConnectionStatus(status) {
+            const statusEl = document.getElementById('connection-status');
+            if (!statusEl) return;
+            
+            statusEl.className = 'connection-status';
+            switch(status) {
+                case 'connected':
+                    statusEl.className += ' status-connected';
+                    statusEl.textContent = 'онлайн';
+                    break;
+                case 'disconnected':
+                    statusEl.className += ' status-disconnected';
+                    statusEl.textContent = 'офлайн';
+                    break;
+                case 'connecting':
+                    statusEl.className += ' status-connecting';
+                    statusEl.textContent = 'подключение...';
+                    break;
+            }
+        }
 
         function switchScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -467,6 +535,8 @@
         async function fetchRooms() {
             try {
                 const res = await fetch(API_URL + '/rooms');
+                if (!res.ok) throw new Error('Network response was not ok');
+                
                 const rooms = await res.json();
                 const list = document.getElementById('rooms-list');
 
@@ -477,12 +547,16 @@
 
                 list.innerHTML = rooms.map(room => `
                     <div class="card" onclick="openChat(${room.id}, '${room.title.replace(/'/g, "\\'")}')">
-                        <h3>${room.title}</h3>
+                        <h3>
+                            ${room.title}
+                            ${room.online ? `<span class="online-badge">● ${room.online}</span>` : ''}
+                        </h3>
                         <p>${room.description || ''}</p>
-                        <div class="tags">${room.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}</div>
+                        <div class="tags">${(room.tags || []).map(tag => `<span class="tag">#${tag}</span>`).join('')}</div>
                     </div>
                 `).join('');
             } catch (e) {
+                console.error('Error fetching rooms:', e);
                 document.getElementById('rooms-list').innerHTML = '<div class="empty-state" style="color:#E55;">Ошибка подключения к серверу Amvera</div>';
             }
         }
@@ -497,11 +571,13 @@
             const tags = tagsRaw.split(',').map(t => t.trim()).filter(t => t.length > 0);
 
             try {
-                await fetch(API_URL + '/rooms', {
+                const response = await fetch(API_URL + '/rooms', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ title, description, creator_id: tgUserId, tags })
                 });
+
+                if (!response.ok) throw new Error('Failed to create room');
 
                 document.getElementById('room-title').value = '';
                 document.getElementById('room-desc').value = '';
@@ -509,86 +585,242 @@
                 toggleModal(false);
                 fetchRooms();
             } catch (e) {
+                console.error('Error creating room:', e);
                 alert('Не удалось отправить данные на сервер');
             }
         }
 
-        // 3. Подключение к веб-сокету чата комнаты
-        function openChat(roomId, roomTitle) {
-            document.getElementById('chat-room-title').innerText = roomTitle;
-            document.getElementById('chat-messages').innerHTML = '';
-            switchScreen('chat-screen');
+        // Функция для добавления сообщения в чат
+        function addMessageToChat(text, senderId, type = 'message') {
+            const msgBox = document.getElementById('chat-messages');
+            if (!msgBox) return;
 
-            if (wsConnection) { wsConnection.close(); }
+            const newMsg = document.createElement('div');
 
-            console.log("Пытаемся подключиться к сокету:", WS_URL + '/ws/' + roomId.toString());
-            wsConnection = new WebSocket(WS_URL + '/ws/' + roomId.toString());
-
-            wsConnection.onerror = function(error) {
-                console.error("Ошибка WebSocket:", error);
-                const msgBox = document.getElementById('chat-messages');
-                msgBox.innerHTML = '<p style="color:#FF5252; text-align:center; font-size:13px;">⚠️ Ошибка сети сокета. Переподключение...</p>';
-            };
-
-            wsConnection.onclose = function(event) {
-                console.warn("Соединение закрыто сервером. Код:", event.code);
-            };
-
-            wsConnection.onmessage = function(event) {
-                const msgBox = document.getElementById('chat-messages');
-                const newMsg = document.createElement('div');
-
-                let text, senderId;
-
-                try {
-                    const msgData = JSON.parse(event.data);
-                    
-                    // ХАК ДЛЯ AMVERA: Игнорируем технический пакет приветствия, чтобы не выводить его на экран
-                    if (msgData.text === "системное_сообщение_подключено" || msgData.sender_id === -1) {
-                        console.log("🚀 Вебсокет успешно пожал руку серверу Amvera!");
-                        return;
-                    }
-
-                    text = msgData.text;
-                    senderId = msgData.sender_id;
-                } catch {
-                    text = event.data;
-                    senderId = null;
-                }
-
-                newMsg.innerText = text;
-
-                // Цветовая разметка: свои фиолетовые справа, чужие серые слева [INDEX]
+            if (type === 'system') {
+                newMsg.className = 'msg system-msg';
+                newMsg.textContent = text;
+            } else {
+                newMsg.textContent = text;
                 if (senderId != null && Number(senderId) === Number(tgUserId)) {
                     newMsg.className = 'msg my-msg';
                 } else {
                     newMsg.className = 'msg other-msg';
                 }
+            }
 
-                msgBox.appendChild(newMsg);
-                
-                // Плавный скролл вниз
+            msgBox.appendChild(newMsg);
+            
+            // Плавный скролл вниз
+            setTimeout(() => {
                 msgBox.scrollTo({
                     top: msgBox.scrollHeight,
                     behavior: 'smooth'
                 });
+            }, 50);
+        }
+
+        // Функция для установки WebSocket с keep-alive
+        function setupWebSocket(roomId) {
+            if (wsConnection) {
+                wsConnection.onclose = null; // Убираем старый обработчик
+                wsConnection.close();
+                wsConnection = null;
+            }
+
+            if (pingInterval) {
+                clearInterval(pingInterval);
+                pingInterval = null;
+            }
+
+            updateConnectionStatus('connecting');
+            
+            const wsUrl = WS_URL + '/ws/' + roomId.toString();
+            console.log("🔌 Подключение к WebSocket:", wsUrl);
+            
+            try {
+                wsConnection = new WebSocket(wsUrl);
+            } catch (e) {
+                console.error("❌ Ошибка создания WebSocket:", e);
+                updateConnectionStatus('disconnected');
+                addMessageToChat('❌ Не удалось подключиться к чату', null, 'system');
+                return;
+            }
+
+            // Таймаут на подключение
+            const connectionTimeout = setTimeout(() => {
+                if (wsConnection && wsConnection.readyState !== WebSocket.OPEN) {
+                    console.error("❌ Таймаут подключения WebSocket");
+                    wsConnection.close();
+                }
+            }, 10000);
+
+            wsConnection.onopen = function() {
+                clearTimeout(connectionTimeout);
+                console.log("✅ WebSocket подключен к комнате", roomId);
+                updateConnectionStatus('connected');
+                
+                // Запускаем ping каждые 25 секунд для поддержания соединения
+                pingInterval = setInterval(() => {
+                    if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+                        try {
+                            wsConnection.send(JSON.stringify({ type: 'ping' }));
+                        } catch (e) {
+                            console.error("❌ Ошибка отправки ping:", e);
+                        }
+                    }
+                }, 25000);
             };
+
+            wsConnection.onerror = function(error) {
+                clearTimeout(connectionTimeout);
+                console.error("❌ Ошибка WebSocket:", error);
+                updateConnectionStatus('disconnected');
+                addMessageToChat('⚠️ Ошибка соединения с чатом', null, 'system');
+            };
+
+            wsConnection.onclose = function(event) {
+                clearTimeout(connectionTimeout);
+                console.log("🔌 WebSocket закрыт. Код:", event.code, "Причина:", event.reason);
+                
+                if (pingInterval) {
+                    clearInterval(pingInterval);
+                    pingInterval = null;
+                }
+                
+                updateConnectionStatus('disconnected');
+                
+                // Переподключение только если мы все еще должны быть в этой комнате
+                if (shouldReconnect && currentRoomId === roomId) {
+                    const reconnectDelay = event.code === 1006 ? 2000 : 5000;
+                    console.log(`🔄 Переподключение через ${reconnectDelay/1000}с...`);
+                    
+                    addMessageToChat('🔄 Переподключение...', null, 'system');
+                    
+                    reconnectTimeout = setTimeout(() => {
+                        if (shouldReconnect && currentRoomId === roomId) {
+                            setupWebSocket(roomId);
+                        }
+                    }, reconnectDelay);
+                }
+            };
+
+            wsConnection.onmessage = function(event) {
+                try {
+                    const msgData = JSON.parse(event.data);
+                    
+                    // Обработка разных типов сообщений
+                    switch(msgData.type) {
+                        case 'ping':
+                            // Отвечаем на ping сервера
+                            if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+                                wsConnection.send(JSON.stringify({ type: 'pong' }));
+                            }
+                            return;
+                            
+                        case 'pong':
+                            // Просто игнорируем
+                            return;
+                            
+                        case 'system':
+                            // Системные сообщения
+                            addMessageToChat(msgData.text, null, 'system');
+                            return;
+                            
+                        case 'message':
+                        default:
+                            // Обычные сообщения
+                            const text = msgData.text;
+                            const senderId = msgData.sender_id;
+                            
+                            if (!text) return;
+                            
+                            // Игнорируем технические сообщения
+                            if (text === "системное_сообщение_подключено" || senderId === -1) {
+                                console.log("🚀 WebSocket рукопожатие с сервером Amvera успешно!");
+                                return;
+                            }
+                            
+                            addMessageToChat(text, senderId, 'message');
+                    }
+                } catch (e) {
+                    console.error("❌ Ошибка обработки сообщения:", e, event.data);
+                    // Если это не JSON, показываем как обычный текст
+                    addMessageToChat(event.data, null, 'message');
+                }
+            };
+        }
+
+        // 3. Подключение к веб-сокету чата комнаты
+        function openChat(roomId, roomTitle) {
+            console.log(`📱 Открываем чат комнаты #${roomId}: ${roomTitle}`);
+            
+            currentRoomId = roomId;
+            currentRoomTitle = roomTitle;
+            shouldReconnect = true;
+            
+            document.getElementById('chat-room-title').innerText = roomTitle;
+            document.getElementById('chat-messages').innerHTML = '';
+            
+            switchScreen('chat-screen');
+            
+            // Небольшая задержка перед подключением WebSocket
+            setTimeout(() => {
+                setupWebSocket(roomId);
+            }, 100);
         }
 
         // 4. Отправка сообщения в сокет
         function sendWsMessage() {
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
-            if (!text || !wsConnection) return;
+            
+            if (!text) return;
+            
+            if (!wsConnection || wsConnection.readyState !== WebSocket.OPEN) {
+                addMessageToChat('⚠️ Нет подключения к чату. Переподключаемся...', null, 'system');
+                
+                if (currentRoomId) {
+                    setupWebSocket(currentRoomId);
+                }
+                return;
+            }
 
-            // Передаем структурированный JSON с текстом и твоим реальным Telegram ID [INDEX]
-            wsConnection.send(JSON.stringify({ "text": text, "sender_id": tgUserId }));
-
-            input.value = '';
+            try {
+                wsConnection.send(JSON.stringify({ 
+                    "text": text, 
+                    "sender_id": tgUserId 
+                }));
+                input.value = '';
+            } catch (e) {
+                console.error("❌ Ошибка отправки сообщения:", e);
+                addMessageToChat('❌ Не удалось отправить сообщение', null, 'system');
+            }
         }
 
         function closeChat() {
-            if (wsConnection) { wsConnection.close(); wsConnection = null; }
+            console.log("🚪 Закрываем чат");
+            
+            shouldReconnect = false;
+            currentRoomId = null;
+            
+            if (reconnectTimeout) {
+                clearTimeout(reconnectTimeout);
+                reconnectTimeout = null;
+            }
+            
+            if (pingInterval) {
+                clearInterval(pingInterval);
+                pingInterval = null;
+            }
+            
+            if (wsConnection) {
+                wsConnection.onclose = null; // Убираем обработчик чтобы не было переподключения
+                wsConnection.close();
+                wsConnection = null;
+            }
+            
+            updateConnectionStatus('disconnected');
             switchScreen('feed-screen');
             fetchRooms();
         }
@@ -597,8 +829,45 @@
             document.getElementById('create-modal').style.display = show ? 'block' : 'none';
         }
 
+        // Закрытие модального окна при клике вне его
+        document.getElementById('create-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                toggleModal(false);
+            }
+        });
+
+        // Обработка закрытия страницы
+        window.addEventListener('beforeunload', () => {
+            if (wsConnection) {
+                wsConnection.onclose = null;
+                wsConnection.close();
+            }
+        });
+
+        // Обработка видимости страницы
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                console.log("📱 Страница скрыта");
+            } else {
+                console.log("📱 Страница видна");
+                // Обновляем список комнат когда страница становится видимой
+                if (!currentRoomId) {
+                    fetchRooms();
+                }
+            }
+        });
+
         // Первичный запуск загрузки ленты
         fetchRooms();
+        
+        // Периодическое обновление списка комнат
+        setInterval(() => {
+            if (!currentRoomId) {
+                fetchRooms();
+            }
+        }, 30000);
+        
+        console.log("🚀 Roomer инициализирован!");
     </script>
 </body>
 </html>
