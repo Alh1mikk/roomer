@@ -871,18 +871,31 @@
             // ─── Авторизация ───
 
             async function loginUser() {
+                // Собираем initData, если мы в Telegram
+                let initDataStr = "";
+                try {
+                    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
+                        initDataStr = window.Telegram.WebApp.initData;
+                    }
+                } catch(e) {
+                    console.warn('⚠️ initData read error:', e);
+                }
+                
                 try {
                     const result = await apiFetch('/auth/login', {
                         method: 'POST',
                         body: JSON.stringify({
                             tg_id: tgUserId,
                             username: tgUserName,
-                            bio: ""
+                            bio: "",
+                            init_data: initDataStr
                         })
                     });
                     if (result.status === 'success') {
                         userDbId = result.user_id;
                         console.log(`✅ Авторизован: id=${userDbId}, tg_id=${tgUserId}, username=${result.username}`);
+                    } else if (result.error) {
+                        console.warn('⚠️ Auth error:', result.error);
                     }
                 } catch (e) {
                     console.warn('⚠️ Auth failed (non-critical):', e.message);
