@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
     <html lang="ru">
     <head>
         <meta charset="UTF-8">
@@ -716,16 +716,21 @@
         let userDbId = null;
         let isTelegramUser = false;
 
-        // Инициализация Telegram WebApp
+        // Определение Telegram окружения
+        const isTelegramBrowser = navigator.userAgent.includes('Telegram');
         if (window.Telegram && window.Telegram.WebApp) {
             const tg = window.Telegram.WebApp;
             tg.ready();
             tg.expand();
+            // Пользователь открыл приложение в Telegram — отмечаем это
+            isTelegramUser = true;
             if (tg.initDataUnsafe?.user?.id) {
                 tgUserId = tg.initDataUnsafe.user.id;
                 tgUserName = tg.initDataUnsafe.user.first_name || "Юзер Telegram";
-                isTelegramUser = true;
             }
+        } else if (isTelegramBrowser) {
+            // Встроенный браузер Telegram (не Mini App)
+            isTelegramUser = true;
         }
 
             // ─── Состояние ───
