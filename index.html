@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Roomer</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-    <script>eruda.init();</script>
     <style>
         *, *::before, *::after {
             box-sizing: border-box;
@@ -23,25 +21,6 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* ── Debug Bar ── */
-        #debug-bar {
-            background: #1a3a5c;
-            color: #8ec8f2;
-            font-size: 11px;
-            padding: 6px 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 4px;
-            border-bottom: 1px solid #2a5a8c;
-            line-height: 1.4;
-        }
-        #debug-bar .debug-label { color: #5a9aca; }
-        #debug-bar .debug-val { color: #c0e0ff; font-weight: 500; }
-        #debug-bar .debug-ok { color: #4CAF50; }
-        #debug-bar .debug-warn { color: #FF9800; }
-
         .screen { 
             display: none;
             min-height: 100vh;
@@ -51,7 +30,6 @@
             display: block;
         }
 
-        /* ── Header ── */
         .header {
             display: flex;
             align-items: center;
@@ -92,7 +70,6 @@
             gap: 8px;
         }
 
-        /* ── Search bar ── */
         .search-bar {
             display: flex;
             align-items: center;
@@ -137,7 +114,6 @@
             display: block;
         }
 
-        /* ── Tabs ── */
         .tabs {
             display: flex;
             background: #1A1A24;
@@ -165,7 +141,6 @@
             border-bottom-color: #7C4DFF;
         }
 
-        /* ── Status indicator ── */
         .connection-status {
             font-size: 11px;
             padding: 3px 8px;
@@ -188,7 +163,6 @@
             color: #FF9800;
         }
 
-        /* ── Online badge in header ── */
         .online-badge-header {
             font-size: 12px;
             color: #4CAF50;
@@ -198,7 +172,6 @@
             white-space: nowrap;
         }
 
-        /* ── Buttons ── */
         .btn-icon {
             width: 36px;
             height: 36px;
@@ -225,7 +198,6 @@
             transform: scale(0.93);
         }
 
-        /* ── Rooms Feed ── */
         #rooms-list {
             padding: 16px;
             display: flex;
@@ -301,22 +273,86 @@
             border-radius: 10px;
         }
 
-        .card .member-count {
+        .card-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 8px;
             font-size: 12px;
-            color: #6B6B80;
-            background: rgba(107, 107, 128, 0.1);
-            padding: 2px 8px;
-            border-radius: 10px;
+            font-family: inherit;
+            cursor: pointer;
+            border: 1px solid #3A3A48;
+            background: #2A2A38;
+            color: #9B9BB0;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+            user-select: none;
         }
 
-        .card .last-visited {
-            font-size: 11px;
-            color: #6B6B80;
-            display: block;
-            margin-top: 4px;
+        .action-btn:hover {
+            border-color: #7C4DFF;
+            background: #33334D;
         }
 
-        /* ── Loading shimmer ── */
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+
+        .action-btn.active {
+            border-color: #7C4DFF;
+            color: #7C4DFF;
+            background: rgba(124, 77, 255, 0.1);
+        }
+
+        .action-btn.liked {
+            border-color: #4CAF50;
+            color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .action-btn.disliked {
+            border-color: #F44336;
+            color: #F44336;
+            background: rgba(244, 67, 54, 0.1);
+        }
+
+        .favorite-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-family: inherit;
+            cursor: pointer;
+            border: 1px solid #3A3A48;
+            background: #2A2A38;
+            color: #9B9BB0;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+            user-select: none;
+            background: transparent;
+        }
+
+        .favorite-btn:hover {
+            border-color: #FFD700;
+            color: #FFD700;
+            background: rgba(255, 215, 0, 0.08);
+        }
+
+        .favorite-btn.is-fav {
+            border-color: #FFD700;
+            color: #FFD700;
+            background: rgba(255, 215, 0, 0.12);
+        }
+
         .loading-shimmer {
             background: linear-gradient(90deg, #1A1A24 25%, #222233 50%, #1A1A24 75%);
             background-size: 200% 100%;
@@ -338,7 +374,6 @@
             font-size: 14px;
         }
 
-        /* ── Refresh animation ── */
         .btn-refresh.spinning {
             animation: spin 0.6s ease-in-out;
         }
@@ -347,7 +382,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* ── Modal ── */
         .modal {
             display: none;
             position: fixed;
@@ -463,7 +497,6 @@
             color: #F0F0F5;
         }
 
-        /* ── Chat Screen ── */
         #chat-screen {
             display: none;
             flex-direction: column;
@@ -620,7 +653,6 @@
             transform: none;
         }
 
-        /* ── Scrollbar ── */
         ::-webkit-scrollbar {
             width: 4px;
         }
@@ -638,7 +670,6 @@
             background: #4A4A58;
         }
 
-        /* ── toast ── */
         .toast {
             position: fixed;
             bottom: 80px;
@@ -661,19 +692,17 @@
             opacity: 1;
             transform: translateX(-50%) translateY(0);
         }
+
+        .room-stats {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: #6B6B80;
+        }
     </style>
 </head>
 <body>
-
-    <!-- DEBUG BAR — удалите когда всё заработает -->
-    <div id="debug-bar">
-        <span><span class="debug-label">TG ID:</span> <span id="dbg-tgid" class="debug-val">—</span></span>
-        <span><span class="debug-label">Имя:</span> <span id="dbg-name" class="debug-val">—</span></span>
-        <span><span class="debug-label">WebApp:</span> <span id="dbg-webapp" class="debug-warn">—</span></span>
-        <span><span class="debug-label">initData:</span> <span id="dbg-initdata" class="debug-warn">—</span></span>
-        <span><span class="debug-label">User:</span> <span id="dbg-user" class="debug-warn">—</span></span>
-        <span><span class="debug-label">Вериф:</span> <span id="dbg-verified" class="debug-warn">—</span></span>
-    </div>
 
     <!-- TOAST -->
     <div id="toast" class="toast"></div>
@@ -683,13 +712,13 @@
         <div class="header">
             <h2>Roomer</h2>
             <div class="header-right">
-                <button class="btn-icon btn-refresh" onclick="refreshRooms(this)" title="Обновить">⟳</button>
+                <button class="btn-icon btn-refresh" onclick="refreshRooms(this)" title="Обновить">R</button>
                 <button class="btn-icon" onclick="toggleModal(true)" title="Создать комнату">+</button>
             </div>
         </div>
         <div class="search-bar">
             <input type="text" id="search-input" placeholder="Поиск комнат по названию, описанию, тегам..." autocomplete="off">
-            <button class="btn-clear" id="btn-clear-search" onclick="clearSearch()">✕</button>
+            <button class="btn-clear" id="btn-clear-search" onclick="clearSearch()">X</button>
         </div>
         <div class="tabs">
             <div class="tab active" data-tab="all" onclick="switchTab('all')">Все комнаты</div>
@@ -722,18 +751,18 @@
     <div id="chat-screen" class="screen">
         <div class="header">
             <div class="header-left">
-                <button class="btn-icon" onclick="closeChat()">←</button>
+                <button class="btn-icon" onclick="closeChat()"><</button>
                 <h2 id="chat-room-title">Чат</h2>
             </div>
             <div class="header-right">
-                <span id="online-count" class="online-badge-header" style="display:none">● 0</span>
+                <span id="online-count" class="online-badge-header" style="display:none">0</span>
                 <span id="connection-status" class="connection-status status-connecting">...</span>
             </div>
         </div>
         <div id="chat-messages"></div>
         <div class="chat-input-container">
             <input type="text" id="chat-input" placeholder="Сообщение..." maxlength="500" autocomplete="off">
-            <button class="btn-send" id="btn-send" disabled>→</button>
+            <button class="btn-send" id="btn-send" disabled>></button>
         </div>
     </div>
 
@@ -742,52 +771,42 @@
         const API_URL = 'https://roomer-alh1mikk.amvera.io';
         const WS_URL = 'wss://roomer-alh1mikk.amvera.io';
 
-        // ─── Данные пользователя ───
-        let tgUserId = null;           // Telegram ID (число)
-        let tgUserName = "Аноним";     // Имя пользователя
-        let userDbId = null;           // ID в вашей базе данных
-        let isTelegramUser = false;    // Флаг: пользователь из Telegram
-        let isVerifiedUser = false;    // Флаг: пользователь прошёл проверку initData
-        let tgInitData = "";           // Сырая строка initData от Telegram
+        // ---- Данные пользователя ----
+        let tgUserId = null;
+        let tgUserName = "Аноним";
+        let userDbId = null;
+        let isTelegramUser = false;
+        let isVerifiedUser = false;
+        let tgInitData = "";
 
-        // ═══════════════════════════════════════════
-        // ОПРЕДЕЛЕНИЕ ПОЛЬЗОВАТЕЛЯ
-        // ═══════════════════════════════════════════
+        // ---- Определение пользователя ----
 
-        // 1. Пробуем получить данные из Telegram WebApp (Mini App)
         if (window.Telegram && window.Telegram.WebApp) {
             const tg = window.Telegram.WebApp;
             try { tg.ready(); tg.expand(); } catch(e) {}
             
-            isTelegramUser = true;  // Мы внутри Telegram!
+            isTelegramUser = true;
             
-            // Сохраняем initData для отправки на сервер
             if (tg.initData) {
                 tgInitData = tg.initData;
             }
             
-            // Проверяем, есть ли данные пользователя
             if (tg.initDataUnsafe?.user?.id) {
                 tgUserId = tg.initDataUnsafe.user.id;
                 tgUserName = tg.initDataUnsafe.user.first_name || tgUserName;
-                console.log('✅ Telegram Mini App user:', tgUserId, tgUserName);
-            } else {
-                console.log('⚠️ В Telegram, но без данных пользователя (initDataUnsafe.user пуст)');
+                console.log('Telegram Mini App user:', tgUserId, tgUserName);
             }
         }
 
-        // 2. Проверяем URL параметры (если перешли по ссылке с tg_id)
         if (!tgUserId) {
             const params = new URLSearchParams(window.location.search);
             if (params.has('tg_id')) {
                 tgUserId = parseInt(params.get('tg_id'));
                 tgUserName = params.get('username') || tgUserName;
                 isTelegramUser = true;
-                console.log('✅ Telegram user from URL params:', tgUserId);
             }
         }
 
-        // 3. Если после всех проверок ID нет — генерируем временный
         if (!tgUserId) {
             const savedId = sessionStorage.getItem('roomer_temp_id');
             if (savedId) {
@@ -796,10 +815,8 @@
                 tgUserId = Math.floor(Math.random() * 90000) + 10000;
                 sessionStorage.setItem('roomer_temp_id', tgUserId.toString());
             }
-            console.log('ℹ️ Temporary anonymous ID:', tgUserId);
         }
 
-        // Сохраняем в sessionStorage
         if (isTelegramUser && tgUserId) {
             sessionStorage.setItem('roomer_tg_id', tgUserId.toString());
             sessionStorage.setItem('roomer_tg_name', tgUserName);
@@ -808,29 +825,7 @@
             }
         }
 
-        // ═══════════════════════════════════════════
-        // ДЕБАГ-ПАНЕЛЬ
-        // ═══════════════════════════════════════════
-        function updateDebugBar() {
-            document.getElementById('dbg-tgid').textContent = tgUserId || '—';
-            document.getElementById('dbg-name').textContent = tgUserName || '—';
-            document.getElementById('dbg-webapp').textContent = (!!window.Telegram?.WebApp) ? '✅' : '❌ нет';
-            document.getElementById('dbg-initdata').textContent = tgInitData ? '✅ есть' : '❌ нет';
-            document.getElementById('dbg-user').textContent = (tgUserId && tgUserId > 10000) ? '✅' : '⚠️ аноним';
-            document.getElementById('dbg-verified').textContent = isVerifiedUser ? '✅' : '❌ нет';
-        }
-        updateDebugBar();
-
-        console.log('🔍 DEBUG INFO:');
-        console.log('  has WebApp:', !!window.Telegram?.WebApp);
-        console.log('  initData exists:', !!tgInitData);
-        console.log('  initData length:', tgInitData.length);
-        console.log('  initDataUnsafe.user:', window.Telegram?.WebApp?.initDataUnsafe?.user);
-        console.log('  tgUserId:', tgUserId);
-        console.log('  tgUserName:', tgUserName);
-        console.log('  isTelegramUser:', isTelegramUser);
-
-        // ─── Состояние ───
+        // ---- Состояние ----
         let wsConnection = null;
         let pingInterval = null;
         let currentRoomId = null;
@@ -842,23 +837,12 @@
         let searchQuery = '';
         let searchTimer = null;
 
-        // ─── Утилиты ───
+        // ---- Утилиты ----
 
         function formatTime(dateStr) {
             if (!dateStr) return '';
             const d = new Date(dateStr);
             return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-        }
-
-        function formatDate(dateStr) {
-            if (!dateStr) return '';
-            const d = new Date(dateStr);
-            const now = new Date();
-            const diff = now - d;
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            if (days === 0) return 'сегодня';
-            if (days === 1) return 'вчера';
-            return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
         }
 
         function showToast(text, duration = 2500) {
@@ -878,16 +862,8 @@
         function updateConnectionStatus(state) {
             const el = document.getElementById('connection-status');
             if (!el) return;
-            const texts = {
-                connected: 'онлайн',
-                connecting: '...',
-                disconnected: 'офлайн'
-            };
-            const classes = {
-                connected: 'status-connected',
-                connecting: 'status-connecting',
-                disconnected: 'status-disconnected'
-            };
+            const texts = { connected: 'онлайн', connecting: '...', disconnected: 'офлайн' };
+            const classes = { connected: 'status-connected', connecting: 'status-connecting', disconnected: 'status-disconnected' };
             el.textContent = texts[state] || texts.disconnected;
             el.className = 'connection-status ' + (classes[state] || classes.disconnected);
         }
@@ -897,43 +873,35 @@
             if (!el) return;
             onlineCount = count;
             if (count > 0) {
-                el.textContent = '● ' + count;
+                el.textContent = count + ' в сети';
                 el.style.display = '';
             } else {
                 el.style.display = 'none';
             }
         }
 
-        // ─── API ───
+        // ---- API ----
 
         async function apiFetch(url, options = {}) {
             const defaultOptions = {
                 mode: 'cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
             };
-
             const mergedOptions = { ...defaultOptions, ...options };
             if (mergedOptions.headers) {
                 mergedOptions.headers = { ...defaultOptions.headers, ...options.headers };
             }
-
             const response = await fetch(API_URL + url, mergedOptions);
-
             if (!response.ok) {
                 const errText = await response.text();
-                throw new Error(`HTTP ${response.status}: ${errText || response.statusText}`);
+                throw new Error('HTTP ' + response.status + ': ' + (errText || response.statusText));
             }
-
             return response.json();
         }
 
-        // ─── Авторизация ───
+        // ---- Авторизация ----
 
         async function loginUser() {
-            console.log('🔐 loginUser(): tg_id=' + tgUserId + ', hasInitData=' + !!tgInitData);
-            
             try {
                 const result = await apiFetch('/auth/login', {
                     method: 'POST',
@@ -947,153 +915,152 @@
                 
                 if (result.status === 'success') {
                     userDbId = result.user_id;
-                    tgUserId = result.tg_id;        // Сервер мог вернуть другой ID
-                    tgUserName = result.username;    // Сервер мог вернуть другое имя
+                    tgUserId = result.tg_id;
+                    tgUserName = result.username;
                     isVerifiedUser = result.is_verified || false;
                     
-                    console.log('✅ Auth OK:', {
-                        db_id: userDbId,
-                        tg_id: tgUserId,
-                        username: tgUserName,
-                        verified: isVerifiedUser
-                    });
-                    
-                    // Обновляем sessionStorage
                     sessionStorage.setItem('roomer_tg_id', tgUserId.toString());
                     sessionStorage.setItem('roomer_tg_name', tgUserName);
-                    
-                    updateDebugBar();
-                } else if (result.error) {
-                    console.warn('⚠️ Auth error:', result.error);
                 }
             } catch (e) {
-                console.warn('⚠️ Auth failed (non-critical):', e.message);
+                console.warn('Auth failed:', e.message);
             }
         }
 
-            // ─── Загрузка комнат ───
+        // ---- Загрузка комнат ----
 
-            async function fetchRooms() {
-                const list = document.getElementById('rooms-list');
-                let url = '/rooms';
+        // Хранилище текущих голосов пользователя (roomId -> vote)
+        let userVotes = {};
 
-                if (currentTab === 'my') {
-                    if (!tgUserId || tgUserId < 1) {
-                        list.innerHTML = '<div class="empty-state">Для доступа к истории войдите через Telegram</div>';
-                        return;
-                    }
-                    url = '/my-rooms?tg_id=' + tgUserId;
-                } else {
-                    // Передаём tg_id для сортировки по избранному
-                    url = '/rooms?tg_id=' + (tgUserId || 0);
+        async function fetchRooms() {
+            const list = document.getElementById('rooms-list');
+            let url = '/rooms';
+
+            if (currentTab === 'my') {
+                if (!tgUserId || tgUserId < 1) {
+                    list.innerHTML = '<div class="empty-state">Для доступа к истории войдите через Telegram</div>';
+                    return;
                 }
-
-                if (searchQuery.trim()) {
-                    url = '/rooms/search?q=' + encodeURIComponent(searchQuery) + '&tg_id=' + (tgUserId || 0);
-                }
-
-                try {
-                    const rooms = await apiFetch(url);
-
-                    if (!rooms || rooms.length === 0) {
-                        if (searchQuery) {
-                            list.innerHTML = '<div class="empty-state">Ничего не найдено по запросу<br>"' + searchQuery + '"</div>';
-                        } else if (currentTab === 'my') {
-                            list.innerHTML = '<div class="empty-state">Вы ещё не создали ни одной комнаты.<br>Создайте её через кнопку +</div>';
-                        } else {
-                            list.innerHTML = '<div class="empty-state">Комнат пока нет.<br>Создайте первую!</div>';
-                        }
-                        return;
-                    }
-
-                    list.innerHTML = rooms.map(room => {
-                        const safeTitle = (room.title || 'Без названия').replace(/'/g, "\\'");
-                        const rating = room.rating || 0;
-                        const likes = room.likes || 0;
-                        const dislikes = room.dislikes || 0;
-                        const isFav = room.is_favorite;
-                        const star = isFav ? '★' : '☆';
-                        const ratingColor = rating > 0 ? '#4CAF50' : rating < 0 ? '#F44336' : '#6B6B80';
-                        return `
-                            <div class="card" onclick="openChat(${room.id}, '${safeTitle}')">
-                                <h3>
-                                    ${room.title || 'Без названия'}
-                                    ${room.online > 0 ? `<span class="online-badge">● ${room.online}</span>` : ''}
-                                </h3>
-                                <p>${room.description || ''}</p>
-                                <div class="tags">${(room.tags || []).map(tag => `<span class="tag">#${tag}</span>`).join('')}</div>
-                                <div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap;">
-                                    <span style="font-size:12px;color:${ratingColor};font-weight:600;">★ ${rating}</span>
-                                    <span style="font-size:11px;color:#6B6B80;">👍 ${likes}</span>
-                                    <span style="font-size:11px;color:#6B6B80;">👎 ${dislikes}</span>
-                                    <span class="favorite-btn" data-room-id="${room.id}" style="cursor:pointer;font-size:18px;color:${isFav ? '#FFD700' : '#6B6B80'};" onclick="event.stopPropagation();toggleFavorite(${room.id}, this)">${star}</span>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                } catch (e) {
-                    console.error('Error fetching rooms:', e);
-                    list.innerHTML = `
-                        <div class="empty-state" style="color:#E55;">
-                            Ошибка подключения<br>
-                            <span style="font-size:13px;color:#9B9BB0;">${e.message}</span>
-                            <br><br>
-                            <button class="btn-submit" style="width:auto;padding:10px 24px;display:inline-block;" onclick="fetchRooms()">Повторить</button>
-                        </div>
-                    `;
-                }
+                url = '/my-rooms?tg_id=' + tgUserId;
+            } else {
+                url = '/rooms?tg_id=' + (tgUserId || 0);
             }
-            
-            // ─── Избранное ───
-            async function toggleFavorite(roomId, el) {
-                if (!tgUserId) { showToast('Войдите через Telegram'); return; }
-                try {
-                    const result = await apiFetch('/rooms/' + roomId + '/favorite?tg_id=' + tgUserId + '&action=toggle', { method: 'POST' });
-                    if (result.is_favorite) {
-                        el.textContent = '★';
-                        el.style.color = '#FFD700';
+
+            if (searchQuery.trim()) {
+                url = '/rooms/search?q=' + encodeURIComponent(searchQuery) + '&tg_id=' + (tgUserId || 0);
+            }
+
+            try {
+                const rooms = await apiFetch(url);
+
+                if (!rooms || rooms.length === 0) {
+                    if (searchQuery) {
+                        list.innerHTML = '<div class="empty-state">Ничего не найдено по запросу<br>"' + searchQuery + '"</div>';
+                    } else if (currentTab === 'my') {
+                        list.innerHTML = '<div class="empty-state">Вы ещё не создали ни одной комнаты.<br>Создайте её через кнопку +</div>';
                     } else {
-                        el.textContent = '☆';
-                        el.style.color = '#6B6B80';
+                        list.innerHTML = '<div class="empty-state">Комнат пока нет.<br>Создайте первую!</div>';
                     }
-                } catch(e) {
-                    console.error('Favorite error:', e);
-                    showToast('Ошибка');
+                    return;
                 }
-            }
-            
-            // ─── Лайк/дизлайк ───
-            async function voteRoom(roomId, vote) {
-                if (!tgUserId) { showToast('Войдите через Telegram'); return; }
-                try {
-                    const result = await apiFetch('/rooms/vote', {
-                        method: 'POST',
-                        body: JSON.stringify({ tg_id: tgUserId, room_id: roomId, vote: vote })
-                    });
-                    if (result.status === 'success') {
-                        showToast('Голос учтён!');
-                        fetchRooms();
-                    } else if (result.error) {
-                        showToast(result.error);
+
+                // Загружаем голоса пользователя для каждой комнаты
+                if (tgUserId && tgUserId > 0) {
+                    for (const room of rooms) {
+                        try {
+                            const voteData = await apiFetch('/rooms/' + room.id + '/my-vote?tg_id=' + tgUserId);
+                            userVotes[room.id] = voteData.vote;
+                        } catch(e) {}
                     }
-                } catch(e) {
-                    console.error('Vote error:', e);
-                    showToast('Ошибка голосования');
                 }
+
+                list.innerHTML = rooms.map(room => {
+                    const safeTitle = (room.title || 'Без названия').replace(/'/g, "\\'");
+                    const rating = room.rating || 0;
+                    const likes = room.likes_count || 0;
+                    const dislikes = room.dislikes_count || 0;
+                    const isFav = room.is_favorite;
+                    const myVote = userVotes[room.id] || 0;
+                    
+                    const ratingColor = rating > 0 ? '#4CAF50' : rating < 0 ? '#F44336' : '#6B6B80';
+                    
+                    const likeClass = myVote === 1 ? 'action-btn liked' : 'action-btn';
+                    const dislikeClass = myVote === -1 ? 'action-btn disliked' : 'action-btn';
+                    const favClass = isFav ? 'favorite-btn is-fav' : 'favorite-btn';
+
+                    return '<div class="card" onclick="openChat(' + room.id + ", '" + safeTitle + "')" + '">' +
+                        '<h3>' +
+                            (room.title || 'Без названия') +
+                            (room.online > 0 ? '<span class="online-badge">' + room.online + ' в сети</span>' : '') +
+                        '</h3>' +
+                        '<p>' + (room.description || '') + '</p>' +
+                        '<div class="tags">' + (room.tags || []).map(tag => '<span class="tag">#' + tag + '</span>').join('') + '</div>' +
+                        '<div class="card-actions">' +
+                            '<span style="font-size:13px;color:' + ratingColor + ';font-weight:600;">Рейтинг: ' + rating + '</span>' +
+                            '<button class="' + likeClass + '" onclick="event.stopPropagation();voteRoom(' + room.id + ', 1, this)">+ ' + likes + '</button>' +
+                            '<button class="' + dislikeClass + '" onclick="event.stopPropagation();voteRoom(' + room.id + ', -1, this)">- ' + dislikes + '</button>' +
+                            '<button class="' + favClass + '" onclick="event.stopPropagation();toggleFavorite(' + room.id + ', this)">' + (isFav ? 'В избранном' : 'В избранное') + '</button>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+            } catch (e) {
+                console.error('Error fetching rooms:', e);
+                list.innerHTML = '<div class="empty-state" style="color:#E55;">' +
+                    'Ошибка подключения<br>' +
+                    '<span style="font-size:13px;color:#9B9BB0;">' + e.message + '</span><br><br>' +
+                    '<button class="btn-submit" style="width:auto;padding:10px 24px;display:inline-block;" onclick="fetchRooms()">Повторить</button>' +
+                '</div>';
             }
+        }
+        
+        // ---- Избранное ----
+        async function toggleFavorite(roomId, el) {
+            if (!tgUserId) { showToast('Войдите через Telegram'); return; }
+            try {
+                const result = await apiFetch('/rooms/' + roomId + '/favorite?tg_id=' + tgUserId + '&action=toggle', { method: 'POST' });
+                if (result.is_favorite) {
+                    el.textContent = 'В избранном';
+                    el.className = 'favorite-btn is-fav';
+                } else {
+                    el.textContent = 'В избранное';
+                    el.className = 'favorite-btn';
+                }
+                showToast(result.is_favorite ? 'Добавлено в избранное' : 'Удалено из избранного');
+            } catch(e) {
+                console.error('Favorite error:', e);
+                showToast('Ошибка');
+            }
+        }
+        
+        // ---- Лайк/дизлайк ----
+        async function voteRoom(roomId, vote, btnEl) {
+            if (!tgUserId) { showToast('Войдите через Telegram'); return; }
+            try {
+                const result = await apiFetch('/rooms/vote', {
+                    method: 'POST',
+                    body: JSON.stringify({ tg_id: tgUserId, room_id: roomId, vote: vote })
+                });
+                if (result.status === 'success') {
+                    userVotes[roomId] = result.vote;
+                    showToast('Голос учтён!');
+                    fetchRooms();
+                } else if (result.error) {
+                    showToast(result.error);
+                }
+            } catch(e) {
+                console.error('Vote error:', e);
+                showToast('Ошибка голосования');
+            }
+        }
 
         function refreshRooms(btn) {
             btn.classList.add('spinning');
             setTimeout(() => btn.classList.remove('spinning'), 600);
-            document.getElementById('rooms-list').innerHTML = `
-                <div class="loading-shimmer"></div>
-                <div class="loading-shimmer"></div>
-                <div class="loading-shimmer"></div>
-            `;
+            document.getElementById('rooms-list').innerHTML = '<div class="loading-shimmer"></div><div class="loading-shimmer"></div><div class="loading-shimmer"></div>';
             fetchRooms();
         }
 
-        // ─── Поиск ───
+        // ---- Поиск ----
 
         function onSearchInput() {
             const input = document.getElementById('search-input');
@@ -1104,11 +1071,7 @@
             
             clearTimeout(searchTimer);
             searchTimer = setTimeout(() => {
-                document.getElementById('rooms-list').innerHTML = `
-                    <div class="loading-shimmer"></div>
-                    <div class="loading-shimmer"></div>
-                    <div class="loading-shimmer"></div>
-                `;
+                document.getElementById('rooms-list').innerHTML = '<div class="loading-shimmer"></div><div class="loading-shimmer"></div><div class="loading-shimmer"></div>';
                 fetchRooms();
             }, 300);
         }
@@ -1117,28 +1080,20 @@
             document.getElementById('search-input').value = '';
             document.getElementById('btn-clear-search').classList.remove('visible');
             searchQuery = '';
-            document.getElementById('rooms-list').innerHTML = `
-                <div class="loading-shimmer"></div>
-                <div class="loading-shimmer"></div>
-                <div class="loading-shimmer"></div>
-            `;
+            document.getElementById('rooms-list').innerHTML = '<div class="loading-shimmer"></div><div class="loading-shimmer"></div><div class="loading-shimmer"></div>';
             fetchRooms();
         }
 
-        // ─── Табы ───
+        // ---- Табы ----
 
         function switchTab(tab) {
             currentTab = tab;
             document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-            document.getElementById('rooms-list').innerHTML = `
-                <div class="loading-shimmer"></div>
-                <div class="loading-shimmer"></div>
-                <div class="loading-shimmer"></div>
-            `;
+            document.getElementById('rooms-list').innerHTML = '<div class="loading-shimmer"></div><div class="loading-shimmer"></div><div class="loading-shimmer"></div>';
             fetchRooms();
         }
 
-        // ─── Создание комнаты ───
+        // ---- Создание комнаты ----
 
         async function submitRoom() {
             const title = document.getElementById('room-title').value.trim();
@@ -1177,7 +1132,7 @@
             }
         }
 
-        // ─── WebSocket ───
+        // ---- WebSocket ----
 
         function setupWebSocket(roomId) {
             if (wsConnection) {
@@ -1196,19 +1151,18 @@
             lastPongTime = Date.now();
             updateConnectionStatus('connecting');
 
-            // Передаём tg_id и имя пользователя в WebSocket URL
             const wsUrl = WS_URL + '/ws/' + roomId + '?user_name=' + encodeURIComponent(tgUserName) + '&tg_id=' + tgUserId;
 
             try {
                 wsConnection = new WebSocket(wsUrl);
             } catch (e) {
-                console.error("❌ WebSocket creation error:", e);
+                console.error("WebSocket creation error:", e);
                 updateConnectionStatus('disconnected');
                 return;
             }
 
             wsConnection.onopen = function() {
-                console.log("✅ WebSocket connected to room", roomId);
+                console.log("WebSocket connected to room", roomId);
                 updateConnectionStatus('connected');
                 reconnectAttempts = 0;
                 lastPongTime = Date.now();
@@ -1216,7 +1170,7 @@
                 pingInterval = setInterval(() => {
                     if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
                         if (Date.now() - lastPongTime > 45000) {
-                            console.log("⚠️ No pong received, reconnecting...");
+                            console.log("No pong received, reconnecting...");
                             reconnectWs(roomId);
                             return;
                         }
@@ -1226,11 +1180,11 @@
             };
 
             wsConnection.onerror = function(error) {
-                console.error("❌ WebSocket error:", error);
+                console.error("WebSocket error:", error);
             };
 
             wsConnection.onclose = function(event) {
-                console.log("🔌 WebSocket closed. Code:", event.code);
+                console.log("WebSocket closed. Code:", event.code);
                 updateConnectionStatus('disconnected');
 
                 if (pingInterval) {
@@ -1278,7 +1232,7 @@
                             updateOnlineCount(data.online);
                             const onlineSpan = document.createElement('span');
                             onlineSpan.className = 'msg-online';
-                            onlineSpan.textContent = '● ' + data.online + ' в сети';
+                            onlineSpan.textContent = data.online + ' в сети';
                             systemMsg.appendChild(onlineSpan);
                         }
 
@@ -1308,7 +1262,7 @@
                     }
 
                 } catch (e) {
-                    console.error("❌ Message parse error:", e);
+                    console.error("Message parse error:", e);
                 }
             };
         }
@@ -1392,7 +1346,7 @@
             }
         }
 
-        // ─── События ───
+        // ---- События ----
 
         document.getElementById('create-modal').addEventListener('click', function(e) {
             if (e.target === this) toggleModal(false);
@@ -1418,19 +1372,15 @@
         });
 
         document.getElementById('btn-send').addEventListener('click', sendWsMessage);
-
         document.getElementById('search-input').addEventListener('input', onSearchInput);
 
-        // ─── ЗАПУСК ───
-        console.log("🚀 Roomer v2.2 initializing...");
-        console.log("📋 Init data available:", !!tgInitData);
+        // ---- ЗАПУСК ----
+        console.log("Roomer initializing...");
         
         loginUser().then(() => {
-            console.log("📋 After login: tgUserId=" + tgUserId + ", isVerified=" + isVerifiedUser);
+            console.log("After login: tgUserId=" + tgUserId + ", isVerified=" + isVerifiedUser);
             fetchRooms();
         });
-        
-        console.log("🚀 Roomer initialized! User: id=" + tgUserId + " name=" + tgUserName + " tg=" + isTelegramUser);
     </script>
 </body>
 </html>
