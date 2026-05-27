@@ -971,63 +971,116 @@
             }
         }
 
-        // ─── Загрузка комнат ───
+            // ─── Загрузка комнат ───
 
-        async function fetchRooms() {
-            const list = document.getElementById('rooms-list');
-            let url = '/rooms';
+            async function fetchRooms() {
+                const list = document.getElementById('rooms-list');
+                let url = '/rooms';
 
-            if (currentTab === 'my') {
-                if (!tgUserId || tgUserId < 1) {
-                    list.innerHTML = '<div class="empty-state">Для доступа к истории войдите через Telegram</div>';
-                    return;
-                }
-                url = '/my-rooms?tg_id=' + tgUserId;
-            }
-
-            if (searchQuery.trim()) {
-                url = '/rooms/search?q=' + encodeURIComponent(searchQuery);
-            }
-
-            try {
-                const rooms = await apiFetch(url);
-
-                if (!rooms || rooms.length === 0) {
-                    if (searchQuery) {
-                        list.innerHTML = '<div class="empty-state">Ничего не найдено по запросу<br>"' + searchQuery + '"</div>';
-                    } else if (currentTab === 'my') {
-                        list.innerHTML = '<div class="empty-state">Вы ещё не создали ни одной комнаты.<br>Создайте её через кнопку +</div>';
-                    } else {
-                        list.innerHTML = '<div class="empty-state">Комнат пока нет.<br>Создайте первую!</div>';
+                if (currentTab === 'my') {
+                    if (!tgUserId || tgUserId < 1) {
+                        list.innerHTML = '<div class="empty-state">Для доступа к истории войдите через Telegram</div>';
+                        return;
                     }
-                    return;
+                    url = '/my-rooms?tg_id=' + tgUserId;
+                } else {
+                    // Передаём tg_id для сортировки по избранному
+                    url = '/rooms?tg_id=' + (tgUserId || 0);
                 }
 
-                list.innerHTML = rooms.map(room => {
-                    const safeTitle = (room.title || 'Без названия').replace(/'/g, "\\'");
-                    return `
-                        <div class="card" onclick="openChat(${room.id}, '${safeTitle}')">
-                            <h3>
-                                ${room.title || 'Без названия'}
-                                ${room.online > 0 ? `<span class="online-badge">● ${room.online}</span>` : ''}
-                            </h3>
-                            <p>${room.description || ''}</p>
-                            <div class="tags">${(room.tags || []).map(tag => `<span class="tag">#${tag}</span>`).join('')}</div>
+                if (searchQuery.trim()) {
+                    url = '/rooms/search?q=' + encodeURIComponent(searchQuery) + '&tg_id=' + (tgUserId || 0);
+                }
+
+                try {
+                    const rooms = await apiFetch(url);
+
+                    if (!rooms || rooms.length === 0) {
+                        if (searchQuery) {
+                            list.innerHTML = '<div class="empty-state">Ничего не найдено по запросу<br>"' + searchQuery + '"</div>';
+                        } else if (currentTab === 'my') {
+                            list.innerHTML = '<div class="empty-state">Вы ещё не создали ни одной комнаты.<br>Создайте её через кнопку +</div>';
+                        } else {
+                            list.innerHTML = '<div class="empty-state">Комнат пока нет.<br>Создайте первую!</div>';
+                        }
+                        return;
+                    }
+
+                    list.innerHTML = rooms.map(room => {
+                        const safeTitle = (room.title || 'Без названия').replace(/'/g, "\\'");
+                        const rating = room.rating || 0;
+                        const likes = room.likes || 0;
+                        const dislikes = room.dislikes || 0;
+                        const isFav = room.is_favorite;
+                        const star = isFav ? '★' : '☆';
+                        const ratingColor = rating > 0 ? '#4CAF50' : rating < 0 ? '#F44336' : '#6B6B80';
+                        return `
+                            <div class="card" onclick="openChat(${room.id}, '${safeTitle}')">
+                                <h3>
+                                    ${room.title || 'Без названия'}
+                                    ${room.online > 0 ? `<span class="online-badge">● ${room.online}</span>` : ''}
+                                </h3>
+                                <p>${room.description || ''}</p>
+                                <div class="tags">${(room.tags || []).map(tag => `<span class="tag">#${tag}</span>`).join('')}</div>
+                                <div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap;">
+                                    <span style="font-size:12px;color:${ratingColor};font-weight:600;">★ ${rating}</span>
+                                    <span style="font-size:11px;color:#6B6B80;">👍 ${likes}</span>
+                                    <span style="font-size:11px;color:#6B6B80;">👎 ${dislikes}</span>
+                                    <span class="favorite-btn" data-room-id="${room.id}" style="cursor:pointer;font-size:18px;color:${isFav ? '#FFD700' : '#6B6B80'};" onclick="event.stopPropagation();toggleFavorite(${room.id}, this)">${star}</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } catch (e) {
+                    console.error('Error fetching rooms:', e);
+                    list.innerHTML = `
+                        <div class="empty-state" style="color:#E55;">
+                            Ошибка подключения<br>
+                            <span style="font-size:13px;color:#9B9BB0;">${e.message}</span>
+                            <br><br>
+                            <button class="btn-submit" style="width:auto;padding:10px 24px;display:inline-block;" onclick="fetchRooms()">Повторить</button>
                         </div>
                     `;
-                }).join('');
-            } catch (e) {
-                console.error('Error fetching rooms:', e);
-                list.innerHTML = `
-                    <div class="empty-state" style="color:#E55;">
-                        Ошибка подключения<br>
-                        <span style="font-size:13px;color:#9B9BB0;">${e.message}</span>
-                        <br><br>
-                        <button class="btn-submit" style="width:auto;padding:10px 24px;display:inline-block;" onclick="fetchRooms()">Повторить</button>
-                    </div>
-                `;
+                }
             }
-        }
+            
+            // ─── Избранное ───
+            async function toggleFavorite(roomId, el) {
+                if (!tgUserId) { showToast('Войдите через Telegram'); return; }
+                try {
+                    const result = await apiFetch('/rooms/' + roomId + '/favorite?tg_id=' + tgUserId + '&action=toggle', { method: 'POST' });
+                    if (result.is_favorite) {
+                        el.textContent = '★';
+                        el.style.color = '#FFD700';
+                    } else {
+                        el.textContent = '☆';
+                        el.style.color = '#6B6B80';
+                    }
+                } catch(e) {
+                    console.error('Favorite error:', e);
+                    showToast('Ошибка');
+                }
+            }
+            
+            // ─── Лайк/дизлайк ───
+            async function voteRoom(roomId, vote) {
+                if (!tgUserId) { showToast('Войдите через Telegram'); return; }
+                try {
+                    const result = await apiFetch('/rooms/vote', {
+                        method: 'POST',
+                        body: JSON.stringify({ tg_id: tgUserId, room_id: roomId, vote: vote })
+                    });
+                    if (result.status === 'success') {
+                        showToast('Голос учтён!');
+                        fetchRooms();
+                    } else if (result.error) {
+                        showToast(result.error);
+                    }
+                } catch(e) {
+                    console.error('Vote error:', e);
+                    showToast('Ошибка голосования');
+                }
+            }
 
         function refreshRooms(btn) {
             btn.classList.add('spinning');
