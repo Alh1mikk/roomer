@@ -55,6 +55,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
 .btn-submit{width:100%;padding:10px;font-size:14px;font-weight:600;font-family:inherit;border:none;border-radius:8px;background:#7C4DFF;color:#fff;cursor:pointer}
 .btn-submit:hover{background:#6C3DFF}
 .btn-submit.secondary{background:#2A2A38;color:#C0C0D0;margin-top:6px}
+.btn-submit.danger{background:#D32F2F;color:#fff;margin-top:6px}
 
 #chat-screen{display:none;flex-direction:column;height:100vh;position:fixed;top:0;left:0;width:100%;background:#0F0F13}
 #chat-screen.active{display:flex}
@@ -100,6 +101,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
 .reply-bar .reply-cancel{background:none;border:none;color:#6B6B80;cursor:pointer;font-size:14px}
 .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#1A1A24;border:1px solid #2A2A38;border-radius:10px;padding:8px 16px;font-size:12px;color:#E8E8ED;opacity:0;transition:opacity .3s,transform .3s;z-index:200;pointer-events:none;max-width:90%;text-align:center}
 .toast.visible{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Участники */
+.participant-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #2A2A38}
+.participant-item:last-child{border-bottom:none}
+.participant-avatar{width:36px;height:36px;border-radius:50%;background:#7C4DFF;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;flex-shrink:0}
+.participant-info{flex:1;min-width:0}
+.participant-name{font-size:14px;color:#F0F0F5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.participant-role{font-size:11px;color:#9B9BB0;margin-top:2px}
+.participant-role .role-badge{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600}
+.role-badge.creator{background:rgba(255,215,0,0.2);color:#FFD700}
+.role-badge.admin{background:rgba(124,77,255,0.2);color:#B388FF}
+.role-badge.member{background:rgba(76,175,80,0.2);color:#4CAF50}
+.role-badge.guest{background:rgba(158,158,158,0.2);color:#9E9E9E}
+.participant-status{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.participant-status.online{background:#4CAF50}
+.participant-status.offline{background:#6B6B80}
+.participants-count{font-size:12px;color:#6B6B80;margin-bottom:12px}
+
 ::-webkit-scrollbar{width:3px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:#3A3A48;border-radius:3px}
@@ -132,10 +151,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
 <button class="btn-submit secondary" onclick="toggleModal(false)">Отмена</button>
 </div>
 </div>
+<div id="participants-modal" class="modal">
+<div class="modal-inner">
+<h2 id="participants-modal-title">Участники</h2>
+<div class="participants-count" id="participants-count">загрузка...</div>
+<div id="participants-list"></div>
+<button class="btn-submit secondary" onclick="toggleParticipantsModal(false)">Закрыть</button>
+</div>
+</div>
 <div id="chat-screen" class="screen">
 <div class="header">
 <div class="header-left"><button class="btn-icon" onclick="closeChat()">&larr;</button><h2 id="chat-room-title">Чат</h2></div>
 <div class="header-right">
+<button class="btn-icon" onclick="openParticipants()" title="Участники">&#x1f465;</button>
 <span id="online-count" class="status-connected" style="display:none">0</span>
 <span id="connection-status" class="status-connecting">...</span>
 </div>
@@ -198,10 +226,15 @@ ws.onopen=()=>{ucs('connected');reconnectAttempts=0;lastPong=Date.now();pingInte
 ws.onerror=(e)=>{};ws.onclose=(e)=>{ucs('disconnected');if(pingInterval){clearInterval(pingInterval);pingInterval=null};if(shouldReconnect&&currentRoomId===roomId){reconnectAttempts++;setTimeout(()=>{if(shouldReconnect&&currentRoomId===roomId)setupWebSocket(roomId)},Math.min(1000*Math.pow(1.5,reconnectAttempts),10000))}}
 
 function addMsgToChat(d){const box=document.getElementById('chat-messages');if(!box)return
+if(d.id&&document.getElementById('msg-'+d.id))return
 const isMine=Number(d.tg_id)===Number(tgUserId)
 const m=document.createElement('div')
 if(d.is_deleted){m.id='msg-'+d.id;m.className='msg deleted-msg';m.innerHTML='<div class="bubble">Сообщение удалено</div>';box.appendChild(m);return}
-if(d.type==='system'){m.className='msg system-msg';m.innerHTML='<div class="bubble">'+(d.text||'')+(d.online!==undefined?'<br><span style="color:#4CAF50">'+d.online+' в сети</span>':'')+'</div>';box.appendChild(m);box.scrollTo({top:box.scrollHeight,behavior:'smooth'});return}
+if(d.type==='system'){m.className='msg system-msg';let txt=d.text||''
+if(d.room_title){document.getElementById('chat-room-title').textContent=d.room_title}
+let extra=''
+if(d.online!==undefined){extra='<br><span style="color:#4CAF50">'+d.online+' в сети</span>'}
+m.innerHTML='<div class="bubble">'+txt+extra+'</div>';box.appendChild(m);box.scrollTo({top:box.scrollHeight,behavior:'smooth'});return}
 if(d.type==='edit'){const el=document.getElementById('msg-'+d.id);if(el){const txt=el.querySelector('.msg-text');if(txt)txt.textContent=d.text;const ed=el.querySelector('.edited-label');if(ed)ed.style.display='inline'};return}
 if(d.type==='delete'){const el=document.getElementById('msg-'+d.id);if(el)el.outerHTML='<div id="msg-'+d.id+'" class="msg deleted-msg"><div class="bubble">Сообщение удалено</div></div>';return}
 m.id='msg-'+d.id;m.className='msg '+(isMine?'my-msg':'other-msg')
@@ -222,11 +255,13 @@ m.innerHTML=html;box.appendChild(m);box.scrollTo({top:box.scrollHeight,behavior:
 
 ws.onmessage=(e)=>{try{const d=JSON.parse(e.data);addMsgToChat(d)}catch(e){console.error('WS parse:',e)}}}
 
-function reconnectWs(roomId){shouldReconnect=false;if(ws){ws.onclose=null;ws.close();ws=null};if(pingInterval){clearInterval(pingInterval);pingInterval=null};shouldReconnect=true;setupWebSocket(roomId)}
+function reconnectWs(roomId){shouldReconnect=false;if(ws){ws.onclose=null;ws.close();ws=null};if(pingInterval){clearInterval(pingInterval);pingInterval=null};document.getElementById('chat-messages').innerHTML='';shouldReconnect=true;setupWebSocket(roomId)}
 
 function replyToMsg(msgId,username){replyToId=msgId;replyToName=username;const el=document.getElementById('msg-'+msgId);const txt=el?el.querySelector('.msg-text')?.textContent||'':'';document.getElementById('reply-bar').style.display='flex';document.getElementById('reply-name').textContent=username;document.getElementById('reply-text').textContent=txt.slice(0,80);document.getElementById('chat-input').focus()}
 function cancelReply(){replyToId=null;replyToName='';document.getElementById('reply-bar').style.display='none';document.getElementById('reply-name').textContent='';document.getElementById('reply-text').textContent=''}
-async function openChat(roomId){currentRoomId=roomId;shouldReconnect=true;onlineCount=0;uoc(0);cancelReply();document.getElementById('chat-room-title').textContent='Чат #'+roomId;document.getElementById('chat-messages').innerHTML='';ucs('connecting');sc('chat-screen');setTimeout(()=>setupWebSocket(roomId),100)}
+async function openChat(roomId){currentRoomId=roomId;shouldReconnect=true;onlineCount=0;uoc(0);cancelReply();document.getElementById('chat-room-title').textContent='Загрузка...';document.getElementById('chat-messages').innerHTML='';ucs('connecting');sc('chat-screen');setTimeout(()=>setupWebSocket(roomId),100)}
+// Загружаем название комнаты через API как fallback
+try{apiFetch('/rooms/'+roomId+'/info').then(info=>{if(info&&info.title)document.getElementById('chat-room-title').textContent=info.title}).catch(()=>{})}catch(e){}
 
 function sendWsMessage(){const input=document.getElementById('chat-input'),text=input.value.trim();if(!text)return;if(!ws||ws.readyState!==WebSocket.OPEN){st('Нет подключения');if(currentRoomId)setupWebSocket(currentRoomId);return}
 ws.send(JSON.stringify({type:'message',text:text,username:tgUserName,reply_to_id:replyToId}));input.value='';document.getElementById('btn-send').disabled=true;cancelReply()}
@@ -236,10 +271,32 @@ function editMsg(msgId){const el=document.getElementById('msg-'+msgId);if(!el)re
 function deleteMsg(msgId){if(!confirm('Удалить сообщение?'))return;ws.send(JSON.stringify({type:'delete',id:msgId}))}
 
 function closeChat(){shouldReconnect=false;currentRoomId=null;cancelReply();if(pingInterval){clearInterval(pingInterval);pingInterval=null};if(ws){try{if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'leave'}))}catch(e){};ws.onclose=null;ws.close(1000);ws=null};ucs('disconnected');uoc(0);sc('feed-screen');fetchRooms()}
+
+// ─── Участники ───
+function toggleParticipantsModal(s){document.getElementById('participants-modal').style.display=s?'block':'none'}
+document.getElementById('participants-modal').addEventListener('click',function(e){if(e.target===this)toggleParticipantsModal(false)})
+
+async function openParticipants(){if(!currentRoomId){st('Нет комнаты');return}
+toggleParticipantsModal(true);document.getElementById('participants-modal-title').textContent='Участники';document.getElementById('participants-list').innerHTML='<div class="loading" style="height:40px"></div>';document.getElementById('participants-count').textContent='загрузка...'
+try{const participants=await apiFetch('/rooms/'+currentRoomId+'/participants')
+const onlineCount=participants.filter(p=>p.online).length
+document.getElementById('participants-count').textContent='всего '+participants.length+', онлайн '+onlineCount
+document.getElementById('participants-list').innerHTML=participants.map(p=>{
+const initial=(p.username||'?')[0].toUpperCase()
+const roleLabels={creator:'Создатель',admin:'Админ',member:'Участник',guest:'Гость'}
+return '<div class="participant-item">'+
+'<div class="participant-avatar">'+initial+'</div>'+
+'<div class="participant-info">'+
+'<div class="participant-name">'+p.username+'</div>'+
+'<div class="participant-role"><span class="role-badge '+p.role+'">'+roleLabels[p.role]||p.role+'</span></div>'+
+'</div>'+
+'<div class="participant-status '+(p.online?'online':'offline')+'"></div>'+
+'</div>'}).join('')}catch(e){document.getElementById('participants-list').innerHTML='<div class="empty-state" style="color:#E55">Ошибка загрузки</div>';document.getElementById('participants-count').textContent=''}}
+
 window.addEventListener('beforeunload',()=>{if(ws&&ws.readyState===WebSocket.OPEN){ws.send(JSON.stringify({type:'leave'}));ws.close(1000,'Page closing')};if(pingInterval)clearInterval(pingInterval)})
 function toggleModal(s){document.getElementById('create-modal').style.display=s?'block':'none';if(s)document.getElementById('room-title').focus()}
 document.getElementById('create-modal').addEventListener('click',function(e){if(e.target===this)toggleModal(false)})
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(document.getElementById('create-modal').style.display==='block')toggleModal(false)}})
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(document.getElementById('create-modal').style.display==='block')toggleModal(false);if(document.getElementById('participants-modal').style.display==='block')toggleParticipantsModal(false)}})
 document.getElementById('chat-input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendWsMessage()}})
 document.getElementById('chat-input').addEventListener('input',function(){document.getElementById('btn-send').disabled=this.value.trim().length===0})
 document.getElementById('btn-send').addEventListener('click',sendWsMessage)
