@@ -892,11 +892,22 @@
                 mergedOptions.headers = { ...defaultOptions.headers, ...options.headers };
             }
             const response = await fetch(API_URL + url, mergedOptions);
+            const body = await response.text();
             if (!response.ok) {
-                const errText = await response.text();
-                throw new Error('HTTP ' + response.status + ': ' + (errText || response.statusText));
+                let errMsg = '';
+                try {
+                    const errJson = JSON.parse(body);
+                    errMsg = errJson.error || errJson.detail || body;
+                } catch(e) {
+                    errMsg = body || response.statusText;
+                }
+                throw new Error(errMsg);
             }
-            return response.json();
+            try {
+                return JSON.parse(body);
+            } catch(e) {
+                return body;
+            }
         }
 
         // ---- Авторизация ----
@@ -1049,7 +1060,8 @@
                 }
             } catch(e) {
                 console.error('Vote error:', e);
-                showToast('Ошибка голосования');
+                // Показываем текст ошибки от сервера пользователю
+                showToast(e.message || 'Ошибка голосования');
             }
         }
 
