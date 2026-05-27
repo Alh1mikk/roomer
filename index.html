@@ -1339,9 +1339,16 @@
             }
 
             if (wsConnection) {
+                // Отправляем явный сигнал о выходе перед закрытием
+                try {
+                    if (wsConnection.readyState === WebSocket.OPEN) {
+                        wsConnection.send(JSON.stringify({ type: 'leave' }));
+                    }
+                } catch(e) {}
+                
                 wsConnection.onclose = null;
                 wsConnection.onerror = null;
-                wsConnection.close();
+                wsConnection.close(1000, 'User left chat');  // 1000 = Normal Closure
                 wsConnection = null;
             }
 
@@ -1350,6 +1357,17 @@
             switchScreen('feed-screen');
             fetchRooms();
         }
+
+        // Корректное закрытие WebSocket при уходе со страницы
+        window.addEventListener('beforeunload', function() {
+            if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+                wsConnection.send(JSON.stringify({ type: 'leave' }));
+                wsConnection.close(1000, 'Page closing');
+            }
+            if (pingInterval) {
+                clearInterval(pingInterval);
+            }
+        });
 
         function toggleModal(show) {
             document.getElementById('create-modal').style.display = show ? 'block' : 'none';
