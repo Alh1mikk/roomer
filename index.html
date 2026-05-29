@@ -226,6 +226,7 @@ ws.onopen=()=>{ucs('connected');reconnectAttempts=0;lastPong=Date.now();pingInte
 ws.onerror=(e)=>{};ws.onclose=(e)=>{ucs('disconnected');if(pingInterval){clearInterval(pingInterval);pingInterval=null};if(shouldReconnect&&currentRoomId===roomId){reconnectAttempts++;setTimeout(()=>{if(shouldReconnect&&currentRoomId===roomId)setupWebSocket(roomId)},Math.min(1000*Math.pow(1.5,reconnectAttempts),10000))}}
 
 function addMsgToChat(d){const box=document.getElementById('chat-messages');if(!box)return
+if(d.type==='ping'||d.type==='pong')return
 if(d.type==='edit'){const el=document.getElementById('msg-'+d.id);if(el){const txt=el.querySelector('.msg-text');if(txt)txt.textContent=d.text;const ed=el.querySelector('.edited-label');if(ed)ed.style.display='inline'};return}
 if(d.type==='delete'){const el=document.getElementById('msg-'+d.id);if(el)el.outerHTML='<div id="msg-'+d.id+'" class="msg deleted-msg"><div class="bubble">Сообщение удалено</div></div>';return}
 if(d.id&&document.getElementById('msg-'+d.id))return
@@ -275,7 +276,6 @@ function closeChat(){shouldReconnect=false;currentRoomId=null;cancelReply();if(p
 // ─── Участники ───
 function toggleParticipantsModal(s){document.getElementById('participants-modal').style.display=s?'block':'none'}
 document.getElementById('participants-modal').addEventListener('click',function(e){if(e.target===this)toggleParticipantsModal(false)})
-
 async function openParticipants(){if(!currentRoomId){st('Нет комнаты');return}
 toggleParticipantsModal(true);document.getElementById('participants-modal-title').textContent='Участники';document.getElementById('participants-list').innerHTML='<div class="loading" style="height:40px"></div>';document.getElementById('participants-count').textContent='загрузка...'
 try{const participants=await apiFetch('/rooms/'+currentRoomId+'/participants')
