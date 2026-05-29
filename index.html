@@ -439,7 +439,7 @@ function toggleReaction(msgId,reaction){reactMsg(msgId,reaction)}
 function pinMsg(msgId){if(!ws||ws.readyState!==WebSocket.OPEN)return;if(confirm('Закрепить сообщение?'))ws.send(JSON.stringify({type:'pin',message_id:msgId}))}
 function unpinMessage(){if(!ws||ws.readyState!==WebSocket.OPEN)return;ws.send(JSON.stringify({type:'pin',message_id:0}))}
 
-ws.onmessage=(e)=>{try{lastPong=Date.now();const d=JSON.parse(e.data);addMsgToChat(d)}catch(e){console.error('WS parse:',e)}}}
+ws.onmessage=(e)=>{try{lastPong=Date.now();const d=JSON.parse(e.data);addMsgToChat(d)}catch(e){console.error('WS parse:',e)}}  
 
 function reconnectWs(roomId){shouldReconnect=false;if(ws){ws.onclose=null;ws.close();ws=null};if(pingInterval){clearInterval(pingInterval);pingInterval=null};shouldReconnect=true;setupWebSocket(roomId)}
 
