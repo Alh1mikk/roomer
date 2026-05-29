@@ -226,6 +226,8 @@ ws.onopen=()=>{ucs('connected');reconnectAttempts=0;lastPong=Date.now();pingInte
 ws.onerror=(e)=>{};ws.onclose=(e)=>{ucs('disconnected');if(pingInterval){clearInterval(pingInterval);pingInterval=null};if(shouldReconnect&&currentRoomId===roomId){reconnectAttempts++;setTimeout(()=>{if(shouldReconnect&&currentRoomId===roomId)setupWebSocket(roomId)},Math.min(1000*Math.pow(1.5,reconnectAttempts),10000))}}
 
 function addMsgToChat(d){const box=document.getElementById('chat-messages');if(!box)return
+if(d.type==='edit'){const el=document.getElementById('msg-'+d.id);if(el){const txt=el.querySelector('.msg-text');if(txt)txt.textContent=d.text;const ed=el.querySelector('.edited-label');if(ed)ed.style.display='inline'};return}
+if(d.type==='delete'){const el=document.getElementById('msg-'+d.id);if(el)el.outerHTML='<div id="msg-'+d.id+'" class="msg deleted-msg"><div class="bubble">Сообщение удалено</div></div>';return}
 if(d.id&&document.getElementById('msg-'+d.id))return
 const isMine=Number(d.tg_id)===Number(tgUserId)
 const m=document.createElement('div')
@@ -235,8 +237,6 @@ if(d.room_title){document.getElementById('chat-room-title').textContent=d.room_t
 let extra=''
 if(d.online!==undefined){extra='<br><span style="color:#4CAF50">'+d.online+' в сети</span>'}
 m.innerHTML='<div class="bubble">'+txt+extra+'</div>';box.appendChild(m);box.scrollTo({top:box.scrollHeight,behavior:'smooth'});return}
-if(d.type==='edit'){const el=document.getElementById('msg-'+d.id);if(el){const txt=el.querySelector('.msg-text');if(txt)txt.textContent=d.text;const ed=el.querySelector('.edited-label');if(ed)ed.style.display='inline'};return}
-if(d.type==='delete'){const el=document.getElementById('msg-'+d.id);if(el)el.outerHTML='<div id="msg-'+d.id+'" class="msg deleted-msg"><div class="bubble">Сообщение удалено</div></div>';return}
 m.id='msg-'+d.id;m.className='msg '+(isMine?'my-msg':'other-msg')
 let html='<div class="bubble">'
 if(!isMine&&d.username)html+='<div class="msg-author">'+(d.username||'')+'</div>'
