@@ -159,10 +159,34 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
 <button class="btn-submit secondary" onclick="toggleParticipantsModal(false)">Закрыть</button>
 </div>
 </div>
+<div id="premium-modal" class="modal">
+<div class="modal-inner">
+<h2>&#x2605; Roomer Premium</h2>
+<p style="font-size:13px;color:#9B9BB0;margin-bottom:16px;line-height:1.5">
+Выберите цвет своих сообщений в чате. Премиум действует 30 дней.
+</p>
+<label>Цвет сообщений</label>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px" id="premium-colors">
+<button class="premium-color-btn" data-color="#7C4DFF" style="width:40px;height:40px;border-radius:50%;border:3px solid transparent;cursor:pointer;background:#7C4DFF" onclick="selectPremiumColor(this,'#7C4DFF')"></button>
+<button class="premium-color-btn" data-color="#4CAF50" style="width:40px;height:40px;border-radius:50%;border:3px solid transparent;cursor:pointer;background:#4CAF50" onclick="selectPremiumColor(this,'#4CAF50')"></button>
+<button class="premium-color-btn" data-color="#FF5722" style="width:40px;height:40px;border-radius:50%;border:3px solid transparent;cursor:pointer;background:#FF5722" onclick="selectPremiumColor(this,'#FF5722')"></button>
+<button class="premium-color-btn" data-color="#2196F3" style="width:40px;height:40px;border-radius:50%;border:3px solid transparent;cursor:pointer;background:#2196F3" onclick="selectPremiumColor(this,'#2196F3')"></button>
+<button class="premium-color-btn" data-color="#FF9800" style="width:40px;height:40px;border-radius:50%;border:3px solid transparent;cursor:pointer;background:#FF9800" onclick="selectPremiumColor(this,'#FF9800')"></button>
+<button class="premium-color-btn" data-color="#E91E63" style="width:40px;height:40px;border-radius:50%;border:3px solid transparent;cursor:pointer;background:#E91E63" onclick="selectPremiumColor(this,'#E91E63')"></button>
+<button class="premium-color-btn" data-color="#00BCD4" style="width:40px;height:40px;border-radius:50%;border:3px solid transparent;cursor:pointer;background:#00BCD4" onclick="selectPremiumColor(this,'#00BCD4')"></button>
+<button class="premium-color-btn" data-color="#FFEB3B" style="width:40px;height:40px;border-radius:50%;border:3px solid transparent;cursor:pointer;background:#FFEB3B" onclick="selectPremiumColor(this,'#FFEB3B')"></button>
+</div>
+<input type="text" id="premium-color-custom" placeholder="Свой цвет (например #FF0000)" maxlength="7" style="width:100%;background:#2A2A38;border:1px solid #3A3A48;border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit;color:#E8E8ED;outline:none;margin-bottom:10px">
+<button class="btn-submit" onclick="activatePremium()">Купить на 30 дней</button>
+<button class="btn-submit secondary" onclick="applyPremiumColor()">Применить цвет</button>
+<button class="btn-submit secondary" onclick="togglePremiumModal(false)">Закрыть</button>
+</div>
+</div>
 <div id="chat-screen" class="screen">
 <div class="header">
 <div class="header-left"><button class="btn-icon" onclick="closeChat()">&larr;</button><h2 id="chat-room-title">Чат</h2></div>
 <div class="header-right">
+<button class="btn-icon" onclick="openPremium()" title="Премиум" style="background:#FFD700;color:#1A1A24">&#x2605;</button>
 <button class="btn-icon" onclick="openParticipants()" title="Участники">&#x1f465;</button>
 <span id="online-count" class="status-connected" style="display:none">0</span>
 <span id="connection-status" class="status-connecting">...</span>
@@ -239,7 +263,9 @@ let extra=''
 if(d.online!==undefined){extra='<br><span style="color:#4CAF50">'+d.online+' в сети</span>'}
 m.innerHTML='<div class="bubble">'+txt+extra+'</div>';box.appendChild(m);box.scrollTo({top:box.scrollHeight,behavior:'smooth'});return}
 m.id='msg-'+d.id;m.className='msg '+(isMine?'my-msg':'other-msg')
-let html='<div class="bubble">'
+let bubbleStyle=''
+if(d.message_color&&isMine)bubbleStyle='style="background:'+d.message_color+'"'
+let html='<div class="bubble" '+bubbleStyle+'>'
 if(!isMine&&d.username)html+='<div class="msg-author">'+(d.username||'')+'</div>'
 if(d.reply_to)html+='<div class="reply-block"><span class="reply-author">'+(d.reply_to.username||'')+'</span>: '+d.reply_to.text+'</div>'
 html+='<span class="msg-text">'+(d.text||'')+'</span>'
@@ -272,6 +298,16 @@ function editMsg(msgId){const el=document.getElementById('msg-'+msgId);if(!el)re
 function deleteMsg(msgId){if(!confirm('Удалить сообщение?'))return;ws.send(JSON.stringify({type:'delete',id:msgId}))}
 
 function closeChat(){shouldReconnect=false;currentRoomId=null;cancelReply();if(pingInterval){clearInterval(pingInterval);pingInterval=null};if(ws){try{if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'leave'}))}catch(e){};ws.onclose=null;ws.close(1000);ws=null};ucs('disconnected');uoc(0);sc('feed-screen');fetchRooms()}
+
+// ─── Премиум ───
+let selectedPremiumColor='#7C4DFF';
+function togglePremiumModal(s){document.getElementById('premium-modal').style.display=s?'block':'none'}
+document.getElementById('premium-modal').addEventListener('click',function(e){if(e.target===this)togglePremiumModal(false)})
+function openPremium(){if(!tgUserId){st('Войдите через Telegram');return};togglePremiumModal(true)}
+function selectPremiumColor(el,color){document.querySelectorAll('.premium-color-btn').forEach(b=>b.style.borderColor='transparent');el.style.borderColor='#fff';selectedPremiumColor=color;document.getElementById('premium-color-custom').value=color}
+document.getElementById('premium-color-custom').addEventListener('input',function(){if(this.value.match(/^#[0-9A-Fa-f]{6}$/)){selectedPremiumColor=this.value;document.querySelectorAll('.premium-color-btn').forEach(b=>b.style.borderColor='transparent')}})
+async function activatePremium(){if(!tgUserId){st('Войдите через Telegram');return};const btn=document.querySelector('#premium-modal .btn-submit:first-of-type');btn.disabled=true;btn.textContent='Активация...';try{const r=await apiFetch('/premium/activate',{method:'POST',body:JSON.stringify({tg_id:tgUserId,color:selectedPremiumColor})});if(r.status==='success'){st('Премиум активирован! Цвет: '+r.message_color)}else if(r.error)st(r.error)}catch(e){st(e.message||'Ошибка')}finally{btn.disabled=false;btn.textContent='Купить на 30 дней'}}
+async function applyPremiumColor(){if(!tgUserId){st('Войдите через Telegram');return};try{const r=await apiFetch('/premium/set-color',{method:'POST',body:JSON.stringify({tg_id:tgUserId,color:selectedPremiumColor})});if(r.status==='success'){st('Цвет изменён: '+r.message_color);togglePremiumModal(false)}else if(r.error)st(r.error)}catch(e){st(e.message||'Ошибка')}}
 
 // ─── Участники ───
 function toggleParticipantsModal(s){document.getElementById('participants-modal').style.display=s?'block':'none'}
