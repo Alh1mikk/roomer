@@ -222,7 +222,7 @@ function switchTab(tab){currentTab=tab;document.querySelectorAll('.tab').forEach
 async function submitRoom(){const title=document.getElementById('room-title').value.trim(),desc=document.getElementById('room-desc').value.trim(),tags=document.getElementById('room-tags').value.split(',').map(t=>t.trim()).filter(t=>t).slice(0,10),btn=document.getElementById('btn-create-room');if(!title){st('Введите название');return};btn.disabled=true;btn.textContent='Создание...';try{await apiFetch('/rooms',{method:'POST',body:JSON.stringify({title,description:desc,creator_id:tgUserId,tags})});document.getElementById('room-title').value='';document.getElementById('room-desc').value='';document.getElementById('room-tags').value='';toggleModal(false);st('Комната создана!');fetchRooms()}catch(e){st('Ошибка: '+e.message)}finally{btn.disabled=false;btn.textContent='Создать'}}
 
 function setupWebSocket(roomId){if(ws){ws.onclose=null;ws.close();ws=null};if(pingInterval){clearInterval(pingInterval);pingInterval=null};reconnectAttempts=0;lastPong=Date.now();ucs('connecting');const wsUrl=WS+'/ws/'+roomId+'?user_name='+encodeURIComponent(tgUserName)+'&tg_id='+tgUserId;try{ws=new WebSocket(wsUrl)}catch(e){ucs('disconnected');return}
-ws.onopen=()=>{ucs('connected');reconnectAttempts=0;lastPong=Date.now();pingInterval=setInterval(()=>{if(ws&&ws.readyState===WebSocket.OPEN){if(Date.now()-lastPong>45000){reconnectWs(roomId);return};ws.send(JSON.stringify({type:'ping'}))}},20000)}
+ws.onopen=()=>{ucs('connected');reconnectAttempts=0;lastPong=Date.now();pingInterval=setInterval(()=>{if(ws&&ws.readyState===WebSocket.OPEN){if(Date.now()-lastPong>60000){reconnectWs(roomId);return};ws.send(JSON.stringify({type:'ping'}))}},15000)}
 ws.onerror=(e)=>{};ws.onclose=(e)=>{ucs('disconnected');if(pingInterval){clearInterval(pingInterval);pingInterval=null};if(shouldReconnect&&currentRoomId===roomId){reconnectAttempts++;setTimeout(()=>{if(shouldReconnect&&currentRoomId===roomId)setupWebSocket(roomId)},Math.min(1000*Math.pow(1.5,reconnectAttempts),10000))}}
 
 function addMsgToChat(d){const box=document.getElementById('chat-messages');if(!box)return
@@ -253,9 +253,9 @@ html+='<button class="msg-action-btn" onclick="event.stopPropagation();replyToMs
 html+='</div>'
 m.innerHTML=html;box.appendChild(m);box.scrollTo({top:box.scrollHeight,behavior:'smooth'})}
 
-ws.onmessage=(e)=>{try{const d=JSON.parse(e.data);addMsgToChat(d)}catch(e){console.error('WS parse:',e)}}}
+ws.onmessage=(e)=>{try{lastPong=Date.now();const d=JSON.parse(e.data);addMsgToChat(d)}catch(e){console.error('WS parse:',e)}}}
 
-function reconnectWs(roomId){shouldReconnect=false;if(ws){ws.onclose=null;ws.close();ws=null};if(pingInterval){clearInterval(pingInterval);pingInterval=null};document.getElementById('chat-messages').innerHTML='';shouldReconnect=true;setupWebSocket(roomId)}
+function reconnectWs(roomId){shouldReconnect=false;if(ws){ws.onclose=null;ws.close();ws=null};if(pingInterval){clearInterval(pingInterval);pingInterval=null};shouldReconnect=true;setupWebSocket(roomId)}
 
 function replyToMsg(msgId,username){replyToId=msgId;replyToName=username;const el=document.getElementById('msg-'+msgId);const txt=el?el.querySelector('.msg-text')?.textContent||'':'';document.getElementById('reply-bar').style.display='flex';document.getElementById('reply-name').textContent=username;document.getElementById('reply-text').textContent=txt.slice(0,80);document.getElementById('chat-input').focus()}
 function cancelReply(){replyToId=null;replyToName='';document.getElementById('reply-bar').style.display='none';document.getElementById('reply-name').textContent='';document.getElementById('reply-text').textContent=''}
