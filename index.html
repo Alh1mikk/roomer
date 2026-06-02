@@ -22,7 +22,7 @@ body.light .search-bar{background:#fff;border-bottom:1px solid #E0E0E0}
 .search-bar input{flex:1;background:#2A2A38;border:1px solid #3A3A48;border-radius:10px;padding:8px 12px;font-size:14px;font-family:inherit;color:#E8E8ED;outline:none}
 body.light .search-bar input{background:#F0F0F2;border-color:#D0D0D8;color:#1A1A24}
 .search-bar input:focus{border-color:#7C4DFF}
-.btn-clear{background:transparent;border:none;color:#6B6B80;font-size:18px;cursor:pointer;display:none;line-height:1}
+.btn-clear{background:transparent;border:none;color:#6B6B80;font-size:18px;cursor:poнinter;display:none;line-height:1}
 .btn-clear.visible{display:block}
 .tabs{display:flex;background:#1A1A24;border-bottom:1px solid #2A2A38;padding:0 12px}
 body.light .tabs{background:#fff;border-bottom:1px solid #E0E0E0}
@@ -83,7 +83,6 @@ body.light #chat-screen{background:#F5F5F7}
 #chat-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:4px;padding-bottom:60px}
 #chat-messages.loading-past{opacity:.7}
 
-.msg{display:flex;flex-direction:column;max-width:85%;margin-bottom:2px;position:relative;animation:msgIn .15s ease-out}
 .msg .bubble{padding:8px 12px;border-radius:14px;font-size:14px;line-height:1.4;word-break:break-word;position:relative}
 .msg .bubble .reply-block{background:rgba(255,255,255,.08);border-left:3px solid #7C4DFF;padding:4px 8px;border-radius:6px;font-size:11px;margin-bottom:4px;color:rgba(255,255,255,.5)}
 body.light .msg .bubble .reply-block{background:rgba(0,0,0,.06);color:rgba(0,0,0,.5)}
@@ -94,26 +93,61 @@ body.light .msg .bubble .reply-block{background:rgba(0,0,0,.06);color:rgba(0,0,0
 .msg .bubble .msg-footer .msg-edited{font-size:9px;color:rgba(255,255,255,.3)}
 .msg .bubble .premium-badge{font-size:8px;margin-left:4px;opacity:.7}
 
-.msg.my-msg{align-self:flex-end;align-items:flex-end}
 .msg.my-msg .bubble{background:#7C4DFF;color:#fff;border-bottom-right-radius:4px}
 body.light .msg.my-msg .bubble .msg-author{color:rgba(255,255,255,.6)}
 .msg.my-msg .bubble .reply-block{border-left-color:#B388FF;background:rgba(255,255,255,.12)}
-.msg.other-msg{align-self:flex-start;align-items:flex-start}
 .msg.other-msg .bubble{background:#2A2A38;color:#E8E8ED;border-bottom-left-radius:4px}
 body.light .msg.other-msg .bubble{background:#E8E8ED;color:#1A1A24}
 .msg.other-msg .bubble .reply-block{border-left-color:#7C4DFF}
-.msg.deleted-msg{align-self:center}
 .msg.deleted-msg .bubble{background:transparent;color:#555;font-size:12px;font-style:italic;border:1px dashed #3A3A48;border-radius:8px;padding:4px 12px}
-.msg.system-msg{align-self:center}
 .msg.system-msg .bubble{background:transparent;color:#6B6B80;font-size:12px;text-align:center;padding:4px 8px}
 
-.msg-actions{display:none;position:absolute;top:-20px;right:0;background:#1A1A24;border:1px solid #2A2A38;border-radius:6px;padding:2px;gap:2px;z-index:5}
-body.light .msg-actions{background:#fff;border-color:#E0E0E0}
-.msg:hover .msg-actions{display:flex}
-.msg-action-btn{background:none;border:none;color:#9B9BB0;cursor:pointer;font-size:10px;padding:3px 6px;border-radius:4px;font-family:inherit}
-.msg-action-btn:hover{background:#2A2A38;color:#fff}
-body.light .msg-action-btn:hover{background:#E0E0E0;color:#000}
+/* Bottom Sheet Context Menu */
+.context-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:200;opacity:0;transition:opacity .2s}
+.context-overlay.show{display:block;opacity:1}
+.context-sheet{position:fixed;bottom:0;left:0;width:100%;background:#1A1A24;border-radius:16px 16px 0 0;z-index:201;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);padding-bottom:calc(12px + env(safe-area-inset-bottom));max-height:50vh;overflow-y:auto}
+body.light .context-sheet{background:#fff}
+.context-sheet.show{transform:translateY(0)}
+.context-sheet .handle{width:36px;height:4px;border-radius:2px;background:#3A3A48;margin:8px auto 4px}
+body.light .context-sheet .handle{background:#D0D0D0}
+.context-sheet .context-title{font-size:12px;color:#6B6B80;text-align:center;padding:4px 16px 8px;border-bottom:1px solid #2A2A38;margin-bottom:4px}
+body.light .context-sheet .context-title{border-bottom-color:#E0E0E0}
+.context-item{display:flex;align-items:center;gap:14px;padding:12px 20px;cursor:pointer;transition:background .15s;border:none;background:none;width:100%;text-align:left;font-size:15px;font-family:inherit;color:#E8E8ED}
+body.light .context-item{color:#1A1A24}
+.context-item:hover{background:rgba(124,77,255,.08)}
+.context-item .ctx-icon{width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.context-item .ctx-icon svg{width:20px;height:20px;fill:none;stroke:#9B9BB0;stroke-width:2}
+body.light .context-item .ctx-icon svg{stroke:#666}
+.context-item .ctx-label{flex:1}
+.context-item.danger{color:#F44336}
+.context-item.danger .ctx-icon svg{stroke:#F44336}
+body.light .context-item.danger{color:#D32F2F}
+.context-item.danger:hover{background:rgba(244,67,54,.08)}
+.context-separator{height:1px;background:#2A2A38;margin:4px 20px}
+body.light .context-separator{background:#E0E0E0}
+.ctx-reactions{display:flex;gap:4px;padding:8px 20px;flex-wrap:wrap}
+.ctx-reactions .ctx-reaction{font-size:30px;cursor:pointer;padding:6px;border-radius:50%;transition:background .15s;line-height:1;background:none;border:none;display:flex;align-items:center;justify-content:center}
+.ctx-reactions .ctx-reaction:hover{background:rgba(124,77,255,.15)}
+.context-cancel{display:block;width:calc(100% - 16px);margin:8px 8px 0;padding:10px;border-radius:10px;background:#2A2A38;border:none;font-size:15px;font-weight:500;font-family:inherit;color:#E8E8ED;cursor:pointer;text-align:center}
+body.light .context-cancel{background:#F0F0F2;color:#1A1A24}
+.context-cancel:hover{opacity:.8}
+@keyframes contextFadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
+.msg{display:flex;flex-direction:row;align-items:flex-end;gap:6px;margin-bottom:2px;position:relative;animation:msgIn .15s ease-out;max-width:85%}
+.msg.my-msg{flex-direction:row-reverse;align-self:flex-end}
+.msg.other-msg{align-self:flex-start}
+.msg .msg-avatar{width:32px;height:32px;border-radius:50%;flex-shrink:0;margin-bottom:6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;overflow:hidden;background:#7C4DFF}
+.msg .msg-avatar img{width:100%;height:100%;object-fit:cover}
+.msg .msg-content{display:flex;flex-direction:column;min-width:0;flex:1}
+.msg.my-msg .msg-content{align-items:flex-end}
+.msg.other-msg .msg-content{align-items:flex-start}
+.msg .bubble{padding:8px 12px;border-radius:14px;font-size:14px;line-height:1.4;word-break:break-word;position:relative}
+/* hide avatar for system/deleted */
+.msg.system-msg,.msg.deleted-msg{display:flex;flex-direction:column;align-items:center;align-self:center}
+.msg.system-msg .msg-avatar,.msg.deleted-msg .msg-avatar{display:none}
+.msg.system-msg .msg-content,.msg.deleted-msg .msg-content{max-width:100%}
+.msg.my-msg .msg-avatar{width:32px;height:32px;border-radius:50%;flex-shrink:0;margin-bottom:6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;overflow:hidden;background:#7C4DFF}
+.msg.my-msg .msg-avatar img{width:100%;height:100%;object-fit:cover}
 .msg .reactions{display:flex;gap:2px;margin-top:2px;flex-wrap:wrap}
 .msg .reactions .reaction{padding:1px 4px;border-radius:4px;font-size:10px;background:rgba(124,77,255,.15);cursor:pointer;user-select:none}
 .msg .reactions .reaction.active{background:rgba(124,77,255,.4)}
@@ -297,6 +331,14 @@ body.light .stat-box{background:#F0F0F2}
 <button class="btn-submit secondary" onclick="document.getElementById('create-event-modal').style.display='none'">Отмена</button>
 </div>
 </div>
+<!-- Context Menu Bottom Sheet -->
+<div id="context-overlay" class="context-overlay" onclick="closeContextMenu()"></div>
+<div id="context-sheet" class="context-sheet">
+  <div class="handle"></div>
+  <div class="context-title" id="context-title">Действия</div>
+  <div id="context-body"></div>
+  <button class="context-cancel" onclick="closeContextMenu()">Отмена</button>
+</div>
 <div id="chat-screen" class="screen">
 <div class="header">
 <div class="header-left"><button class="btn-icon" onclick="closeChat()" title="Назад"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button><h2 id="chat-room-title">Чат</h2></div>
@@ -325,10 +367,10 @@ body.light .stat-box{background:#F0F0F2}
 </div>
 <script>
 const API='https://roomer-alh1mikk.amvera.io',WS='wss://roomer-alh1mikk.amvera.io';
-let tgUserId=null,tgUserName='Аноним',tgInitData='',isTelegramUser=false;
+let tgUserId=null,tgUserName='Аноним',tgInitData='',tgPhotoUrl='',isTelegramUser=false;
 if(window.Telegram&&window.Telegram.WebApp){const tg=window.Telegram.WebApp;try{tg.ready();tg.expand()}catch(e){}
 isTelegramUser=true;if(tg.initData)tgInitData=tg.initData
-if(tg.initDataUnsafe?.user?.id){tgUserId=tg.initDataUnsafe.user.id;tgUserName=tg.initDataUnsafe.user.first_name||tgUserName}}
+if(tg.initDataUnsafe?.user?.id){tgUserId=tg.initDataUnsafe.user.id;tgUserName=tg.initDataUnsafe.user.first_name||tgUserName;if(tg.initDataUnsafe.user.photo_url)tgPhotoUrl=tg.initDataUnsafe.user.photo_url}}
 if(!tgUserId){const p=new URLSearchParams(location.search);if(p.has('tg_id')){tgUserId=parseInt(p.get('tg_id'));tgUserName=p.get('username')||tgUserName}}
 if(!tgUserId){const s=sessionStorage.getItem('roomer_temp_id');if(s)tgUserId=parseInt(s);else{tgUserId=Math.floor(Math.random()*90000)+10000;sessionStorage.setItem('roomer_temp_id',tgUserId.toString())}}
 if(isTelegramUser&&tgUserId){sessionStorage.setItem('roomer_tg_id',tgUserId.toString());sessionStorage.setItem('roomer_tg_name',tgUserName);if(tgInitData)sessionStorage.setItem('roomer_initdata',tgInitData)}
@@ -347,7 +389,9 @@ function sc(s){document.querySelectorAll('.screen').forEach(e=>e.classList.remov
 function ucs(s){const e=document.getElementById('connection-status');if(!e)return;const t={connected:'онлайн',connecting:'...',disconnected:'офлайн'},c={connected:'status-connected',connecting:'status-connecting',disconnected:'status-disconnected'};e.textContent=t[s]||t.disconnected;e.className=c[s]||c.disconnected}
 function uoc(c){const e=document.getElementById('online-count');if(!e)return;onlineCount=c;if(c>0){e.textContent=c+' в сети';e.style.display=''}else e.style.display='none'}
 async function apiFetch(url,opts={}){const def={mode:'cors',headers:{'Content-Type':'application/json'}};const m={...def,...opts};if(m.headers)m.headers={...def.headers,...opts.headers};const r=await fetch(API+url,m);const b=await r.text();if(!r.ok){let e='';try{const j=JSON.parse(b);e=j.error||j.detail||b}catch(e){e=b||r.statusText}throw new Error(e)}try{return JSON.parse(b)}catch(e){return b}}
-async function loginUser(){try{const r=await apiFetch('/auth/login',{method:'POST',body:JSON.stringify({tg_id:tgUserId,username:tgUserName,bio:'',init_data:tgInitData})});if(r.status==='success'){tgUserId=r.tg_id;tgUserName=r.username;sessionStorage.setItem('roomer_tg_id',tgUserId.toString());sessionStorage.setItem('roomer_tg_name',tgUserName)}}catch(e){}}
+let myAvatarUrl='';
+async function loginUser(){try{const r=await apiFetch('/auth/login',{method:'POST',body:JSON.stringify({tg_id:tgUserId,username:tgUserName,bio:'',init_data:tgInitData,avatar_url:tgPhotoUrl||null})});if(r.status==='success'){tgUserId=r.tg_id;tgUserName=r.username;if(r.avatar_url)myAvatarUrl=r.avatar_url;sessionStorage.setItem('roomer_tg_id',tgUserId.toString());sessionStorage.setItem('roomer_tg_name',tgUserName);if(r.avatar_url)sessionStorage.setItem('roomer_avatar',r.avatar_url)}}catch(e){}}
+if(sessionStorage.getItem('roomer_avatar'))myAvatarUrl=sessionStorage.getItem('roomer_avatar')
 async function fetchRooms(){const list=document.getElementById('rooms-list');let url='/rooms';if(currentTab==='my'){if(!tgUserId||tgUserId<1){list.innerHTML='<div class="empty-state">Войдите через Telegram</div>';return};url='/my-rooms?tg_id='+tgUserId}else url='/rooms?tg_id='+(tgUserId||0);if(searchQuery.trim())url='/rooms/search?q='+encodeURIComponent(searchQuery)+'&tg_id='+(tgUserId||0);try{const rooms=await apiFetch(url);if(!rooms||rooms.length===0){list.innerHTML=searchQuery?'<div class="empty-state">Ничего не найдено</div>':currentTab==='my'?'<div class="empty-state">Вы не создали комнат</div>':'<div class="empty-state">Комнат пока нет</div>';return}
 if(tgUserId&&tgUserId>0){for(const room of rooms){try{const v=await apiFetch('/rooms/'+room.id+'/my-vote?tg_id='+tgUserId);userVotes[room.id]=v.vote}catch(e){}}}
 list.innerHTML=rooms.map(room=>{const rating=room.rating||0,likes=room.likes_count||0,dislikes=room.dislikes_count||0,isFav=room.is_favorite,myVote=userVotes[room.id]||0,rc=rating>0?'#4CAF50':rating<0?'#F44336':'#6B6B80';return '<div class="card" onclick="openChat('+room.id+')">'+
@@ -379,14 +423,19 @@ ws.onerror=(e)=>{};ws.onclose=(e)=>{ucs('disconnected');if(pingInterval){clearIn
 ws.onmessage=(e)=>{try{lastPong=Date.now();const d=JSON.parse(e.data);addMsgToChat(d)}catch(e){console.error('WS parse:',e)}}
 var sbox=document.getElementById('chat-messages');
 if(sbox){sbox.addEventListener('scroll',function(){if(this.scrollTop<50&&!isLoadingMore&&hasMoreMessages&&lastMsgId){isLoadingMore=true;loadMoreMessages()}})}
+// Right-click (desktop) and long-press (mobile) context menu
+if(sbox){sbox.addEventListener('contextmenu',function(e){const msg=e.target.closest('.msg');if(msg){e.preventDefault();const id=parseInt(msg.id.replace('msg-',''));if(id)showContextMenu(id)}});
+var lpTimer=null;sbox.addEventListener('touchstart',function(e){const msg=e.target.closest('.msg');if(msg&&msg.id&&msg.id.startsWith('msg-')){lpTimer=setTimeout(()=>{lpTimer=null;const id=parseInt(msg.id.replace('msg-',''));if(id){navigator.vibrate&&navigator.vibrate(20);showContextMenu(id)}},500)}});
+sbox.addEventListener('touchend',function(){if(lpTimer){clearTimeout(lpTimer);lpTimer=null}});sbox.addEventListener('touchmove',function(){if(lpTimer){clearTimeout(lpTimer);lpTimer=null}})}
 }
 
 function addMsgToChat(d){const box=document.getElementById('chat-messages');if(!box)return
 if(d.type==='typing'){const el=document.getElementById('typing-indicator');if(d.usernames&&d.usernames.length){el.textContent=d.usernames.join(', ')+' печатает...';el.classList.add('show')}else el.classList.remove('show');return}
-if(d.type==='pinned'){const bar=document.getElementById('pinned-bar');const txt=document.getElementById('pinned-text');if(d.message){txt.textContent='@'+d.message.username+': '+d.message.text;bar.classList.add('show');pinnedMsgId=d.message.id}else{bar.classList.remove('show');pinnedMsgId=null};return}
+if(d.type==='pinned'){const bar=document.getElementById('pinned-bar');const txt=document.getElementById('pinned-text');if(d.message){txt.textContent='@'+d.message.username+': '+d.message.text;bar.classList.add('show');pinnedMsgId=d.message.id;st('\u0421\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435 \u0437\u0430\u043A\u0440\u0435\u043F\u043B\u0435\u043D\u043E')}else{bar.classList.remove('show');pinnedMsgId=null;st('\u0417\u0430\u043A\u0440\u0435\u043F\u043B\u0435\u043D\u0438\u0435 \u0441\u043D\u044F\u0442\u043E')};return}
 if(d.type==='events'){return}
 if(d.type==='reaction'){const el=document.getElementById('msg-'+d.message_id);if(el){let re=el.querySelector('.reactions');if(!re){re=document.createElement('div');re.className='reactions';el.appendChild(re)};let rb=re.querySelector('[data-reaction="'+d.reaction+'"]');if(d.active){if(!rb){rb=document.createElement('span');rb.className='reaction active';rb.dataset.reaction=d.reaction;rb.textContent=d.reaction;rb.onclick=()=>toggleReaction(d.message_id,d.reaction);re.appendChild(rb)}}else{if(rb)rb.remove()}};return}
 if(d.type==='ping'||d.type==='pong')return
+if(d.type==='error'){st(d.text||'\u041E\u0448\u0438\u0431\u043A\u0430');return}
 if(d.type==='edit'){const el=document.getElementById('msg-'+d.id);if(el){const txt=el.querySelector('.msg-text');if(txt)txt.textContent=d.text;const ed=el.querySelector('.edited-label');if(ed)ed.style.display='inline'};return}
 if(d.type==='delete'){const el=document.getElementById('msg-'+d.id);if(el)el.outerHTML='<div id="msg-'+d.id+'" class="msg deleted-msg"><div class="bubble">\u0421\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435 \u0443\u0434\u0430\u043B\u0435\u043D\u043E</div></div>';return}
 if(d.id&&document.getElementById('msg-'+d.id))return
@@ -399,9 +448,15 @@ let extra=''
 if(d.online!==undefined){extra='<br><span style="color:#4CAF50">'+d.online+' \u0432 \u0441\u0435\u0442\u0438</span>'}
 m.innerHTML='<div class="bubble">'+txt+extra+'</div>';box.appendChild(m);box.scrollTo({top:box.scrollHeight,behavior:'smooth'});return}
 m.id='msg-'+d.id;m.className='msg '+(isMine?'my-msg':'other-msg')
+const initial=(d.username||'?')[0].toUpperCase()
+const avatarColor='#'+Math.abs((d.tg_id||0).toString().split('').reduce((a,c)=>a+((a<<5)-a)+c.charCodeAt(0),0)).toString(16).slice(-6)
+let avatarHtml='<div class="msg-avatar" style="background:'+avatarColor+'">'+initial+'</div>'
+const avatarSrc=d.avatar_url||(isMine?myAvatarUrl:null)
+if(avatarSrc)avatarHtml='<div class="msg-avatar"><img src="'+avatarSrc+'" alt=""></div>'
 let bubbleStyle=''
 if(d.message_color&&isMine)bubbleStyle='style="background:'+d.message_color+'"'
-let html='<div class="bubble" '+bubbleStyle+'>'
+let html='<div class="msg-content">'
+html+='<div class="bubble" '+bubbleStyle+'>'
 if(!isMine&&d.username)html+='<div class="msg-author">'+(d.username||'')+(d.premium_tier?'<span class="premium-badge">*</span>':'')+'</div>'
 if(d.reply_to)html+='<div class="reply-block"><span class="reply-author">'+(d.reply_to.username||'')+'</span>: '+d.reply_to.text+'</div>'
 html+='<span class="msg-text">'+(d.text||'')+'</span>'
@@ -409,24 +464,16 @@ html+='<div class="msg-footer">'
 if(d.edited_at)html+='<span class="edited-label msg-edited">\u0440\u0435\u0434.</span>'
 html+='<span class="msg-time">'+ft(d.timestamp)+'</span>'
 html+='</div></div>'
-html+='<div class="msg-actions">'
-if(isMine)html+='<button class="msg-action-btn" onclick="event.stopPropagation();editMsg('+d.id+')">\u0440\u0435\u0434.</button>'
-html+='<button class="msg-action-btn" onclick="event.stopPropagation();deleteMsg('+d.id+')">x</button>'
-html+='<button class="msg-action-btn" onclick="event.stopPropagation();replyToMsg('+d.id+',\''+(d.username||'')+'\')">\u043E\u0442\u0432.</button>'
-html+='<button class="msg-action-btn" onclick="event.stopPropagation();pinMsg('+d.id+')">pin</button>'
-html+='<button class="msg-action-btn" onclick="event.stopPropagation();reactMsg('+d.id+',\'+\')">+1</button>'
-html+='<button class="msg-action-btn" onclick="event.stopPropagation();reactMsg('+d.id+',\'❤\')">❤</button>'
-html+='<button class="msg-action-btn" onclick="event.stopPropagation();reactMsg('+d.id+',\'😄\')">😄</button>'
-html+='<button class="msg-action-btn" onclick="event.stopPropagation();reactMsg('+d.id+',\'😢\')">😢</button>'
-html+='</div>'
 html+='<div class="reactions"></div>'
+html+='</div>'
+html=avatarHtml+html
 m.innerHTML=html;box.appendChild(m);box.scrollTo({top:box.scrollHeight,behavior:'smooth'});lastMsgId=d.id
 if(!isMine&&document.visibilityState!=='visible'){st('\u041D\u043E\u0432\u043E\u0435 \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435 \u043E\u0442 '+d.username);try{navigator.vibrate(100)}catch(e){}}}
 function loadMoreMessages(){if(!currentRoomId||!lastMsgId||isLoadingMore)return;isLoadingMore=true;document.getElementById('chat-messages').classList.add('loading-past');apiFetch('/rooms/'+currentRoomId+'/messages?before_id='+lastMsgId+'&limit=30').then(msgs=>{if(msgs.length<30)hasMoreMessages=false;const box=document.getElementById('chat-messages');const scrollH=box.scrollHeight;msgs.reverse().forEach(m=>{if(!document.getElementById('msg-'+m.id))addMsgToChat(m)});const newH=box.scrollHeight;box.scrollTop=newH-scrollH;isLoadingMore=false;box.classList.remove('loading-past')}).catch(()=>{isLoadingMore=false;box.classList.remove('loading-past')})}
 function reactMsg(msgId,reaction){if(!ws||ws.readyState!==WebSocket.OPEN)return;apiFetch('/messages/reaction',{method:'POST',body:JSON.stringify({tg_id:tgUserId,message_id:msgId,reaction})}).then(r=>{r.status==='success'&&ws.send(JSON.stringify({type:'reaction',message_id:msgId,reaction,active:r.active}))}).catch(()=>{})}
 function toggleReaction(msgId,reaction){reactMsg(msgId,reaction)}
-function pinMsg(msgId){if(!ws||ws.readyState!==WebSocket.OPEN)return;if(confirm('\u0417\u0430\u043A\u0440\u0435\u043F\u0438\u0442\u044C \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435?'))ws.send(JSON.stringify({type:'pin',message_id:msgId}))}
-function unpinMessage(){if(!ws||ws.readyState!==WebSocket.OPEN)return;ws.send(JSON.stringify({type:'pin',message_id:0}))}
+function pinMsg(msgId){if(!ws||ws.readyState!==WebSocket.OPEN){st('\u041D\u0435\u0442 \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F');return}ws.send(JSON.stringify({type:'pin',message_id:msgId}))}
+function unpinMessage(){if(!ws||ws.readyState!==WebSocket.OPEN){st('\u041D\u0435\u0442 \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F');return}ws.send(JSON.stringify({type:'pin',message_id:0}))}
 function reconnectWs(roomId){shouldReconnect=false;if(ws){ws.onclose=null;ws.close();ws=null};if(pingInterval){clearInterval(pingInterval);pingInterval=null};shouldReconnect=true;setupWebSocket(roomId)}
 function replyToMsg(msgId,username){replyToId=msgId;replyToName=username;const el=document.getElementById('msg-'+msgId);const txt=el?el.querySelector('.msg-text')?.textContent||'':'';document.getElementById('reply-bar').style.display='flex';document.getElementById('reply-name').textContent=username;document.getElementById('reply-text').textContent=txt.slice(0,80);document.getElementById('chat-input').focus()}
 function cancelReply(){replyToId=null;replyToName='';document.getElementById('reply-bar').style.display='none';document.getElementById('reply-name').textContent='';document.getElementById('reply-text').textContent=''}
@@ -434,6 +481,39 @@ function sendWsMessage(){const input=document.getElementById('chat-input'),text=
 ws.send(JSON.stringify({type:'message',text:text,username:tgUserName,reply_to_id:replyToId}));input.value='';document.getElementById('btn-send').disabled=true;cancelReply()}
 function editMsg(msgId){const el=document.getElementById('msg-'+msgId);if(!el)return;const txt=el.querySelector('.msg-text');if(!txt)return;const newText=prompt('\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C:',txt.textContent);if(newText&&newText.trim()){ws.send(JSON.stringify({type:'edit',id:msgId,text:newText.trim()}))}}
 function deleteMsg(msgId){if(!confirm('\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435?'))return;ws.send(JSON.stringify({type:'delete',id:msgId}))}
+// Context Menu
+var CXI={}; CXI.reply='<svg viewBox="0 0 24 24"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></svg>';
+CXI.pin='<svg viewBox="0 0 24 24"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>';
+CXI.edit='<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
+CXI.del='<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>';
+CXI.copy='<svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
+let contextMsgId=null,contextMsgUsername='';
+function ctxMenuBtn(label,icon,cls,fn){return '<button class="context-item'+(cls?' '+cls:'')+'" onclick="'+fn+';closeContextMenu()"><span class="ctx-icon">'+icon+'</span><span class="ctx-label">'+label+'</span></button>'}
+function showContextMenu(msgId){if(!ws||ws.readyState!==WebSocket.OPEN)return
+  const el=document.getElementById('msg-'+msgId)
+  if(!el)return
+  const isMine=el.classList.contains('my-msg')
+  const msgText=el.querySelector('.msg-text')?.textContent||''
+  const username=el.querySelector('.msg-author')?.textContent?.replace('*','').trim()||''
+  contextMsgId=msgId;contextMsgUsername=username
+  document.getElementById('context-title').textContent='Действия'
+  let body='<div class="ctx-reactions">'
+  const reactions=['👍','❤️','😄','😢','😮','😡','🔥']
+  reactions.forEach(r=>{body+='<button class="ctx-reaction" onclick="contextReact('+msgId+',\''+r+'\')">'+r+'</button>'})
+  body+='</div>'
+  body+='<div class="context-separator"></div>'
+  body+=ctxMenuBtn('Ответить',CXI.reply,'','replyToMsg('+msgId+',\''+(username||'')+'\')')
+  body+=ctxMenuBtn('Закрепить',CXI.pin,'','pinMsg('+msgId+')')
+  if(isMine){body+=ctxMenuBtn('Редактировать',CXI.edit,'','editMsg('+msgId+')')
+  body+=ctxMenuBtn('Удалить',CXI.del,'danger','deleteMsg('+msgId+')')}
+  body+=ctxMenuBtn('Скопировать',CXI.copy,'','copyMsgText('+msgId+')')
+  document.getElementById('context-body').innerHTML=body
+  document.getElementById('context-overlay').classList.add('show')
+  document.getElementById('context-sheet').classList.add('show')
+}
+function contextReact(msgId,reaction){reactMsg(msgId,reaction)}
+function copyMsgText(msgId){const el=document.getElementById('msg-'+msgId);const txt=el?el.querySelector('.msg-text')?.textContent||'':'';if(txt){navigator.clipboard.writeText(txt).then(()=>st('Скопировано')).catch(()=>st('Ошибка'))}}
+function closeContextMenu(){document.getElementById('context-overlay').classList.remove('show');document.getElementById('context-sheet').classList.remove('show')}
 function closeChat(){shouldReconnect=false;currentRoomId=null;cancelReply();if(pingInterval){clearInterval(pingInterval);pingInterval=null};if(ws){try{if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'leave'}))}catch(e){};ws.onclose=null;ws.close(1000);ws=null};ucs('disconnected');uoc(0);sc('feed-screen');fetchRooms()}
 document.getElementById('chat-input').addEventListener('input',function(){clearTimeout(typingTimer);if(ws&&ws.readyState===WebSocket.OPEN&&this.value.trim()){ws.send(JSON.stringify({type:'typing'}))};typingTimer=setTimeout(()=>{},2000)})
 // Premium
@@ -465,8 +545,9 @@ document.getElementById('participants-list').innerHTML=participants.map(p=>{
 const initial=(p.username||'?')[0].toUpperCase()
 const roleLabels={creator:'\u0421\u043E\u0437\u0434\u0430\u0442\u0435\u043B\u044C',admin:'\u0410\u0434\u043C\u0438\u043D',member:'\u0423\u0447\u0430\u0441\u0442\u043D\u0438\u043A',guest:'\u0413\u043E\u0441\u0442\u044C'}
 const tierBadge=p.premium_tier?'<span class="tier-badge '+p.premium_tier+'">*'+p.premium_tier+'</span>':''
+const pAvatar=p.avatar_url?'<div class="participant-avatar'+(p.avatar_border?' has-border':'')+'"'+(p.avatar_border?' style="border-color:'+p.avatar_border+'"':'')+'><img src="'+p.avatar_url+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>':'<div class="participant-avatar'+(p.avatar_border?' has-border':'')+'"'+(p.avatar_border?' style="border-color:'+p.avatar_border+'"':'')+'>'+initial+'</div>'
 return '<div class="participant-item">'+
-'<div class="participant-avatar'+(p.avatar_border?' has-border':'')+'"'+(p.avatar_border?' style="border-color:'+p.avatar_border+'"':'')+'>'+initial+'</div>'+
+pAvatar+
 '<div class="participant-info">'+
 '<div class="participant-name">'+p.username+'</div>'+
 '<div class="participant-role"><span class="role-badge '+p.role+'">'+roleLabels[p.role]||p.role+'</span>'+tierBadge+'</div>'+
