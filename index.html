@@ -360,6 +360,7 @@ body.light .stat-label{color:#888}
 <button class="btn-icon premium" onclick="openPremium()" title="Премиум"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
 <button class="btn-icon" onclick="openStats()" title="Статистика"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg></button>
 <button class="btn-icon" onclick="openEventsUI()" title="События"><svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z"/></svg></button>
+<button class="btn-icon" onclick="startVoiceChat()" title="Голосовой чат" style="color:#4CAF50"><svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
 <button class="btn-icon" onclick="openParticipants()" title="Участники"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></button>
 <span id="online-count" class="status-connected" style="display:none">0</span>
 <span id="connection-status" class="status-connecting">...</span>
@@ -374,7 +375,8 @@ body.light .stat-label{color:#888}
 </div>
 <div class="emoji-panel" id="emoji-panel"></div>
 <div class="chat-input-container">
-<button class="btn-emoji" onclick="toggleEmoji()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 9c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm8 0c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-4 8c-2.5 0-4.5-1.5-5.5-3.5h11c-1 2-3 3.5-5.5 3.5z"/></svg></button>
+<button class="btn-emoji" onclick="toggleEmoji()" title="Смайлик"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 9c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm8 0c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-4 8c-2.5 0-4.5-1.5-5.5-3.5h11c-1 2-3 3.5-5.5 3.5z"/></svg></button>
+<button class="btn-emoji" onclick="showMediaMenu()" title="Поделиться медиа" style="color:#9B9BB0"><svg viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg></button>
 <input type="text" id="chat-input" placeholder="Сообщение..." maxlength="500" autocomplete="off">
 <button class="btn-send" id="btn-send" disabled><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
 </div>
@@ -578,6 +580,90 @@ document.getElementById('chat-input').addEventListener('keydown',e=>{if(e.key===
 document.getElementById('chat-input').addEventListener('input',function(){document.getElementById('btn-send').disabled=this.value.trim().length===0})
 document.getElementById('btn-send').addEventListener('click',sendWsMessage)
 document.getElementById('search-input').addEventListener('input',onSearchInput)
+
+// ─── Voice Chat ───
+async function startVoiceChat(){
+  if(!currentRoomId){st('Нет комнаты');return}
+  if(!tgUserId){st('Войдите через Telegram');return}
+  try{
+    const r=await apiFetch('/rooms/'+currentRoomId+'/start-voice-chat',{method:'POST',body:JSON.stringify({tg_id:tgUserId})});
+    if(r.status==='success'){
+      st('Голосовой чат запущен!');
+      if(r.invite_link){
+        const msg={type:'system',text:'🎙 Голосовой чат запущен! <a href="'+r.invite_link+'" target="_blank">Присоединиться в группе</a>',group_link:r.invite_link,voice_chat_active:true};
+        addMsgToChat(msg)
+      }
+    }else{
+      st(r.error||'Ошибка')
+    }
+  }catch(e){st(e.message||'Ошибка')}
+}
+
+// ─── Media Sharing ───
+function showMediaMenu(){
+  closeContextMenu();
+  document.getElementById('context-title').textContent='Поделиться медиа';
+  let body='';
+  const items=[
+    {label:'📷 Фото',type:'photo'},
+    {label:'🎬 Видео',type:'video'},
+    {label:'🎵 Аудио',type:'audio'},
+    {label:'📁 Файл',type:'file'}
+  ];
+  items.forEach(item=>{
+    body+='<button class="context-item" onclick="shareMedia(\''+item.type+'\');closeContextMenu()"><span class="ctx-label">'+item.label+'</span></button>'
+  });
+  document.getElementById('context-body').innerHTML=body;
+  document.getElementById('context-overlay').classList.add('show');
+  document.getElementById('context-sheet').classList.add('show')
+}
+
+async function shareMedia(mediaType){
+  if(!currentRoomId){st('Нет комнаты');return}
+  if(!tgUserId){st('Войдите через Telegram');return}
+  try{
+    const r=await apiFetch('/rooms/'+currentRoomId+'/share-media',{method:'POST',body:JSON.stringify({tg_id:tgUserId,media_type:mediaType})});
+    if(r.status==='success'){
+      st('Ссылка на группу отправлена в чат!');
+      if(r.group_link){
+        const mediaLabels={photo:'фото',video:'видео',audio:'аудио',file:'файл'};
+        const label=mediaLabels[mediaType]||'медиа';
+        const msg={type:'system',text:'📎 @'+tgUserName+' поделился '+label+' в группе комнаты — <a href="'+r.group_link+'" target="_blank">смотреть там</a>',group_link:r.group_link};
+        addMsgToChat(msg)
+      }
+    }else{
+      st(r.error||'Ошибка')
+    }
+  }catch(e){st(e.message||'Ошибка')}
+}
+
+// ─── Enhanced system message handler for group links ───
+// Patch addMsgToChat to handle group links in system messages
+const _origAddMsg = addMsgToChat;
+addMsgToChat = function(d){
+  if(d.type==='system' && d.group_link){
+    // Handle system messages with group links
+    const box=document.getElementById('chat-messages');
+    if(!box)return _origAddMsg(d);
+    const m=document.createElement('div');
+    m.className='msg system-msg';
+    let txt=d.text||''
+    if(d.room_title){document.getElementById('chat-room-title').textContent=d.room_title}
+    let extra=''
+    if(d.online!==undefined){extra='<br><span style="color:#4CAF50">'+d.online+' \u0432 \u0441\u0435\u0442\u0438</span>'}
+    // If the text already has an <a> tag, don't add another button
+    if(!txt.includes('<a')){
+      txt+='<br><a href="'+d.group_link+'" target="_blank" style="display:inline-block;margin-top:6px;padding:6px 14px;background:#4CAF50;color:#fff;border-radius:8px;text-decoration:none;font-size:12px;font-weight:600">\u041F\u0435\u0440\u0435\u0439\u0442\u0438 \u0432 \u0433\u0440\u0443\u043F\u043F\u0443</a>'
+    }
+    m.innerHTML='<div class="bubble">'+txt+extra+'</div>';
+    box.appendChild(m);
+    box.scrollTo({top:box.scrollHeight,behavior:'smooth'});
+    return
+  }
+  // For all other messages, use the original handler
+  _origAddMsg(d)
+};
+
 loginUser().then(()=>fetchRooms())
 </script>
 </body>
