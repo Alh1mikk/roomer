@@ -581,7 +581,62 @@ document.getElementById('premium-modal').addEventListener('click',function(e){if
 function openPremium(){if(!tgUserId){st('Войдите через Telegram');return};togglePremiumModal(true);apiFetch('/premium/'+tgUserId).then(info=>{if(info.message_color)document.getElementById('premium-color-custom').value=info.message_color;if(info.avatar_border_color)document.getElementById('premium-border').value=info.avatar_border_color;if(info.chat_background)document.getElementById('premium-bg').value=info.chat_background}).catch(()=>{})}
 function selectPremiumColor(el,color){document.querySelectorAll('.premium-color-btn').forEach(b=>b.style.borderColor='transparent');el.style.borderColor='#fff';selectedPremiumColor=color;document.getElementById('premium-color-custom').value=color}
 document.getElementById('premium-color-custom').addEventListener('input',function(){if(this.value.match(/^#[0-9A-Fa-f]{6}$/)){selectedPremiumColor=this.value;document.querySelectorAll('.premium-color-btn').forEach(b=>b.style.borderColor='transparent')}})
-async function activatePremium(){if(!tgUserId){st('Войдите через Telegram');return};const tier=document.getElementById('premium-tier').value;try{const r=await apiFetch('/premium/activate',{method:'POST',body:JSON.stringify({tg_id:tgUserId,tier})});if(r.status==='success')st('Премиум '+tier+' активирован!');else st(r.error)}catch(e){st(e.message||'Ошибка')}}
+async function activatePremium(){
+    if(!tgUserId){
+        st('Войдите через Telegram');
+        return;
+    };
+    
+    const tier = document.getElementById('premium-tier').value;
+    const btn = document.querySelector('#premium-modal .btn-submit');
+    
+    // Блокируем кнопку на время генерации инвойса, чтобы избежать дублирования кликов
+    if(btn) {
+        btn.disabled = true;
+        btn.textContent = 'Генерация счета...';
+    }
+    
+    try {
+        // Делаем запрос к твоему обновленному эндпоинту бэкенда на Amvera
+        const r = await apiFetch('/premium/activate', {
+            method: 'POST',
+            body: JSON.stringify({ tg_id: tgUserId, tier: tier })
+        });
+        
+        if(btn) {
+            btn.disabled = false;
+            btn.textContent = 'Купить';
+        }
+        
+        // ВАЖНО: Берем полученную ссылку и передаем её в нативный метод Telegram WebApp SDK
+        if (r && r.status === 'success' && r.invoice_link) {
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openInvoice) {
+                
+                window.Telegram.WebApp.openInvoice(r.invoice_link, function(status) {
+                    if (status === 'paid') {
+                        st('🎉 Оплата успешна! Премиум активен.');
+                        togglePremiumModal(false);
+                        // Провоцируем обновление интерфейса чата, если юзер находится в комнате
+                        if (typeof openChat === 'function' && currentRoomId) openChat(currentRoomId);
+                    } else if (status === 'failed') {
+                        st('❌ Оплата отклонена или отменена');
+                    }
+                });
+                
+            } else {
+                st('Ошибка: Нативная платежка доступна только внутри Telegram!');
+            }
+        } else {
+            st(r.error || 'Не удалось сгенерировать инвойс-ссылку');
+        }
+    } catch (e) {
+        if(btn) {
+            btn.disabled = false;
+            btn.textContent = 'Купить';
+        }
+        st(e.message || 'Ошибка соединения с сервером');
+    }
+}
 async function applyPremiumColor(){if(!tgUserId){st('Войдите через Telegram');return};try{const r=await apiFetch('/premium/set-color',{method:'POST',body:JSON.stringify({tg_id:tgUserId,color:selectedPremiumColor})});if(r.status==='success'){st('Цвет: '+r.message_color);togglePremiumModal(false)}else st(r.error)}catch(e){st(e.message||'Ошибка')}}
 async function applyPremiumBorder(){if(!tgUserId){st('Войдите через Telegram');return};const color=document.getElementById('premium-border').value.trim()||'#FFD700';try{const r=await apiFetch('/premium/set-border',{method:'POST',body:JSON.stringify({tg_id:tgUserId,color})});if(r.status==='success')st('Рамка: '+r.avatar_border_color);else st(r.error)}catch(e){st(e.message||'Ошибка')}}
 async function applyPremiumBg(){if(!tgUserId){st('Войдите через Telegram');return};const bg=document.getElementById('premium-bg').value.trim();if(!bg){st('Введите фон');return};try{const r=await apiFetch('/premium/set-background',{method:'POST',body:JSON.stringify({tg_id:tgUserId,background:bg})});if(r.status==='success'){chatBg=bg;document.getElementById('chat-screen').style.background=bg;st('Фон применён');togglePremiumModal(false)}else st(r.error)}catch(e){st(e.message||'Ошибка')}}
