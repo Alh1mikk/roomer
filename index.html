@@ -8,173 +8,195 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background:#0F0F13;color:#E8E8ED;min-height:100vh;-webkit-font-smoothing:antialiased;transition:background .3s,color .3s}
-body.light{background:#F5F5F7;color:#1A1A24}
-.screen{display:none;min-height:100vh}.screen.active{display:block}
-.header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#1A1A24;border-bottom:1px solid #2A2A38;position:sticky;top:0;z-index:10;transition:background .3s,border .3s}
+body.light{background:#F2F2F7;color:#1A1A24}
+
+/* ========== SCROLLBAR ========== */
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#3A3A48;border-radius:3px}
+
+/* ========== HEADER ========== */
+.header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#1A1A24;border-bottom:1px solid #2A2A38;position:sticky;top:0;z-index:10;transition:background .3s,border .3s}
 body.light .header{background:#fff;border-bottom:1px solid #E0E0E0}
-body.light .header h2{color:#1A1A24}
-.header h2{font-size:17px;font-weight:600;color:#F0F0F5}
-.header-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
-.header-left h2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.header h2{font-size:18px;font-weight:700;color:#7C4DFF}
+.header-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.header-left h2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#F0F0F5;font-size:17px}
+body.light .header-left h2{color:#1A1A24}
 .header-right{display:flex;align-items:center;gap:6px}
-.search-bar{display:flex;padding:8px 12px;background:#1A1A24;gap:6px;border-bottom:1px solid #2A2A38}
-body.light .search-bar{background:#fff;border-bottom:1px solid #E0E0E0}
-.search-bar input{flex:1;background:#2A2A38;border:1px solid #3A3A48;border-radius:10px;padding:8px 12px;font-size:14px;font-family:inherit;color:#E8E8ED;outline:none}
+
+/* ========== BUTTONS ========== */
+.btn-icon{width:36px;height:36px;border-radius:10px;border:none;background:rgba(255,255,255,.06);color:#C0C0D0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;padding:0;line-height:1;transition:all .15s}
+.btn-icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.btn-icon:hover{background:rgba(124,77,255,.15);color:#7C4DFF}
+body.light .btn-icon{background:rgba(0,0,0,.04);color:#666}
+body.light .btn-icon:hover{background:rgba(124,77,255,.1);color:#7C4DFF}
+.btn-icon.premium{background:rgba(255,215,0,.15);color:#FFD700}
+.btn-icon.premium:hover{background:rgba(255,215,0,.25);color:#FFD700}
+.btn-icon.primary{background:#7C4DFF;color:#fff;width:48px;height:48px;border-radius:50%;box-shadow:0 4px 12px rgba(124,77,255,.25)}
+.btn-icon.primary:hover{background:#6C3DFF;box-shadow:0 6px 16px rgba(124,77,255,.35)}
+
+/* ========== SEARCH ========== */
+.search-bar{display:flex;padding:10px 16px;gap:8px;border-bottom:1px solid #2A2A38;align-items:center}
+body.light .search-bar{border-bottom:1px solid #E0E0E0}
+.search-bar .search-icon{color:#6B6B80;flex-shrink:0;display:flex;align-items:center}
+.search-bar .search-icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.search-bar input{flex:1;background:#2A2A38;border:1px solid #3A3A48;border-radius:10px;padding:10px 14px;font-size:14px;font-family:inherit;color:#E8E8ED;outline:none;transition:border-color .15s}
 body.light .search-bar input{background:#F0F0F2;border-color:#D0D0D8;color:#1A1A24}
 .search-bar input:focus{border-color:#7C4DFF}
-.btn-clear{background:transparent;border:none;color:#6B6B80;font-size:18px;cursor:pointer;display:none;line-height:1}
-body.light .btn-clear{color:#999}
+.search-bar input::placeholder{color:#6B6B80}
+body.light .search-bar input::placeholder{color:#999}
+.btn-clear{background:transparent;border:none;color:#6B6B80;font-size:18px;cursor:pointer;display:none;line-height:1;padding:4px}
 .btn-clear.visible{display:block}
-.tabs{display:flex;background:#1A1A24;border-bottom:1px solid #2A2A38;padding:0 12px}
+
+/* ========== TABS ========== */
+.tabs{display:flex;background:#1A1A24;border-bottom:1px solid #2A2A38;padding:0 16px;gap:4px}
 body.light .tabs{background:#fff;border-bottom:1px solid #E0E0E0}
-.tab{padding:10px 14px;font-size:13px;font-weight:500;color:#6B6B80;cursor:pointer;border-bottom:2px solid transparent}
-.tab.active{color:#7C4DFF;border-bottom-color:#7C4DFF}
-.status-connected{background:rgba(76,175,80,0.2);color:#4CAF50;padding:2px 8px;border-radius:10px;font-size:11px}
-.status-disconnected{background:rgba(244,67,54,0.2);color:#F44336;padding:2px 8px;border-radius:10px;font-size:11px}
-.status-connecting{background:rgba(255,152,0,0.2);color:#FF9800;padding:2px 8px;border-radius:10px;font-size:11px}
-.btn-icon{width:34px;height:34px;border-radius:8px;border:none;background:#2A2A38;color:#C0C0D0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;padding:0;line-height:1}
-.btn-icon svg{width:18px;height:18px;fill:currentColor;stroke:currentColor}
-.btn-icon:hover{background:#3A3A48}
-body.light .btn-icon{background:#E8E8ED;color:#555}
-body.light .btn-icon:hover{background:#D0D0D8}
-.btn-icon.premium{background:#FFD700;color:#1A1A24}
-.btn-icon.premium:hover{background:#FFC107}
-#rooms-list{padding:12px;display:flex;flex-direction:column;gap:10px}
-.empty-state{text-align:center;color:#6B6B80;font-size:14px;padding:40px 16px;line-height:1.6}
+.tab{padding:10px 16px;font-size:13px;font-weight:600;color:#6B6B80;cursor:pointer;border-radius:8px 8px 0 0;transition:all .15s;position:relative}
+.tab:hover{color:#9B9BB0;background:rgba(255,255,255,.02)}
+.tab.active{color:#7C4DFF;background:rgba(124,77,255,.06)}
+.tab.active::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:20px;height:2px;background:#7C4DFF;border-radius:2px 2px 0 0}
+
+/* ========== STATUS ========== */
+.status-connected{background:rgba(76,175,80,0.15);color:#4CAF50;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.status-disconnected{background:rgba(244,67,54,0.15);color:#F44336;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.status-connecting{background:rgba(255,152,0,0.15);color:#FF9800;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+
+/* ========== ROOMS LIST ========== */
+#rooms-list{padding:12px 16px;display:flex;flex-direction:column;gap:10px;padding-bottom:80px}
+
+/* ========== EMPTY STATE ========== */
+.empty-state{text-align:center;color:#6B6B80;font-size:14px;padding:48px 28px;line-height:1.7}
 body.light .empty-state{color:#999}
-.card{background:#1A1A24;border:1px solid #2A2A38;border-radius:12px;padding:14px;cursor:pointer}
+.empty-state .empty-icon{width:48px;height:48px;margin:0 auto 16px;color:#3A3A48;display:flex;align-items:center;justify-content:center}
+.empty-state .empty-icon svg{width:48px;height:48px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+body.light .empty-state .empty-icon{color:#D0D0D8}
+.empty-state .empty-title{font-size:17px;font-weight:600;color:#C0C0D0;margin-bottom:6px}
+body.light .empty-state .empty-title{color:#555}
+.empty-state .empty-text{color:#6B6B80;margin-bottom:20px}
+body.light .empty-state .empty-text{color:#888}
+.empty-state .btn-empty{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;border:none;background:#7C4DFF;color:#fff;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s}
+.empty-state .btn-empty:hover{background:#6C3DFF}
+.empty-state .btn-empty svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ========== CARD ========== */
+.card{background:#1A1A24;border:1px solid #2A2A38;border-radius:12px;padding:16px;cursor:pointer;transition:all .15s}
 body.light .card{background:#fff;border-color:#E0E0E0}
+.card:hover{border-color:#7C4DFF;background:#1E1E2A}
+body.light .card:hover{background:#FAFAFC;border-color:#7C4DFF}
+.card h3{font-size:15px;font-weight:600;color:#F0F0F5;margin-bottom:5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 body.light .card h3{color:#1A1A24}
-.card:hover{border-color:#7C4DFF}
-.card h3{font-size:15px;font-weight:600;color:#F0F0F5;margin-bottom:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.card p{font-size:13px;color:#9B9BB0;margin-bottom:8px;line-height:1.4}
+.card p{font-size:13px;color:#9B9BB0;margin-bottom:10px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 body.light .card p{color:#666}
 .tags{display:flex;flex-wrap:wrap;gap:4px}
-.tag{font-size:11px;color:#7C4DFF;background:rgba(124,77,255,0.1);padding:3px 8px;border-radius:5px}
-.online-badge{font-size:11px;color:#4CAF50;background:rgba(76,175,80,0.1);padding:2px 6px;border-radius:8px}
-.card-actions{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap}
-.action-btn,.favorite-btn{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;border:1px solid #3A3A48;background:#2A2A38;color:#9B9BB0;font-family:inherit}
-body.light .action-btn,body.light .favorite-btn{background:#F0F0F2;border-color:#D0D0D8;color:#666}
-.action-btn:hover,.favorite-btn:hover{border-color:#7C4DFF}
-.action-btn.liked{border-color:#4CAF50;color:#4CAF50}
-.action-btn.disliked{border-color:#F44336;color:#F44336}
-.favorite-btn.is-fav{border-color:#FFD700;color:#FFD700}
-.loading{background:linear-gradient(90deg,#1A1A24 25%,#222233 50%,#1A1A24 75%);background-size:200% 100%;animation:shimmer 1.5s ease-in-out infinite;border-radius:12px;height:100px;margin-bottom:10px}
+.tag{font-size:11px;color:#7C4DFF;background:rgba(124,77,255,.08);padding:4px 10px;border-radius:6px;font-weight:500}
+.online-badge{font-size:11px;color:#4CAF50;background:rgba(76,175,80,.1);padding:3px 8px;border-radius:10px;font-weight:600}
+.card-actions{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.action-btn,.favorite-btn{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:8px;font-size:12px;cursor:pointer;border:1px solid #3A3A48;background:transparent;color:#9B9BB0;font-family:inherit;font-weight:500;transition:all .12s}
+body.light .action-btn,body.light .favorite-btn{border-color:#D0D0D8;color:#666}
+.action-btn:hover,.favorite-btn:hover{border-color:#7C4DFF;color:#7C4DFF}
+.action-btn.liked{border-color:#4CAF50;color:#4CAF50;background:rgba(76,175,80,.06)}
+.action-btn.disliked{border-color:#F44336;color:#F44336;background:rgba(244,67,54,.06)}
+.favorite-btn.is-fav{border-color:#FFD700;color:#FFD700;background:rgba(255,215,0,.06)}
+.card-rating{font-size:13px;font-weight:700;padding:2px 4px;border-radius:4px}
+.card-msg-count{font-size:11px;color:#6B6B80;margin-left:auto}
+.action-btn svg,.favorite-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ========== LOADING ========== */
+.loading{background:linear-gradient(90deg,#1A1A24 25%,#2A2A38 50%,#1A1A24 75%);background-size:200% 100%;animation:shimmer 1.5s ease-in-out infinite;border-radius:12px;height:100px;margin-bottom:10px}
 body.light .loading{background:linear-gradient(90deg,#E0E0E0 25%,#EEEEEE 50%,#E0E0E0 75%)}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .spinning{animation:spin .6s ease-in-out}
 @keyframes spin{to{transform:rotate(360deg)}}
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:100;padding:20px;overflow-y:auto}
-.modal-inner{max-width:380px;margin:50px auto;background:#1A1A24;border:1px solid #2A2A38;border-radius:14px;padding:20px}
+
+/* ========== FAB ========== */
+.fab{position:fixed;bottom:24px;right:20px;z-index:50}
+.fab-main{width:54px;height:54px;border-radius:50%;border:none;background:#7C4DFF;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:26px;line-height:1;box-shadow:0 4px 16px rgba(124,77,255,.3);transition:all .15s;position:relative}
+.fab-main:hover{background:#6C3DFF;box-shadow:0 6px 20px rgba(124,77,255,.4);transform:scale(1.04)}.fab-main:active{transform:scale(.96)}
+.fab-main svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+
+/* ========== MODAL ========== */
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.55);z-index:100;padding:20px;overflow-y:auto;animation:fadeIn .15s ease-out}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-inner{max-width:380px;margin:50px auto;background:#1A1A24;border:1px solid #2A2A38;border-radius:16px;padding:24px;animation:slideUp .25s ease-out}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 body.light .modal-inner{background:#fff;border-color:#E0E0E0}
-.modal-inner h2{font-size:18px;font-weight:600;color:#F0F0F5;margin-bottom:16px}
+.modal-inner h2{font-size:18px;font-weight:700;color:#F0F0F5;margin-bottom:16px;display:flex;align-items:center;gap:8px}
 body.light .modal-inner h2{color:#1A1A24}
-.modal-inner label{display:block;font-size:12px;color:#9B9BB0;margin-bottom:4px}
+.modal-inner h2 .h2-icon{width:22px;height:22px;fill:none;stroke:#7C4DFF;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.modal-inner label{display:block;font-size:12px;color:#9B9BB0;margin-bottom:4px;font-weight:500}
 body.light .modal-inner label{color:#888}
-.modal-inner input,.modal-inner textarea,.modal-inner select{width:100%;background:#2A2A38;border:1px solid #3A3A48;border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit;color:#E8E8ED;outline:none;margin-bottom:10px}
+.modal-inner input,.modal-inner textarea,.modal-inner select{width:100%;background:#2A2A38;border:1px solid #3A3A48;border-radius:10px;padding:12px 14px;font-size:14px;font-family:inherit;color:#E8E8ED;outline:none;margin-bottom:12px;transition:border-color .15s}
 body.light .modal-inner input,body.light .modal-inner textarea,body.light .modal-inner select{background:#F0F0F2;border-color:#D0D0D8;color:#1A1A24}
 .modal-inner input:focus,.modal-inner textarea:focus{border-color:#7C4DFF}
-.btn-submit{width:100%;padding:10px;font-size:14px;font-weight:600;font-family:inherit;border:none;border-radius:8px;background:#7C4DFF;color:#fff;cursor:pointer}
+.btn-submit{width:100%;padding:12px;font-size:15px;font-weight:600;font-family:inherit;border:none;border-radius:10px;background:#7C4DFF;color:#fff;cursor:pointer;transition:all .15s}
 .btn-submit:hover{background:#6C3DFF}
 .btn-submit.secondary{background:#2A2A38;color:#C0C0D0;margin-top:6px}
 body.light .btn-submit.secondary{background:#E8E8ED;color:#555}
+.btn-submit.secondary:hover{background:#3A3A48}
+body.light .btn-submit.secondary:hover{background:#D0D0D8}
 .btn-submit.danger{background:#D32F2F;color:#fff;margin-top:6px}
+.btn-submit.danger:hover{background:#B71C1C}
 
+/* ========== CHAT SCREEN ========== */
 #chat-screen{display:none;flex-direction:column;height:100dvh;position:fixed;top:0;left:0;width:100%;background:#0F0F13}
 #chat-screen.active{display:flex}
-body.light #chat-screen{background:#F5F5F7}
-#chat-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:4px;padding-bottom:60px}
+body.light #chat-screen{background:#F2F2F7}
+#chat-messages{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:3px;padding-bottom:60px}
 #chat-messages.loading-past{opacity:.7}
 
-.msg .bubble{padding:8px 12px;border-radius:14px;font-size:14px;line-height:1.4;word-break:break-word;position:relative}
-.msg .bubble .reply-block{background:rgba(255,255,255,.08);border-left:3px solid #7C4DFF;padding:4px 8px;border-radius:6px;font-size:11px;margin-bottom:4px;color:rgba(255,255,255,.5)}
-body.light .msg .bubble .reply-block{background:rgba(0,0,0,.06);color:rgba(0,0,0,.5)}
+/* ========== MESSAGES ========== */
+.msg{display:flex;flex-direction:row;align-items:flex-end;gap:6px;margin-bottom:2px;position:relative;animation:msgIn .15s ease-out;max-width:85%}
+.msg.my-msg{flex-direction:row-reverse;align-self:flex-end}
+.msg.other-msg{align-self:flex-start}
+.msg .msg-avatar{width:30px;height:30px;border-radius:50%;flex-shrink:0;margin-bottom:4px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;overflow:hidden;background:#7C4DFF;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.msg .msg-avatar img{width:100%;height:100%;object-fit:cover}
+.msg .msg-content{display:flex;flex-direction:column;min-width:0;flex:1}
+.msg.my-msg .msg-content{align-items:flex-end}
+.msg.other-msg .msg-content{align-items:flex-start}
+.msg .bubble{padding:9px 14px;border-radius:16px;font-size:14px;line-height:1.4;word-break:break-word;position:relative}
+.msg.my-msg .bubble{background:#7C4DFF;color:#fff;border-bottom-right-radius:4px}
+body.light .msg.my-msg .bubble{background:#7C4DFF;color:#fff}
+.msg.other-msg .bubble{background:#2A2A38;color:#E8E8ED;border-bottom-left-radius:4px}
+body.light .msg.other-msg .bubble{background:#E8E8ED;color:#1A1A24}
+.msg.deleted-msg .bubble{background:transparent;color:#555;font-size:12px;font-style:italic;border:1px dashed #3A3A48;border-radius:10px;padding:6px 14px}
+body.light .msg.deleted-msg .bubble{color:#999;border-color:#CCC}
+.msg.system-msg .bubble{background:transparent;color:#6B6B80;font-size:12px;text-align:center;padding:6px 12px}
+body.light .msg.system-msg .bubble{color:#999}
+.msg.my-msg .msg-avatar{width:30px;height:30px;border-radius:50%;flex-shrink:0;margin-bottom:4px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;overflow:hidden;background:#7C4DFF;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.msg.my-msg .msg-avatar img{width:100%;height:100%;object-fit:cover}
+.msg.system-msg,.msg.deleted-msg{display:flex;flex-direction:column;align-items:center;align-self:center}
+.msg.system-msg .msg-avatar,.msg.deleted-msg .msg-avatar{display:none}
+.msg.system-msg .msg-content,.msg.deleted-msg .msg-content{max-width:100%}
+.msg .bubble .reply-block{background:rgba(255,255,255,.08);border-left:3px solid #B388FF;padding:5px 8px;border-radius:8px;font-size:11px;margin-bottom:5px;color:rgba(255,255,255,.5)}
+body.light .msg.other-msg .bubble .reply-block{background:rgba(0,0,0,.06);color:rgba(0,0,0,.5)}
+.msg.my-msg .bubble .reply-block{border-left-color:#E0D0FF;background:rgba(255,255,255,.12)}
 .msg .bubble .reply-block .reply-author{font-weight:600;font-size:10px}
-.msg .bubble .msg-author{font-size:10px;font-weight:600;margin-bottom:2px;color:rgba(255,255,255,.5)}
+.msg .bubble .msg-author{font-size:10px;font-weight:600;margin-bottom:2px;color:rgba(255,255,255,.55)}
 .msg .bubble .msg-footer{display:flex;align-items:center;gap:4px;margin-top:2px}
 .msg .bubble .msg-footer .msg-time{font-size:9px;color:rgba(255,255,255,.4)}
 .msg .bubble .msg-footer .msg-edited{font-size:9px;color:rgba(255,255,255,.3)}
 .msg .bubble .premium-badge{font-size:8px;margin-left:4px;opacity:.7}
+.msg .reactions{display:flex;gap:2px;margin-top:2px;flex-wrap:wrap}
+.msg .reactions .reaction{padding:2px 5px;border-radius:5px;font-size:11px;background:rgba(124,77,255,.1);cursor:pointer;user-select:none}
+.msg .reactions .reaction.active{background:rgba(124,77,255,.3)}
+@keyframes msgIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 
-.msg.my-msg .bubble{background:#7C4DFF;color:#fff;border-bottom-right-radius:4px}
-body.light .msg.my-msg .bubble .msg-author{color:rgba(255,255,255,.6)}
-.msg.my-msg .bubble .reply-block{border-left-color:#B388FF;background:rgba(255,255,255,.12)}
-.msg.other-msg .bubble{background:#2A2A38;color:#E8E8ED;border-bottom-left-radius:4px}
-body.light .msg.other-msg .bubble{background:#E8E8ED;color:#1A1A24}
-body.light .msg.other-msg .bubble .msg-author{color:rgba(0,0,0,.45)}
-body.light .msg.other-msg .bubble .msg-footer .msg-time{color:rgba(0,0,0,.35)}
-body.light .msg.other-msg .bubble .msg-footer .msg-edited{color:rgba(0,0,0,.25)}
-.msg.other-msg .bubble .reply-block{border-left-color:#7C4DFF}
-.msg.deleted-msg .bubble{background:transparent;color:#555;font-size:12px;font-style:italic;border:1px dashed #3A3A48;border-radius:8px;padding:4px 12px}
-body.light .msg.deleted-msg .bubble{color:#999;border-color:#CCC}
-.msg.system-msg .bubble{background:transparent;color:#6B6B80;font-size:12px;text-align:center;padding:4px 8px}
-body.light .msg.system-msg .bubble{color:#999}
-
-/* Inline Edit */
-.msg-edit-area{width:100%;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:6px;font-size:14px;font-family:inherit;color:#fff;resize:none;outline:none;margin-top:4px}
+/* ========== INLINE EDIT ========== */
+.msg-edit-area{width:100%;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:8px;font-size:14px;font-family:inherit;color:#fff;resize:none;outline:none;margin-top:4px}
 body.light .msg-edit-area{background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.2);color:#000}
 .msg-edit-actions{display:flex;gap:6px;margin-top:4px}
-.msg-edit-btn{padding:4px 10px;border-radius:6px;border:none;font-size:12px;cursor:pointer;font-family:inherit}
+.msg-edit-btn{padding:5px 12px;border-radius:8px;border:none;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600}
 .msg-edit-btn.save{background:#4CAF50;color:#fff}
 .msg-edit-btn.cancel{background:#555;color:#fff}
 
-/* Typing Animation */
-.typing-dots{display:inline-flex;align-items:center;gap:2px;height:12px;margin-left:4px}
+/* ========== TYPING ========== */
+.typing-dots{display:inline-flex;align-items:center;gap:3px;height:10px;margin-left:4px}
 .typing-dots span{width:4px;height:4px;border-radius:50%;background:#6B6B80;animation:typingBounce .6s infinite alternate}
 .typing-dots span:nth-child(2){animation-delay:.2s}
 .typing-dots span:nth-child(3){animation-delay:.4s}
 @keyframes typingBounce{to{opacity:.3;transform:translateY(-2px)}}
 
-/* Bottom Sheet Context Menu */
-.context-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:200;opacity:0;transition:opacity .2s}
-.context-overlay.show{display:block;opacity:1}
-.context-sheet{position:fixed;bottom:0;left:0;width:100%;background:#1A1A24;border-radius:16px 16px 0 0;z-index:201;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);padding-bottom:calc(12px + env(safe-area-inset-bottom));max-height:50vh;overflow-y:auto}
-body.light .context-sheet{background:#fff}
-.context-sheet.show{transform:translateY(0)}
-.context-sheet .handle{width:36px;height:4px;border-radius:2px;background:#3A3A48;margin:8px auto 4px}
-body.light .context-sheet .handle{background:#D0D0D0}
-.context-sheet .context-title{font-size:12px;color:#6B6B80;text-align:center;padding:4px 16px 8px;border-bottom:1px solid #2A2A38;margin-bottom:4px}
-body.light .context-sheet .context-title{border-bottom-color:#E0E0E0;color:#999}
-.context-item{display:flex;align-items:center;gap:14px;padding:12px 20px;cursor:pointer;transition:background .15s;border:none;background:none;width:100%;text-align:left;font-size:15px;font-family:inherit;color:#E8E8ED}
-body.light .context-item{color:#1A1A24}
-.context-item:hover{background:rgba(124,77,255,.08)}
-.context-item .ctx-icon{width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.context-item .ctx-icon svg{width:20px;height:20px;fill:none;stroke:#9B9BB0;stroke-width:2}
-body.light .context-item .ctx-icon svg{stroke:#666}
-.context-item .ctx-label{flex:1}
-.context-item.danger{color:#F44336}
-.context-item.danger .ctx-icon svg{stroke:#F44336}
-body.light .context-item.danger{color:#D32F2F}
-.context-item.danger:hover{background:rgba(244,67,54,.08)}
-.context-separator{height:1px;background:#2A2A38;margin:4px 20px}
-body.light .context-separator{background:#E0E0E0}
-.ctx-reactions{display:flex;gap:4px;padding:8px 20px;flex-wrap:wrap}
-.ctx-reactions .ctx-reaction{font-size:30px;cursor:pointer;padding:6px;border-radius:50%;transition:background .15s;line-height:1;background:none;border:none;display:flex;align-items:center;justify-content:center}
-.ctx-reactions .ctx-reaction:hover{background:rgba(124,77,255,.15)}
-.context-cancel{display:block;width:calc(100% - 16px);margin:8px 8px 0;padding:10px;border-radius:10px;background:#2A2A38;border:none;font-size:15px;font-weight:500;font-family:inherit;color:#E8E8ED;cursor:pointer;text-align:center}
-body.light .context-cancel{background:#F0F0F2;color:#1A1A24}
-.context-cancel:hover{opacity:.8}
-@keyframes contextFadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-
-.msg{display:flex;flex-direction:row;align-items:flex-end;gap:6px;margin-bottom:2px;position:relative;animation:msgIn .15s ease-out;max-width:85%}
-.msg.my-msg{flex-direction:row-reverse;align-self:flex-end}
-.msg.other-msg{align-self:flex-start}
-.msg .msg-avatar{width:32px;height:32px;border-radius:50%;flex-shrink:0;margin-bottom:6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;overflow:hidden;background:#7C4DFF}
-.msg .msg-avatar img{width:100%;height:100%;object-fit:cover}
-.msg .msg-content{display:flex;flex-direction:column;min-width:0;flex:1}
-.msg.my-msg .msg-content{align-items:flex-end}
-.msg.other-msg .msg-content{align-items:flex-start}
-.msg .bubble{padding:8px 12px;border-radius:14px;font-size:14px;line-height:1.4;word-break:break-word;position:relative}
-.msg.system-msg,.msg.deleted-msg{display:flex;flex-direction:column;align-items:center;align-self:center}
-.msg.system-msg .msg-avatar,.msg.deleted-msg .msg-avatar{display:none}
-.msg.system-msg .msg-content,.msg.deleted-msg .msg-content{max-width:100%}
-.msg.my-msg .msg-avatar{width:32px;height:32px;border-radius:50%;flex-shrink:0;margin-bottom:6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;overflow:hidden;background:#7C4DFF}
-.msg.my-msg .msg-avatar img{width:100%;height:100%;object-fit:cover}
-.msg .reactions{display:flex;gap:2px;margin-top:2px;flex-wrap:wrap}
-.msg .reactions .reaction{padding:1px 4px;border-radius:4px;font-size:10px;background:rgba(124,77,255,.15);cursor:pointer;user-select:none}
-.msg .reactions .reaction.active{background:rgba(124,77,255,.4)}
-
-@keyframes msgIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+/* ========== CHAT INPUT ========== */
 .chat-input-container{padding:8px 12px;background:#1A1A24;border-top:1px solid #2A2A38;display:flex;gap:8px;align-items:center;padding-bottom:calc(8px + env(safe-area-inset-bottom))}
 body.light .chat-input-container{background:#fff;border-top:1px solid #E0E0E0}
 .chat-input-container input{flex:1;background:#2A2A38;border:1px solid #3A3A48;padding:10px 14px;border-radius:20px;font-size:14px;font-family:inherit;color:#E8E8ED;outline:none}
@@ -182,131 +204,226 @@ body.light .chat-input-container input{background:#F0F0F2;border-color:#D0D0D8;c
 .chat-input-container input:focus{border-color:#7C4DFF}
 .btn-emoji{background:transparent;border:none;color:#9B9BB0;cursor:pointer;padding:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;line-height:1}
 body.light .btn-emoji{color:#888}
-.btn-emoji svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2}
-.btn-send{background:#7C4DFF;color:#fff;border:none;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0;line-height:1}
-.btn-send svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.5}
+.btn-emoji svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.btn-send{background:#7C4DFF;color:#fff;border:none;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0;line-height:1;transition:all .1s}
+.btn-send svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.btn-send:hover{background:#6C3DFF}
 .btn-send:disabled{opacity:.4}
-.emoji-panel{display:none;padding:8px 12px;background:#1A1A24;border-top:1px solid #2A2A38;gap:2px;flex-wrap:wrap;max-height:120px;overflow-y:auto}
+.emoji-panel{display:none;padding:10px 12px;background:#1A1A24;border-top:1px solid #2A2A38;gap:4px;flex-wrap:wrap;max-height:120px;overflow-y:auto}
 body.light .emoji-panel{background:#fff;border-color:#E0E0E0}
 .emoji-panel.show{display:flex}
-.emoji-panel span{font-size:22px;cursor:pointer;padding:2px;border-radius:4px}
-.emoji-panel span:hover{background:rgba(124,77,255,.2)}
-.reply-bar{display:none;padding:6px 12px;background:#2A2A38;border-top:1px solid #3A3A48;font-size:12px;color:#9B9BB0;align-items:center;gap:8px}
+.emoji-panel span{font-size:24px;cursor:pointer;padding:4px;border-radius:4px}
+.emoji-panel span:hover{background:rgba(124,77,255,.15)}
+
+/* ========== REPLY BAR ========== */
+.reply-bar{display:none;padding:8px 14px;background:#2A2A38;border-top:1px solid #3A3A48;font-size:12px;color:#9B9BB0;align-items:center;gap:8px}
 body.light .reply-bar{background:#F0F0F2;border-color:#D0D0D8}
 .reply-bar .reply-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .reply-bar .reply-label .reply-name{color:#7C4DFF;font-weight:600}
-.reply-bar .reply-cancel{background:none;border:none;color:#6B6B80;cursor:pointer;font-size:14px;line-height:1}
-body.light .reply-bar .reply-cancel{color:#999}
-.typing-indicator{display:none;padding:2px 12px;font-size:11px;color:#6B6B80;font-style:italic}
-body.light .typing-indicator{color:#999}
+.reply-bar .reply-cancel{background:none;border:none;color:#6B6B80;cursor:pointer;font-size:14px;line-height:1;padding:4px}
+.typing-indicator{display:none;padding:3px 14px;font-size:11px;color:#6B6B80;font-style:italic}
 .typing-indicator.show{display:flex;align-items:center}
-#pinned-bar{display:none;padding:6px 12px;background:#2A2A38;border-bottom:1px solid #3A3A48;font-size:12px;color:#9B9BB0;align-items:center;gap:8px;cursor:pointer}
+
+/* ========== PINNED BAR ========== */
+#pinned-bar{display:none;padding:8px 14px;background:#2A2A38;border-bottom:1px solid #3A3A48;font-size:12px;color:#9B9BB0;align-items:center;gap:8px;cursor:pointer}
 body.light #pinned-bar{background:#F0F0F2;border-color:#D0D0D8}
 #pinned-bar.show{display:flex}
 #pinned-bar .pinned-icon{display:flex;align-items:center;color:#FFD700}
-#pinned-bar .pinned-icon svg{width:14px;height:14px;fill:currentColor}
+#pinned-bar .pinned-icon svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 #pinned-bar .pinned-text{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #pinned-bar .pinned-cancel{background:none;border:none;color:#6B6B80;cursor:pointer;font-size:14px;line-height:1}
-body.light #pinned-bar .pinned-cancel{color:#999}
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#1A1A24;border:1px solid #2A2A38;border-radius:10px;padding:8px 16px;font-size:12px;color:#E8E8ED;opacity:0;transition:opacity .3s,transform .3s;z-index:200;pointer-events:none;max-width:90%;text-align:center}
+
+/* ========== TOAST ========== */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(16px);background:#1A1A24;border:1px solid #2A2A38;border-radius:12px;padding:10px 18px;font-size:13px;color:#E8E8ED;opacity:0;transition:all .3s ease;z-index:200;pointer-events:none;max-width:90%;text-align:center}
 body.light .toast{background:#fff;border-color:#E0E0E0;color:#1A1A24}
 .toast.visible{opacity:1;transform:translateX(-50%) translateY(0)}
 
+/* ========== PARTICIPANTS ========== */
 .participant-card{background:#1A1A24;border:1px solid #2A2A38;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px}
 body.light .participant-card{background:#fff;border-color:#E0E0E0}
 .participant-card:hover{border-color:#7C4DFF}
-.participant-avatar{width:40px;height:40px;border-radius:50%;background:#7C4DFF;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:#fff;flex-shrink:0}
+.participant-avatar{width:40px;height:40px;border-radius:50%;background:#7C4DFF;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:#fff;flex-shrink:0}
 .participant-avatar.has-border{border:2px solid}
 .participant-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .participant-info{flex:1;min-width:0}
 .participant-name{font-size:14px;font-weight:600;color:#F0F0F5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 body.light .participant-name{color:#1A1A24}
 .participant-meta{display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap}
-.participant-role-badge{font-size:10px;padding:1px 6px;border-radius:4px;font-weight:600}
-.participant-role-badge.creator{background:rgba(255,215,0,0.2);color:#FFD700}
-.participant-role-badge.admin{background:rgba(124,77,255,0.2);color:#B388FF}
-.participant-role-badge.member{background:rgba(76,175,80,0.2);color:#4CAF50}
-.participant-role-badge.guest{background:rgba(158,158,158,0.2);color:#9E9E9E}
+.participant-role-badge{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600}
+.participant-role-badge.creator{background:rgba(255,215,0,0.15);color:#FFD700}
+.participant-role-badge.admin{background:rgba(124,77,255,0.15);color:#B388FF}
+.participant-role-badge.member{background:rgba(76,175,80,0.15);color:#4CAF50}
+.participant-role-badge.guest{background:rgba(158,158,158,0.15);color:#9E9E9E}
 .tier-badge{font-size:9px;padding:1px 5px;border-radius:4px;font-weight:600}
 .tier-badge.gold{background:rgba(255,215,0,.3);color:#FFD700}
 .tier-badge.silver{background:rgba(192,192,192,.3);color:#C0C0C0}
 .tier-badge.bronze{background:rgba(205,127,50,.3);color:#CD7F32}
 .participant-online-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.participant-online-dot.online{background:#4CAF50;box-shadow:0 0 6px rgba(76,175,80,0.5)}
+.participant-online-dot.online{background:#4CAF50;box-shadow:0 0 6px rgba(76,175,80,0.4)}
 .participant-online-dot.offline{background:#6B6B80}
 #participants-list{display:flex;flex-direction:column;gap:8px;padding:4px 0}
 .participants-count{font-size:13px;color:#9B9BB0;margin-bottom:12px}
-body.light .participants-count{color:#888}
 
-.event-item{padding:10px 0;border-bottom:1px solid #2A2A38;display:flex;gap:8px;align-items:flex-start}
+/* ========== STATS ========== */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.stat-box{background:#2A2A38;border-radius:10px;padding:12px;text-align:center}
+body.light .stat-box{background:#F0F0F2}
+.stat-value{font-size:22px;font-weight:800;color:#7C4DFF}
+.stat-label{font-size:11px;color:#9B9BB0;margin-top:3px;font-weight:500}
+
+/* ========== EVENTS ========== */
+.event-item{padding:12px 0;border-bottom:1px solid #2A2A38;display:flex;gap:10px;align-items:flex-start}
 body.light .event-item{border-color:#E0E0E0}
 .event-item:last-child{border-bottom:none}
 .event-icon{display:flex;align-items:center;flex-shrink:0}
-.event-icon svg{width:20px;height:20px;fill:none;stroke:#7C4DFF;stroke-width:2}
+.event-icon svg{width:20px;height:20px;fill:none;stroke:#7C4DFF;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-.stat-box{background:#2A2A38;border-radius:8px;padding:10px;text-align:center}
-body.light .stat-box{background:#F0F0F2}
-.stat-value{font-size:20px;font-weight:700;color:#7C4DFF}
-.stat-label{font-size:10px;color:#9B9BB0;margin-top:2px}
-body.light .stat-label{color:#888}
+/* ========== CONTEXT SHEET ========== */
+.context-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:200;opacity:0;transition:opacity .2s}
+.context-overlay.show{display:block;opacity:1}
+.context-sheet{position:fixed;bottom:0;left:0;width:100%;background:#1A1A24;border-radius:16px 16px 0 0;z-index:201;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);padding-bottom:calc(12px + env(safe-area-inset-bottom));max-height:50vh;overflow-y:auto}
+body.light .context-sheet{background:#fff}
+.context-sheet.show{transform:translateY(0)}
+.context-sheet .handle{width:36px;height:4px;border-radius:2px;background:#3A3A48;margin:8px auto 4px}
+.context-sheet .context-title{font-size:12px;color:#6B6B80;text-align:center;padding:4px 16px 8px;border-bottom:1px solid #2A2A38;margin-bottom:4px}
+body.light .context-sheet .context-title{border-bottom-color:#E0E0E0;color:#999}
+.context-item{display:flex;align-items:center;gap:14px;padding:12px 20px;cursor:pointer;transition:background .12s;border:none;background:none;width:100%;text-align:left;font-size:15px;font-family:inherit;color:#E8E8ED}
+body.light .context-item{color:#1A1A24}
+.context-item:hover{background:rgba(124,77,255,.06)}
+.context-item .ctx-icon{width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.context-item .ctx-icon svg{width:20px;height:20px;fill:none;stroke:#9B9BB0;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.context-item .ctx-label{flex:1}
+.context-item.danger{color:#F44336}
+.context-item.danger .ctx-icon svg{stroke:#F44336}
+.context-item.danger:hover{background:rgba(244,67,54,.06)}
+.context-separator{height:1px;background:#2A2A38;margin:4px 20px}
+.ctx-reactions{display:flex;gap:4px;padding:8px 20px;flex-wrap:wrap}
+.ctx-reactions .ctx-reaction{font-size:28px;cursor:pointer;padding:6px;border-radius:50%;transition:background .12s;line-height:1;background:none;border:none;display:flex;align-items:center;justify-content:center}
+.ctx-reactions .ctx-reaction:hover{background:rgba(124,77,255,.1)}
+.context-cancel{display:block;width:calc(100% - 16px);margin:8px 8px 0;padding:10px;border-radius:10px;background:#2A2A38;border:none;font-size:15px;font-weight:500;font-family:inherit;color:#E8E8ED;cursor:pointer;text-align:center}
+body.light .context-cancel{background:#F0F0F2;color:#1A1A24}
+.context-cancel:hover{opacity:.8}
 
-::-webkit-scrollbar{width:3px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:#3A3A48;border-radius:3px}
+/* ========== ONBOARDING ========== */
+#onboarding-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:300;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+#onboarding-overlay.show{display:flex}
+.onboard-slide{max-width:340px;background:#1A1A24;border:1px solid #2A2A38;border-radius:20px;padding:32px 24px;text-align:center;animation:slideUp .35s ease-out}
+body.light .onboard-slide{background:#fff;border-color:#E0E0E0}
+.onboard-slide .onboard-icon{width:56px;height:56px;margin:0 auto 16px;color:#7C4DFF;display:flex;align-items:center;justify-content:center}
+.onboard-slide .onboard-icon svg{width:56px;height:56px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.onboard-slide h2{font-size:20px;font-weight:700;color:#F0F0F5;margin-bottom:10px}
+body.light .onboard-slide h2{color:#1A1A24}
+.onboard-slide p{font-size:14px;color:#9B9BB0;line-height:1.6;margin-bottom:24px}
+body.light .onboard-slide p{color:#666}
+.onboard-slide .onboard-btn{display:inline-flex;align-items:center;gap:6px;padding:12px 28px;border-radius:12px;border:none;background:#7C4DFF;color:#fff;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s}
+.onboard-slide .onboard-btn:hover{background:#6C3DFF}
+.onboard-slide .onboard-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.onboard-slide .onboard-skip{display:inline-block;margin-top:12px;font-size:13px;color:#6B6B80;cursor:pointer;background:none;border:none;font-family:inherit;padding:6px 12px}
+.onboard-slide .onboard-skip:hover{color:#9B9BB0}
+.onboard-dots{display:flex;gap:6px;justify-content:center;margin-top:16px}
+.onboard-dots .dot{width:6px;height:6px;border-radius:50%;background:#3A3A48;transition:all .2s;cursor:pointer}
+.onboard-dots .dot.active{width:20px;border-radius:3px;background:#7C4DFF}
+
+/* ========== SVG ICONS ========== */
+.icon{display:inline-flex;align-items:center;justify-content:center}
+.icon svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 </style>
 </head>
 <body>
 <div id="toast" class="toast"></div>
+
+<!-- ONBOARDING -->
+<div id="onboarding-overlay">
+  <div class="onboard-slide" id="onboard-0">
+    <span class="onboard-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+    <h2>Добро пожаловать в Roomer</h2>
+    <p>Общайтесь в тематических комнатах, находите единомышленников и создавайте свои сообщества.</p>
+    <button class="onboard-btn" onclick="nextOnboard(1)">Далее <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+    <button class="onboard-skip" onclick="finishOnboard()">Пропустить</button>
+    <div class="onboard-dots"><span class="dot active" onclick="goOnboard(0)"></span><span class="dot" onclick="goOnboard(1)"></span><span class="dot" onclick="goOnboard(2)"></span></div>
+  </div>
+  <div class="onboard-slide" id="onboard-1" style="display:none">
+    <span class="onboard-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+    <h2>Поиск и навигация</h2>
+    <p>Используйте поиск, чтобы находить комнаты по интересам. Смотрите рейтинг, количество участников и присоединяйтесь к общению.</p>
+    <button class="onboard-btn" onclick="nextOnboard(2)">Далее <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+    <button class="onboard-skip" onclick="finishOnboard()">Пропустить</button>
+    <div class="onboard-dots"><span class="dot" onclick="goOnboard(0)"></span><span class="dot active" onclick="goOnboard(1)"></span><span class="dot" onclick="goOnboard(2)"></span></div>
+  </div>
+  <div class="onboard-slide" id="onboard-2" style="display:none">
+    <span class="onboard-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+    <h2>Общение и творчество</h2>
+    <p>Создавайте свои комнаты, общайтесь в реальном времени, делитесь эмоциями с помощью реакций.</p>
+    <button class="onboard-btn" onclick="finishOnboard()">Начать <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+    <button class="onboard-skip" onclick="finishOnboard()">Пропустить</button>
+    <div class="onboard-dots"><span class="dot" onclick="goOnboard(0)"></span><span class="dot" onclick="goOnboard(1)"></span><span class="dot active" onclick="goOnboard(2)"></span></div>
+  </div>
+</div>
+
+<!-- FEED SCREEN -->
 <div id="feed-screen" class="screen active">
-<div class="header"><h2>Roomer</h2><div class="header-right">
-<button class="btn-icon" onclick="refreshRooms(this)" title="Обновить"><svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4C7.58 4 4.01 7.58 4.01 12S7.58 20 12 20c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg></button>
-<button class="btn-icon" onclick="toggleTheme()" title="Тема"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/></svg></button>
-<button class="btn-icon" onclick="toggleModal(true)" title="Создать"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
-</div></div>
+<div class="header">
+  <h2>Roomer</h2>
+  <div class="header-right">
+    <button class="btn-icon" onclick="refreshRooms(this)" title="Обновить"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+    <button class="btn-icon" onclick="toggleTheme()" title="Тема"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+  </div>
+</div>
 <div class="search-bar">
-<input type="text" id="search-input" placeholder="Поиск..." autocomplete="off">
-<button class="btn-clear" id="btn-clear-search" onclick="clearSearch()">&#x2715;</button>
+  <span class="search-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+  <input type="text" id="search-input" placeholder="Поиск комнат..." autocomplete="off">
+  <button class="btn-clear" id="btn-clear-search" onclick="clearSearch()">&#x2715;</button>
 </div>
 <div class="tabs">
-<div class="tab active" data-tab="all" onclick="switchTab('all')">Все</div>
-<div class="tab" data-tab="my" onclick="switchTab('my')">Мои</div>
+  <div class="tab active" data-tab="all" onclick="switchTab('all')">Все</div>
+  <div class="tab" data-tab="my" onclick="switchTab('my')">Мои</div>
 </div>
 <div id="rooms-list"><div class="loading"></div><div class="loading"></div><div class="loading"></div></div>
+<div class="fab">
+  <button class="fab-main" onclick="toggleModal(true)" title="Создать комнату"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
 </div>
+</div>
+
+<!-- CREATE MODAL -->
 <div id="create-modal" class="modal">
 <div class="modal-inner">
-<h2>Создать комнату</h2>
-<label>Название</label><input type="text" id="room-title" maxlength="100" placeholder="Название">
+<h2><svg class="h2-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Создать комнату</h2>
+<label>Название</label><input type="text" id="room-title" maxlength="100" placeholder="Название комнаты">
 <label>Описание</label><textarea id="room-desc" rows="2" maxlength="500" placeholder="О чём эта комната?"></textarea>
-<label>Теги</label><input type="text" id="room-tags" placeholder="rust, design (через запятую)">
-<label>Пароль (опционально)</label><input type="text" id="room-password" maxlength="50" placeholder="Пароль для входа">
-<button class="btn-submit" id="btn-create-room" onclick="submitRoom()">Создать</button>
+<label>Теги</label><input type="text" id="room-tags" placeholder="rust, дизайн, общение">
+<label>Пароль (опционально)</label><input type="text" id="room-password" maxlength="50" placeholder="Оставьте пустым для свободного входа">
+<button class="btn-submit" id="btn-create-room" onclick="submitRoom()">Создать комнату</button>
 <button class="btn-submit secondary" onclick="toggleModal(false)">Отмена</button>
 </div>
 </div>
+
+<!-- JOIN MODAL -->
 <div id="join-modal" class="modal">
 <div class="modal-inner">
-<h2>Вход в комнату</h2>
-<p style="font-size:13px;color:#9B9BB0;margin-bottom:10px">Эта комната защищена паролем</p>
+<h2><svg class="h2-icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Вход в комнату</h2>
+<p style="font-size:13px;color:#9B9BB0;margin-bottom:14px;line-height:1.5">Эта комната защищена паролем.</p>
 <label>Пароль</label><input type="password" id="join-password" placeholder="Введите пароль">
 <button class="btn-submit" onclick="joinProtectedRoom()">Войти</button>
 <button class="btn-submit secondary" onclick="document.getElementById('join-modal').style.display='none'">Отмена</button>
 </div>
 </div>
+
+<!-- PARTICIPANTS MODAL -->
 <div id="participants-modal" class="modal">
 <div class="modal-inner">
-<h2 id="participants-modal-title">Участники</h2>
+<h2><svg class="h2-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> <span id="participants-modal-title">Участники</span></h2>
 <div class="participants-count" id="participants-count">загрузка...</div>
 <div id="participants-list"></div>
 <button class="btn-submit secondary" onclick="toggleParticipantsModal(false)">Закрыть</button>
 </div>
 </div>
+
+<!-- PREMIUM MODAL -->
 <div id="premium-modal" class="modal">
 <div class="modal-inner">
-<h2>&#x2b50; Roomer Premium</h2>
-<p style="font-size:13px;color:#9B9BB0;margin-bottom:16px;line-height:1.5">Кастомизируйте свой чат! Выберите уровень и настройки.</p>
-<label>Уровень премиума</label>
+<h2><svg class="h2-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Premium</h2>
+<p style="font-size:13px;color:#9B9BB0;margin-bottom:14px;line-height:1.5">Кастомизируйте свой чат.</p>
+<label>Уровень</label>
 <select id="premium-tier">
 <option value="bronze">Бронза (7 дней)</option>
 <option value="silver">Серебро (14 дней)</option>
@@ -314,18 +431,18 @@ body.light .stat-label{color:#888}
 </select>
 <label>Цвет сообщений</label>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px" id="premium-colors">
-<button class="premium-color-btn" data-color="#7C4DFF" style="width:36px;height:36px;border-radius:50%;border:3px solid transparent;cursor:pointer;background:#7C4DFF" onclick="selectPremiumColor(this,'#7C4DFF')"></button>
-<button class="premium-color-btn" data-color="#4CAF50" style="width:36px;height:36px;border-radius:50%;border:3px solid transparent;cursor:pointer;background:#4CAF50" onclick="selectPremiumColor(this,'#4CAF50')"></button>
-<button class="premium-color-btn" data-color="#FF5722" style="width:36px;height:36px;border-radius:50%;border:3px solid transparent;cursor:pointer;background:#FF5722" onclick="selectPremiumColor(this,'#FF5722')"></button>
-<button class="premium-color-btn" data-color="#2196F3" style="width:36px;height:36px;border-radius:50%;border:3px solid transparent;cursor:pointer;background:#2196F3" onclick="selectPremiumColor(this,'#2196F3')"></button>
-<button class="premium-color-btn" data-color="#FF9800" style="width:36px;height:36px;border-radius:50%;border:3px solid transparent;cursor:pointer;background:#FF9800" onclick="selectPremiumColor(this,'#FF9800')"></button>
-<button class="premium-color-btn" data-color="#E91E63" style="width:36px;height:36px;border-radius:50%;border:3px solid transparent;cursor:pointer;background:#E91E63" onclick="selectPremiumColor(this,'#E91E63')"></button>
-<button class="premium-color-btn" data-color="#00BCD4" style="width:36px;height:36px;border-radius:50%;border:3px solid transparent;cursor:pointer;background:#00BCD4" onclick="selectPremiumColor(this,'#00BCD4')"></button>
+<button class="premium-color-btn" data-color="#7C4DFF" style="width:34px;height:34px;border-radius:50%;border:2px solid transparent;cursor:pointer;background:#7C4DFF" onclick="selectPremiumColor(this,'#7C4DFF')"></button>
+<button class="premium-color-btn" data-color="#4CAF50" style="width:34px;height:34px;border-radius:50%;border:2px solid transparent;cursor:pointer;background:#4CAF50" onclick="selectPremiumColor(this,'#4CAF50')"></button>
+<button class="premium-color-btn" data-color="#FF5722" style="width:34px;height:34px;border-radius:50%;border:2px solid transparent;cursor:pointer;background:#FF5722" onclick="selectPremiumColor(this,'#FF5722')"></button>
+<button class="premium-color-btn" data-color="#2196F3" style="width:34px;height:34px;border-radius:50%;border:2px solid transparent;cursor:pointer;background:#2196F3" onclick="selectPremiumColor(this,'#2196F3')"></button>
+<button class="premium-color-btn" data-color="#FF9800" style="width:34px;height:34px;border-radius:50%;border:2px solid transparent;cursor:pointer;background:#FF9800" onclick="selectPremiumColor(this,'#FF9800')"></button>
+<button class="premium-color-btn" data-color="#E91E63" style="width:34px;height:34px;border-radius:50%;border:2px solid transparent;cursor:pointer;background:#E91E63" onclick="selectPremiumColor(this,'#E91E63')"></button>
+<button class="premium-color-btn" data-color="#00BCD4" style="width:34px;height:34px;border-radius:50%;border:2px solid transparent;cursor:pointer;background:#00BCD4" onclick="selectPremiumColor(this,'#00BCD4')"></button>
 </div>
 <input type="text" id="premium-color-custom" placeholder="Свой цвет" maxlength="7" style="margin-bottom:10px;width:100%;background:#2A2A38;border:1px solid #3A3A48;border-radius:8px;padding:10px 12px;font-size:14px;color:#E8E8ED;outline:none">
-<label>Цвет рамки аватара</label>
+<label>Рамка аватара</label>
 <input type="text" id="premium-border" placeholder="#FFD700" maxlength="7" style="margin-bottom:10px;width:100%;background:#2A2A38;border:1px solid #3A3A48;border-radius:8px;padding:10px 12px;font-size:14px;color:#E8E8ED;outline:none">
-<label>Фон чата (url или градиент)</label>
+<label>Фон чата</label>
 <input type="text" id="premium-bg" placeholder="url(...) или linear-gradient(...)" style="margin-bottom:10px;width:100%;background:#2A2A38;border:1px solid #3A3A48;border-radius:8px;padding:10px 12px;font-size:14px;color:#E8E8ED;outline:none">
 <button class="btn-submit" onclick="activatePremium()">Купить</button>
 <button class="btn-submit secondary" onclick="applyPremiumColor()">Применить цвет</button>
@@ -334,32 +451,39 @@ body.light .stat-label{color:#888}
 <button class="btn-submit secondary" onclick="togglePremiumModal(false)">Закрыть</button>
 </div>
 </div>
+
+<!-- STATS MODAL -->
 <div id="stats-modal" class="modal">
 <div class="modal-inner">
-<h2>Статистика комнаты</h2>
+<h2><svg class="h2-icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Статистика комнаты</h2>
 <div class="stats-grid" id="stats-grid"></div>
 <button class="btn-submit secondary" onclick="document.getElementById('stats-modal').style.display='none'">Закрыть</button>
 </div>
 </div>
+
+<!-- EVENTS MODAL -->
 <div id="event-modal" class="modal">
 <div class="modal-inner">
-<h2>События</h2>
+<h2><svg class="h2-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> События</h2>
 <div id="events-list"></div>
 <button class="btn-submit" onclick="showCreateEventModal()">Создать событие</button>
 <button class="btn-submit secondary" onclick="document.getElementById('event-modal').style.display='none'">Закрыть</button>
 </div>
 </div>
+
+<!-- CREATE EVENT MODAL -->
 <div id="create-event-modal" class="modal">
 <div class="modal-inner">
-<h2>Новое событие</h2>
-<label>Название</label><input type="text" id="event-title" maxlength="200" placeholder="Встреча">
+<h2><svg class="h2-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Новое событие</h2>
+<label>Название</label><input type="text" id="event-title" maxlength="200" placeholder="Название события">
 <label>Описание</label><textarea id="event-desc" rows="2" maxlength="500"></textarea>
 <label>Дата и время</label><input type="datetime-local" id="event-time">
 <button class="btn-submit" onclick="submitEvent()">Создать</button>
 <button class="btn-submit secondary" onclick="document.getElementById('create-event-modal').style.display='none'">Отмена</button>
 </div>
 </div>
-<!-- Context Menu Bottom Sheet -->
+
+<!-- CONTEXT MENU -->
 <div id="context-overlay" class="context-overlay" onclick="closeContextMenu()"></div>
 <div id="context-sheet" class="context-sheet">
   <div class="handle"></div>
@@ -367,32 +491,38 @@ body.light .stat-label{color:#888}
   <div id="context-body"></div>
   <button class="context-cancel" onclick="closeContextMenu()">Отмена</button>
 </div>
+
+<!-- CHAT SCREEN -->
 <div id="chat-screen" class="screen">
 <div class="header">
-<div class="header-left"><button class="btn-icon" onclick="closeChat()" title="Назад"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button><h2 id="chat-room-title">Чат</h2></div>
+<div class="header-left">
+  <button class="btn-icon" onclick="closeChat()" title="Назад"><svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+  <h2 id="chat-room-title">Чат</h2>
+</div>
 <div class="header-right">
-<button class="btn-icon premium" onclick="openPremium()" title="Премиум"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
-<button class="btn-icon" onclick="openStats()" title="Статистика"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg></button>
-<button class="btn-icon" onclick="openEventsUI()" title="События"><svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z"/></svg></button>
-<button class="btn-icon" onclick="openParticipants()" title="Участники"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></button>
-<span id="online-count" class="status-connected" style="display:none">0</span>
-<span id="connection-status" class="status-connecting">...</span>
+  <button class="btn-icon premium" onclick="openPremium()" title="Premium"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+  <button class="btn-icon" onclick="openStats()" title="Статистика"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></button>
+  <button class="btn-icon" onclick="openEventsUI()" title="События"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>
+  <button class="btn-icon" onclick="openParticipants()" title="Участники"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
+  <span id="online-count" class="status-connected" style="display:none">0</span>
+  <span id="connection-status" class="status-connecting">...</span>
 </div>
 </div>
 <div id="pinned-bar"><span class="pinned-icon"><svg viewBox="0 0 24 24"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg></span><span class="pinned-text" id="pinned-text"></span><button class="pinned-cancel" id="pinned-cancel" onclick="event.stopPropagation();unpinMessage()">&#x2715;</button></div>
 <div id="chat-messages"></div>
 <div class="typing-indicator" id="typing-indicator"></div>
 <div id="reply-bar" class="reply-bar">
-<span class="reply-label">Ответ на <span class="reply-name" id="reply-name"></span>: <span id="reply-text"></span></span>
-<button class="reply-cancel" onclick="cancelReply()">&#x2715;</button>
+  <span class="reply-label">Ответ <span class="reply-name" id="reply-name"></span>: <span id="reply-text"></span></span>
+  <button class="reply-cancel" onclick="cancelReply()">&#x2715;</button>
 </div>
 <div class="emoji-panel" id="emoji-panel"></div>
 <div class="chat-input-container">
-<button class="btn-emoji" onclick="toggleEmoji()" title="Смайлик"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 9c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm8 0c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-4 8c-2.5 0-4.5-1.5-5.5-3.5h11c-1 2-3 3.5-5.5 3.5z"/></svg></button>
-<input type="text" id="chat-input" placeholder="Сообщение..." maxlength="500" autocomplete="off">
-<button class="btn-send" id="btn-send" disabled><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+  <button class="btn-emoji" onclick="toggleEmoji()" title="Смайлик"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
+  <input type="text" id="chat-input" placeholder="Сообщение..." maxlength="500" autocomplete="off">
+  <button class="btn-send" id="btn-send" disabled><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
 </div>
 </div>
+
 <script>
 const API='https://roomer-alh1mikk.amvera.io',WS='wss://roomer-alh1mikk.amvera.io';
 let tgUserId=null,tgUserName='Аноним',tgInitData='',tgPhotoUrl='',isTelegramUser=false;
@@ -420,30 +550,54 @@ async function apiFetch(url,opts={}){const def={mode:'cors',headers:{'Content-Ty
 let myAvatarUrl='';
 async function loginUser(){try{const r=await apiFetch('/auth/login',{method:'POST',body:JSON.stringify({tg_id:tgUserId,username:tgUserName,bio:'',init_data:tgInitData,avatar_url:tgPhotoUrl||null})});if(r.status==='success'){tgUserId=r.tg_id;tgUserName=r.username;if(r.avatar_url)myAvatarUrl=r.avatar_url;sessionStorage.setItem('roomer_tg_id',tgUserId.toString());sessionStorage.setItem('roomer_tg_name',tgUserName);if(r.avatar_url)sessionStorage.setItem('roomer_avatar',r.avatar_url)}}catch(e){}}
 if(sessionStorage.getItem('roomer_avatar'))myAvatarUrl=sessionStorage.getItem('roomer_avatar')
-async function fetchRooms(){const list=document.getElementById('rooms-list');let url='/rooms';if(currentTab==='my'){if(!tgUserId||tgUserId<1){list.innerHTML='<div class="empty-state">Войдите через Telegram</div>';return};url='/my-rooms?tg_id='+tgUserId}else url='/rooms?tg_id='+(tgUserId||0);if(searchQuery.trim())url='/rooms/search?q='+encodeURIComponent(searchQuery)+'&tg_id='+(tgUserId||0);try{const rooms=await apiFetch(url);if(!rooms||rooms.length===0){list.innerHTML=searchQuery?'<div class="empty-state">Ничего не найдено</div>':currentTab==='my'?'<div class="empty-state">Вы не создали комнат</div>':'<div class="empty-state">Комнат пока нет</div>';return}
+
+/* ========== ONBOARDING ========== */
+let onboardSlide = 0;
+function showOnboardSlide(idx) {
+  for(let i=0;i<3;i++){
+    const el=document.getElementById('onboard-'+i);
+    if(el)el.style.display=i===idx?'':'none';
+  }
+  document.querySelectorAll('#onboarding-overlay .dot').forEach((d,i)=>{
+    d.classList.toggle('active',i===idx);
+  });
+}
+function nextOnboard(idx){onboardSlide=idx;showOnboardSlide(idx)}
+function goOnboard(idx){onboardSlide=idx;showOnboardSlide(idx)}
+function finishOnboard(){
+  document.getElementById('onboarding-overlay').classList.remove('show');
+  localStorage.setItem('roomer_onboarded','1');
+}
+if(!localStorage.getItem('roomer_onboarded')){
+  setTimeout(()=>{
+    document.getElementById('onboarding-overlay').classList.add('show');
+  },600);
+}
+
+async function fetchRooms(){const list=document.getElementById('rooms-list');let url='/rooms';if(currentTab==='my'){if(!tgUserId||tgUserId<1){list.innerHTML='<div class="empty-state"><div class="empty-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div class="empty-title">Войдите в Telegram</div><div class="empty-text">Для просмотра своих комнат необходима авторизация через Telegram</div></div>';return};url='/my-rooms?tg_id='+tgUserId}else url='/rooms?tg_id='+(tgUserId||0);if(searchQuery.trim())url='/rooms/search?q='+encodeURIComponent(searchQuery)+'&tg_id='+(tgUserId||0);try{const rooms=await apiFetch(url);if(!rooms||rooms.length===0){list.innerHTML=searchQuery?'<div class="empty-state"><div class="empty-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div><div class="empty-title">Ничего не найдено</div><div class="empty-text">Попробуйте изменить поисковый запрос</div></div>':currentTab==='my'?'<div class="empty-state"><div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg></div><div class="empty-title">У вас нет комнат</div><div class="empty-text">Создайте свою первую комнату и приглашайте друзей!</div><button class="btn-empty" onclick="toggleModal(true)"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Создать комнату</button></div>':'<div class="empty-state"><div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="empty-title">Комнат пока нет</div><div class="empty-text">Будьте первым — создайте комнату и начните общение!</div><button class="btn-empty" onclick="toggleModal(true)"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Создать комнату</button></div>';return}
 if(tgUserId&&tgUserId>0){for(const room of rooms){try{const v=await apiFetch('/rooms/'+room.id+'/my-vote?tg_id='+tgUserId);userVotes[room.id]=v.vote}catch(e){}}}
 list.innerHTML=rooms.map(room=>{const rating=room.rating||0,likes=room.likes||0,dislikes=room.dislikes||0,isFav=room.is_favorite,myVote=userVotes[room.id]||0,rc=rating>0?'#4CAF50':rating<0?'#F44336':'#6B6B80';return '<div class="card" onclick="openChat('+room.id+')">'+
 '<h3>'+(room.title||'Без названия')+(room.online>0?'<span class="online-badge">'+room.online+'</span>':'')+'</h3>'+
 '<p>'+(room.description||'')+'</p>'+
 '<div class="tags">'+((room.tags||[]).map(t=>'<span class="tag">#'+t+'</span>').join(''))+'</div>'+
 '<div class="card-actions">'+
-'<span style="font-size:12px;color:'+rc+';font-weight:600">'+rating+'</span>'+
-'<button class="action-btn'+(myVote===1?' liked':'')+'" onclick="event.stopPropagation();voteRoom('+room.id+',1)">+ '+likes+'</button>'+
-'<button class="action-btn'+(myVote===-1?' disliked':'')+'" onclick="event.stopPropagation();voteRoom('+room.id+',-1)">- '+dislikes+'</button>'+
-'<button class="favorite-btn'+(isFav?' is-fav':'')+'" onclick="event.stopPropagation();toggleFavorite('+room.id+',this)">'+(isFav?'\u2605':'\u2606')+'</button>'+
-'<span style="font-size:10px;color:#6B6B80">'+((room.message_count||0)>0?room.message_count:'')+'</span>'+
-'</div></div>'}).join('')}catch(e){list.innerHTML='<div class="empty-state" style="color:#E55">Ошибка: '+e.message+'<br><br><button class="btn-submit" style="width:auto;padding:8px 20px;display:inline-block" onclick="fetchRooms()">Повторить</button></div>'}}
-async function toggleFavorite(roomId,el){if(!tgUserId){st('Войдите через Telegram');return}try{const r=await apiFetch('/rooms/'+roomId+'/favorite?tg_id='+tgUserId+'&action=toggle',{method:'POST'});if(r.is_favorite){el.innerHTML='\u2605';el.className='favorite-btn is-fav'}else{el.innerHTML='\u2606';el.className='favorite-btn'};st(r.is_favorite?'Добавлено':'Удалено')}catch(e){st('Ошибка')}}
+'<span class="card-rating" style="color:'+rc+'">'+rating+'</span>'+
+'<button class="action-btn'+(myVote===1?' liked':'')+'" onclick="event.stopPropagation();voteRoom('+room.id+',1)"><svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg> '+likes+'</button>'+
+'<button class="action-btn'+(myVote===-1?' disliked':'')+'" onclick="event.stopPropagation();voteRoom('+room.id+',-1)"><svg viewBox="0 0 24 24"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm0 0H3a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg> '+dislikes+'</button>'+
+'<button class="favorite-btn'+(isFav?' is-fav':'')+'" onclick="event.stopPropagation();toggleFavorite('+room.id+',this)">'+(isFav?'<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>':'<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>')+'</button>'+
+((room.message_count||0)>0?'<span class="card-msg-count"><svg viewBox="0 0 24 24" style="width:12px;height:12px;vertical-align:middle;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;margin-right:2px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'+room.message_count+'</span>':'')+
+'</div></div>'}).join('')}catch(e){list.innerHTML='<div class="empty-state" style="color:#E55"><div class="empty-icon" style="color:#F44336"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="empty-title">Ошибка загрузки</div><div class="empty-text" style="font-size:12px">'+e.message+'</div><button class="btn-empty" onclick="fetchRooms()">Повторить</button></div>'}}
+
+async function toggleFavorite(roomId,el){if(!tgUserId){st('Войдите через Telegram');return}try{const r=await apiFetch('/rooms/'+roomId+'/favorite?tg_id='+tgUserId+'&action=toggle',{method:'POST'});if(r.is_favorite){el.innerHTML='<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';el.className='favorite-btn is-fav'}else{el.innerHTML='<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';el.className='favorite-btn'};st(r.is_favorite?'Добавлено':'Удалено')}catch(e){st('Ошибка')}}
 async function voteRoom(roomId,vote){if(!tgUserId){st('Войдите через Telegram');return}try{const r=await apiFetch('/rooms/vote',{method:'POST',body:JSON.stringify({tg_id:tgUserId,room_id:roomId,vote:vote})});if(r.status==='success'){userVotes[roomId]=r.vote;st('Голос учтён!');fetchRooms()}else st(r.error)}catch(e){st(e.message||'Ошибка')}}
 function refreshRooms(btn){btn.classList.add('spinning');setTimeout(()=>btn.classList.remove('spinning'),600);document.getElementById('rooms-list').innerHTML='<div class="loading"></div><div class="loading"></div><div class="loading"></div>';fetchRooms()}
 function onSearchInput(){const i=document.getElementById('search-input'),c=document.getElementById('btn-clear-search');searchQuery=i.value.trim();c.classList.toggle('visible',i.value.length>0);clearTimeout(searchTimer);searchTimer=setTimeout(()=>{document.getElementById('rooms-list').innerHTML='<div class="loading"></div><div class="loading"></div><div class="loading"></div>';fetchRooms()},300)}
 function clearSearch(){document.getElementById('search-input').value='';document.getElementById('btn-clear-search').classList.remove('visible');searchQuery='';document.getElementById('rooms-list').innerHTML='<div class="loading"></div><div class="loading"></div><div class="loading"></div>';fetchRooms()}
 function switchTab(tab){currentTab=tab;document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));document.getElementById('rooms-list').innerHTML='<div class="loading"></div><div class="loading"></div><div class="loading"></div>';fetchRooms()}
-async function submitRoom(){const title=document.getElementById('room-title').value.trim(),desc=document.getElementById('room-desc').value.trim(),tags=document.getElementById('room-tags').value.split(',').map(t=>t.trim()).filter(t=>t).slice(0,10),password=document.getElementById('room-password').value.trim()||null,btn=document.getElementById('btn-create-room');if(!title){st('Введите название');return};btn.disabled=true;btn.textContent='Создание...';try{await apiFetch('/rooms',{method:'POST',body:JSON.stringify({title,description:desc,creator_id:tgUserId,tags,password})});document.getElementById('room-title').value='';document.getElementById('room-desc').value='';document.getElementById('room-tags').value='';document.getElementById('room-password').value='';toggleModal(false);st('Комната создана!');fetchRooms()}catch(e){st('Ошибка: '+e.message)}finally{btn.disabled=false;btn.textContent='Создать'}}
+async function submitRoom(){const title=document.getElementById('room-title').value.trim(),desc=document.getElementById('room-desc').value.trim(),tags=document.getElementById('room-tags').value.split(',').map(t=>t.trim()).filter(t=>t).slice(0,10),password=document.getElementById('room-password').value.trim()||null,btn=document.getElementById('btn-create-room');if(!title){st('Введите название');return};btn.disabled=true;btn.textContent='Создание...';try{await apiFetch('/rooms',{method:'POST',body:JSON.stringify({title,description:desc,creator_id:tgUserId,tags,password})});document.getElementById('room-title').value='';document.getElementById('room-desc').value='';document.getElementById('room-tags').value='';document.getElementById('room-password').value='';toggleModal(false);st('Комната создана!');fetchRooms()}catch(e){st('Ошибка: '+e.message)}finally{btn.disabled=false;btn.textContent='Создать комнату'}}
 let joinRoomId=null;
 function joinProtectedRoom(){const password=document.getElementById('join-password').value.trim();const targetRoomId=joinRoomId;if(!targetRoomId){st('Ошибка');return};apiFetch('/rooms/'+targetRoomId+'/join',{method:'POST',body:JSON.stringify({tg_id:tgUserId,password:password||null})}).then(r=>{if(r.status==='success'){document.getElementById('join-modal').style.display='none';currentRoomId=targetRoomId;shouldReconnect=true;ucs('connecting');sc('chat-screen');joinRoomPassword=password||'';document.getElementById('chat-messages').innerHTML='';isLoadingMore=false;hasMoreMessages=true;lastMsgId=null;joinRoomId=null;setTimeout(()=>setupWebSocket(targetRoomId),100)}else{st(r.error||'Неверный пароль')}}).catch(e=>{st('Ошибка: '+e.message)})}
 async function openChat(roomId){currentRoomId=roomId;shouldReconnect=true;onlineCount=0;uoc(0);cancelReply();document.getElementById('chat-room-title').textContent='Загрузка...';document.getElementById('chat-messages').innerHTML='';isLoadingMore=false;hasMoreMessages=true;lastMsgId=null;
-// Load draft
 const draft=localStorage.getItem('roomer_draft_'+roomId);
 if(draft){document.getElementById('chat-input').value=draft;document.getElementById('btn-send').disabled=false}
 apiFetch('/rooms/'+roomId+'/info').then(info=>{if(info&&info.title)document.getElementById('chat-room-title').textContent=info.title
@@ -513,11 +667,9 @@ function replyToMsg(msgId,username){replyToId=msgId;replyToName=username;const e
 function cancelReply(){replyToId=null;replyToName='';document.getElementById('reply-bar').style.display='none';document.getElementById('reply-name').textContent='';document.getElementById('reply-text').textContent=''}
 function sendWsMessage(){const input=document.getElementById('chat-input'),text=input.value.trim();if(!text)return;if(!ws||ws.readyState!==WebSocket.OPEN){st('Нет подключения');if(currentRoomId)setupWebSocket(currentRoomId);return}
 ws.send(JSON.stringify({type:'message',text:text,username:tgUserName,reply_to_id:replyToId}));input.value='';document.getElementById('btn-send').disabled=true;
-// Clear draft on send
 if(currentRoomId)localStorage.removeItem('roomer_draft_'+currentRoomId);
 cancelReply()}
 
-// Inline Edit
 function startInlineEdit(msgId){const el=document.getElementById('msg-'+msgId);if(!el)return;const txtEl=el.querySelector('.msg-text');if(!txtEl)return;const currentText=txtEl.textContent;
 txtEl.style.display='none';
 const editArea=document.createElement('textarea');editArea.className='msg-edit-area';editArea.value=currentText;txtEl.after(editArea);editArea.focus();
@@ -532,16 +684,14 @@ function cleanupEdit(){editArea.remove();actions.remove();txtEl.style.display=''
 
 function deleteMsg(msgId){if(!confirm('Удалить сообщение?'))return;ws.send(JSON.stringify({type:'delete',id:msgId}))}
 
-// Report
 async function reportMessage(msgId){if(!tgUserId){st('Войдите через Telegram');return}try{const r=await apiFetch('/messages/report',{method:'POST',body:JSON.stringify({tg_id:tgUserId,message_id:msgId,reason:''})});if(r.status==='success')st('Жалоба отправлена');else st(r.error)}catch(e){st(e.message||'Ошибка')}}
 
-// Context Menu
-var CXI={}; CXI.reply='<svg viewBox="0 0 24 24"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></svg>';
+var CXI={}; CXI.reply='<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
 CXI.pin='<svg viewBox="0 0 24 24"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>';
-CXI.edit='<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
-CXI.del='<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>';
-CXI.copy='<svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
-CXI.report='<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>';
+CXI.edit='<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+CXI.del='<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+CXI.copy='<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+CXI.report='<svg viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
 let contextMsgId=null,contextMsgUsername='';
 function ctxMenuBtn(label,icon,cls,fn){return '<button class="context-item'+(cls?' '+cls:'')+'" onclick="'+fn+';closeContextMenu()"><span class="ctx-icon">'+icon+'</span><span class="ctx-label">'+label+'</span></button>'}
 function showContextMenu(msgId){if(!ws||ws.readyState!==WebSocket.OPEN)return
@@ -572,9 +722,7 @@ function copyMsgText(msgId){const el=document.getElementById('msg-'+msgId);const
 function closeContextMenu(){document.getElementById('context-overlay').classList.remove('show');document.getElementById('context-sheet').classList.remove('show')}
 function closeChat(){shouldReconnect=false;currentRoomId=null;joinRoomPassword='';cancelReply();if(pingInterval){clearInterval(pingInterval);pingInterval=null};if(ws){try{if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'leave'}))}catch(e){};ws.onclose=null;ws.close(1000);ws=null};ucs('disconnected');uoc(0);sc('feed-screen');fetchRooms()}
 document.getElementById('chat-input').addEventListener('input',function(){clearTimeout(typingTimer);if(ws&&ws.readyState===WebSocket.OPEN&&this.value.trim()){ws.send(JSON.stringify({type:'typing'}))};typingTimer=setTimeout(()=>{},2000);
-// Save draft
 if(currentRoomId){localStorage.setItem('roomer_draft_'+currentRoomId,this.value)}});
-// Premium
 let selectedPremiumColor='#7C4DFF';
 function togglePremiumModal(s){document.getElementById('premium-modal').style.display=s?'block':'none'}
 document.getElementById('premium-modal').addEventListener('click',function(e){if(e.target===this)togglePremiumModal(false)})
@@ -590,14 +738,12 @@ async function activatePremium(){
     const tier = document.getElementById('premium-tier').value;
     const btn = document.querySelector('#premium-modal .btn-submit');
     
-    // Блокируем кнопку на время генерации инвойса, чтобы избежать дублирования кликов
     if(btn) {
         btn.disabled = true;
         btn.textContent = 'Генерация счета...';
     }
     
     try {
-        // Делаем запрос к твоему обновленному эндпоинту бэкенда на Amvera
         const r = await apiFetch('/premium/activate', {
             method: 'POST',
             body: JSON.stringify({ tg_id: tgUserId, tier: tier })
@@ -608,18 +754,16 @@ async function activatePremium(){
             btn.textContent = 'Купить';
         }
         
-        // ВАЖНО: Берем полученную ссылку и передаем её в нативный метод Telegram WebApp SDK
         if (r && r.status === 'success' && r.invoice_link) {
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openInvoice) {
                 
                 window.Telegram.WebApp.openInvoice(r.invoice_link, function(status) {
                     if (status === 'paid') {
-                        st('🎉 Оплата успешна! Премиум активен.');
+                        st('Оплата успешна! Премиум активен.');
                         togglePremiumModal(false);
-                        // Провоцируем обновление интерфейса чата, если юзер находится в комнате
                         if (typeof openChat === 'function' && currentRoomId) openChat(currentRoomId);
                     } else if (status === 'failed') {
-                        st('❌ Оплата отклонена или отменена');
+                        st('Оплата отклонена или отменена');
                     }
                 });
                 
@@ -640,13 +784,10 @@ async function activatePremium(){
 async function applyPremiumColor(){if(!tgUserId){st('Войдите через Telegram');return};try{const r=await apiFetch('/premium/set-color',{method:'POST',body:JSON.stringify({tg_id:tgUserId,color:selectedPremiumColor})});if(r.status==='success'){st('Цвет: '+r.message_color);togglePremiumModal(false)}else st(r.error)}catch(e){st(e.message||'Ошибка')}}
 async function applyPremiumBorder(){if(!tgUserId){st('Войдите через Telegram');return};const color=document.getElementById('premium-border').value.trim()||'#FFD700';try{const r=await apiFetch('/premium/set-border',{method:'POST',body:JSON.stringify({tg_id:tgUserId,color})});if(r.status==='success')st('Рамка: '+r.avatar_border_color);else st(r.error)}catch(e){st(e.message||'Ошибка')}}
 async function applyPremiumBg(){if(!tgUserId){st('Войдите через Telegram');return};const bg=document.getElementById('premium-bg').value.trim();if(!bg){st('Введите фон');return};try{const r=await apiFetch('/premium/set-background',{method:'POST',body:JSON.stringify({tg_id:tgUserId,background:bg})});if(r.status==='success'){chatBg=bg;document.getElementById('chat-screen').style.background=bg;st('Фон применён');togglePremiumModal(false)}else st(r.error)}catch(e){st(e.message||'Ошибка')}}
-// Stats
 async function openStats(){if(!currentRoomId)return;try{const s=await apiFetch('/rooms/'+currentRoomId+'/stats');document.getElementById('stats-grid').innerHTML='<div class="stat-box"><div class="stat-value">'+s.total_messages+'</div><div class="stat-label">Сообщений</div></div><div class="stat-box"><div class="stat-value">'+s.unique_users+'</div><div class="stat-label">Участников</div></div><div class="stat-box"><div class="stat-value">'+s.active_today+'</div><div class="stat-label">Активных сегодня</div></div><div class="stat-box"><div class="stat-value">'+s.online+'</div><div class="stat-label">Онлайн</div></div><div class="stat-box"><div class="stat-value">'+s.events+'</div><div class="stat-label">Событий</div></div>';document.getElementById('stats-modal').style.display='block'}catch(e){st('Ошибка')}}
-// Events
-async function openEventsUI(){if(!currentRoomId)return;try{const eventsData=await apiFetch('/rooms/'+currentRoomId+'/events');const list=document.getElementById('events-list');if(eventsData.length){list.innerHTML=eventsData.map(e=>'<div class="event-item"><div class="event-icon"><svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z"/></svg></div><div><div style="font-weight:600;font-size:14px">'+e.title+'</div><div style="font-size:12px;color:#9B9BB0">'+e.description+'</div><div style="font-size:11px;color:#7C4DFF;margin-top:2px">'+(new Date(e.event_time).toLocaleString('ru-RU'))+'</div></div></div>').join('')}else list.innerHTML='<div class="empty-state">Нет предстоящих событий</div>';document.getElementById('event-modal').style.display='block'}catch(e){st('Ошибка')}}
+async function openEventsUI(){if(!currentRoomId)return;try{const eventsData=await apiFetch('/rooms/'+currentRoomId+'/events');const list=document.getElementById('events-list');if(eventsData.length){list.innerHTML=eventsData.map(e=>'<div class="event-item"><div class="event-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div><div style="font-weight:600;font-size:14px">'+e.title+'</div><div style="font-size:12px;color:#9B9BB0">'+e.description+'</div><div style="font-size:11px;color:#7C4DFF;margin-top:2px">'+(new Date(e.event_time).toLocaleString('ru-RU'))+'</div></div></div>').join('')}else list.innerHTML='<div class="empty-state"><div class="empty-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="empty-title">Нет событий</div><div class="empty-text">Создайте первое событие в этой комнате</div></div>';document.getElementById('event-modal').style.display='block'}catch(e){st('Ошибка')}}
 function showCreateEventModal(){document.getElementById('event-modal').style.display='none';document.getElementById('create-event-modal').style.display='block'}
 async function submitEvent(){if(!currentRoomId||!tgUserId)return;const title=document.getElementById('event-title').value.trim();const desc=document.getElementById('event-desc').value.trim();const time=document.getElementById('event-time').value;if(!title||!time){st('Заполните название и время');return};try{await apiFetch('/events',{method:'POST',body:JSON.stringify({creator_id:tgUserId,room_id:currentRoomId,title,description:desc,event_time:new Date(time).toISOString()})});st('Событие создано!');document.getElementById('create-event-modal').style.display='none';document.getElementById('event-title').value='';document.getElementById('event-desc').value='';openEventsUI()}catch(e){st(e.message||'Ошибка')}}
-// Participants
 function toggleParticipantsModal(s){document.getElementById('participants-modal').style.display=s?'block':'none'}
 document.getElementById('participants-modal').addEventListener('click',function(e){if(e.target===this)toggleParticipantsModal(false)})
 async function openParticipants(){if(!currentRoomId){st('Нет комнаты');return}
@@ -670,6 +811,10 @@ pAvatar+
 window.addEventListener('beforeunload',()=>{if(ws&&ws.readyState===WebSocket.OPEN){ws.send(JSON.stringify({type:'leave'}));ws.close(1000,'Page closing')};if(pingInterval)clearInterval(pingInterval)})
 function toggleModal(s){document.getElementById('create-modal').style.display=s?'block':'none';if(s)document.getElementById('room-title').focus()}
 document.getElementById('create-modal').addEventListener('click',function(e){if(e.target===this)toggleModal(false)})
+document.getElementById('join-modal').addEventListener('click',function(e){if(e.target===this)this.style.display='none'})
+document.getElementById('stats-modal').addEventListener('click',function(e){if(e.target===this)this.style.display='none'})
+document.getElementById('event-modal').addEventListener('click',function(e){if(e.target===this)this.style.display='none'})
+document.getElementById('create-event-modal').addEventListener('click',function(e){if(e.target===this)this.style.display='none'})
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal').forEach(m=>m.style.display='none');closeContextMenu()}})
 document.getElementById('chat-input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendWsMessage()}})
 document.getElementById('chat-input').addEventListener('input',function(){document.getElementById('btn-send').disabled=this.value.trim().length===0})
